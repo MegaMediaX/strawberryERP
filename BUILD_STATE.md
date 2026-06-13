@@ -87,6 +87,11 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 35) — 2026-06-13 — SESSION ENDPOINT
+- Added `GET /api/auth/session` ("who am I"): returns id/name/email/role + effectiveRole + impersonating + source from the verified cookie (or dev header outside prod); 401 with no session; never leaks secrets. 3 tests. **295 total, all green** (typecheck/lint/build/test exit 0).
+- Completes the client-facing auth surface: login / logout / session / 2fa setup-activate-disable.
+- **Next start (Docker-gated):** bridge Next 2FA store → Frappe `api/two_factor.py`; #3 `bench migrate`; #6 `docker compose up`; Portal Role Assignment mapping.
+
 ### Fire 1 (cont. 34) — 2026-06-13 — FRAPPE 2FA PERSISTENCE
 - Added **`Portal Two Factor` DocType** (user[unique/indexed], secret[Password=encrypted at rest], is_active[Check]; Super-Admin-only perms, §18-clean) + controller + `api/two_factor.py` persistence module (upsert/activate/disable/get_active_secret via get_password — secret never in list/read payloads). 38 DocTypes now.
 - Host-verified: `py_compile` clean + DocType-integrity test passes over the new DocType (fields valid, no non-super delete). **292 total, all green.**
