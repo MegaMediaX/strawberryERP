@@ -45,7 +45,7 @@ Mark `[x]` **only after verified by running**, not when written.
 ## Scale target (DoD bar)
 
 - [x] Repeatable seed generator: deterministic ≥10k leads, ≥5k customers, multi-country/reseller/status/priority/currency (`src/lib/dev/synthetic.ts`)
-- [x] Server-side pagination + filtering primitive (`src/lib/query/scoped-page.ts`) — `paginate` (filter→sort→page, cap 200) + `scopedPage` (scope-first); **wired into `/api/frappe/leads` GET as opt-in pagination** (page/pageSize/sortBy/sortDir/status/country/priority), backward-compatible. Remaining lists (customers, invoices, receipts, resellers) still load full scoped arrays.
+- [x] Server-side pagination + filtering primitive (`src/lib/query/scoped-page.ts`) — `paginate` + `scopedPage`; **wired into `/api/frappe/leads` GET AND the generic `/api/frappe/*` boundary** (`paginateList` covers invoices/receipts/customers/resellers/commissions/contracts), all opt-in + backward-compatible. Remaining: Frappe-proxy passthrough (limit_start/limit_page_length).
 - [~] Indexed DocTypes: `search_index` added to partner_lead (country, assigned_user, status, follow_up_date, priority, reseller) + partner_customer (country, reseller). Remaining: invoices payment_state, receipts. **DB index effect verified only on `bench migrate` (Docker fire).**
 - [~] Latency: portal-layer p95 **0.86ms** @ 10k/5k (measured, in test output). DB-side p95 <400ms still needs indexed Frappe run.
 - [x] Pagination + scoping correctness under role at volume — proven: no scoped role pages into out-of-scope rows (6 tests over full 10k set)
@@ -85,6 +85,11 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ---
 
 ## Resume journal (newest first)
+
+### Fire 1 (cont. 6) — 2026-06-13
+- Applied pagination to the generic `/api/frappe/*` boundary via a `paginateList` helper (invoices/receipts/customers/resellers/commissions/contracts), opt-in + backward-compatible. 3 boundary tests. **135 tests total, all green** (typecheck/lint/build/test exit 0).
+- Session 30-min loop (`3660083c`) active alongside the 5h cloud schedule.
+- **Next start:** Frappe-proxy pagination passthrough (map page/pageSize → limit_start/limit_page_length in backend-router/maybeRouteToFrappe); then Docker fire (#3 migrate, #6 compose, DB latency) + conversion-preservation (Frappe Python).
 
 ### Fire 1 (cont. 5) — 2026-06-13
 - Receipt→invoice payment-state test (`createReceiptFromPayload`): Fully Paid when amount covers total, Partially Paid for a deposit, negative-amount clamp, country block on receipt path, commission trigger linkage. 5 tests. **132 tests total, all green** (typecheck/lint/build/test exit 0).

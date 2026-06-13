@@ -12,6 +12,7 @@ import {
   upsertIntegrationSetting,
 } from "@/lib/dev-store";
 import { devStoreResponse, maybeRouteToFrappe } from "@/lib/backend/backend-router";
+import { paginate } from "@/lib/query/scoped-page";
 import {
   apiAuditEvent,
   commissionRules,
@@ -84,7 +85,7 @@ export async function GET(request: Request, context: RouteContext) {
   }
 
   if (contextKey === "invoices") {
-    return sampleResponse(filterByPermission(store.invoices, permissionContext));
+    return paginateList(request, filterByPermission(store.invoices, permissionContext));
   }
 
   if (contextKey.startsWith("invoices/")) {
@@ -92,7 +93,7 @@ export async function GET(request: Request, context: RouteContext) {
   }
 
   if (contextKey === "receipts") {
-    return sampleResponse(filterByPermission(store.receipts, permissionContext));
+    return paginateList(request, filterByPermission(store.receipts, permissionContext));
   }
 
   if (contextKey.startsWith("receipts/")) {
@@ -100,15 +101,15 @@ export async function GET(request: Request, context: RouteContext) {
   }
 
   if (contextKey === "customers") {
-    return sampleResponse(filterByPermission(customers, permissionContext));
+    return paginateList(request, filterByPermission(customers, permissionContext));
   }
 
   if (contextKey === "resellers") {
-    return sampleResponse(resellers.map((reseller) => ({ reseller, active: true })));
+    return paginateList(request, resellers.map((reseller) => ({ reseller, active: true })));
   }
 
   if (contextKey === "commissions" || contextKey === "commissions/entries") {
-    return sampleResponse(filterByPermission(store.commissionEntries, permissionContext));
+    return paginateList(request, filterByPermission(store.commissionEntries, permissionContext));
   }
 
   if (contextKey === "commissions/rules") {
@@ -148,7 +149,7 @@ export async function GET(request: Request, context: RouteContext) {
   }
 
   if (contextKey === "contracts") {
-    return sampleResponse(filterByPermission(contracts, permissionContext));
+    return paginateList(request, filterByPermission(contracts, permissionContext));
   }
 
   if (contextKey === "reports") {
@@ -622,6 +623,32 @@ function asObject(payload: unknown): Record<string, unknown> {
 
 function sampleResponse(data: unknown, extra?: { status?: number } & Record<string, unknown>) {
   return devStoreResponse(data, extra);
+}
+
+/**
+ * Opt-in server-side pagination for list collections. Returns the full array
+ * when no page/pageSize params are present (backward compatible), otherwise a
+ * page with total/totalPages meta. Scale DoD: no full-table loads to the UI.
+ */
+function paginateList<T>(request: Request, data: T[]) {
+  const url = new URL(request.url);
+  const pageParam = url.searchParams.get("page");
+  const pageSizeParam = url.searchParams.get("pageSize");
+  if (!pageParam && !pageSizeParam) {
+    return sampleResponse(data);
+  }
+  const result = paginate(data, {
+    page: pageParam ? Number(pageParam) : undefined,
+    pageSize: pageSizeParam ? Number(pageSizeParam) : undefined,
+    sortBy: url.searchParams.get("sortBy") ?? undefined,
+    sortDir: url.searchParams.get("sortDir") === "desc" ? "desc" : "asc",
+  });
+  return sampleResponse(result.rows, {
+    page: result.page,
+    pageSize: result.pageSize,
+    total: result.total,
+    totalPages: result.totalPages,
+  });
 }
 
 function findInvoice(id: string | undefined, source: Invoice[]) {
