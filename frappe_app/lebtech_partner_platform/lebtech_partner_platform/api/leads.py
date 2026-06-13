@@ -4,6 +4,12 @@ import frappe
 from frappe import _
 
 from lebtech_partner_platform.validators import validate_country_value, write_activity
+from lebtech_partner_platform.api._pagination import (
+    DEFAULT_PAGE_LENGTH,
+    MAX_PAGE_LENGTH,
+    safe_int,
+    safe_order_by,
+)
 
 LEAD_STATUSES = {
     "New Lead (Uncontacted)",
@@ -35,8 +41,26 @@ LEAD_UPDATE_FIELDS = {
 }
 
 
+SORTABLE_FIELDS = {
+    "modified",
+    "creation",
+    "company_name",
+    "country",
+    "status",
+    "priority",
+    "follow_up_date",
+}
+
+
 @frappe.whitelist(methods=["GET"])
-def list_leads(country: str | None = None, reseller: str | None = None, assigned_user: str | None = None):
+def list_leads(
+    country: str | None = None,
+    reseller: str | None = None,
+    assigned_user: str | None = None,
+    limit_start=None,
+    limit_page_length=None,
+    order_by: str | None = None,
+):
     filters = {}
     if country:
         validate_country_value(country)
@@ -66,7 +90,9 @@ def list_leads(country: str | None = None, reseller: str | None = None, assigned
             "source",
             "modified",
         ],
-        order_by="modified desc",
+        order_by=safe_order_by(order_by, SORTABLE_FIELDS),
+        limit_start=safe_int(limit_start, 0, 0),
+        limit_page_length=safe_int(limit_page_length, DEFAULT_PAGE_LENGTH, 1, MAX_PAGE_LENGTH),
     )
 
 
