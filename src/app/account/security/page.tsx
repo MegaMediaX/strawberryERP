@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import QRCode from "qrcode";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -13,6 +14,7 @@ const btnClass =
 
 export default function SecurityPage() {
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -38,6 +40,11 @@ export default function SecurityPage() {
     try {
       const data = (await call("/api/auth/2fa/setup")) as Enrollment;
       setEnrollment(data);
+      try {
+        setQrDataUrl(await QRCode.toDataURL(data.otpauthUrl, { margin: 1, width: 200 }));
+      } catch {
+        setQrDataUrl(null); // fall back to manual key entry
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to start 2FA setup.");
     } finally {
@@ -51,6 +58,7 @@ export default function SecurityPage() {
       await call("/api/auth/2fa/activate", { code });
       setStatus("Two-factor authentication is now enabled.");
       setEnrollment(null);
+      setQrDataUrl(null);
       setCode("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Activation failed.");
@@ -97,8 +105,18 @@ export default function SecurityPage() {
               <div className="space-y-1 text-sm">
                 <p className="font-medium">1. Add this key to your authenticator app</p>
                 <p className="text-slate-600 dark:text-slate-300">
-                  Scan the setup URI or enter the key manually:
+                  Scan this QR code with your authenticator app, or enter the key manually:
                 </p>
+                {qrDataUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={qrDataUrl}
+                    alt="2FA QR code"
+                    width={200}
+                    height={200}
+                    className="rounded-md border border-slate-200 bg-white p-2 dark:border-slate-700"
+                  />
+                ) : null}
                 <code className="block break-all rounded-md bg-slate-100 px-3 py-2 text-xs dark:bg-slate-800">
                   {enrollment.secret}
                 </code>

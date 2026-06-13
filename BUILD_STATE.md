@@ -87,6 +87,11 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 31) — 2026-06-13 — 2FA QR
+- Added a scannable **QR code** to `/account/security` (added `qrcode` dep + `@types/qrcode`): on Enable, the otpauth URI renders as a QR image (client-side `QRCode.toDataURL`), with the base32 key as manual-entry fallback.
+- Verified: typecheck/lint/build/test all exit 0 (288 tests); live render GET /account/security → HTTP 200 with 2FA UI (dev server, then stopped).
+- **Next start:** link `/account/security` into the portal nav; then Docker-gated #3/#6 + Frappe 2FA persistence. Auth (#2) is now feature-complete on the portal (login + 2FA + enrollment UI + QR).
+
 ### Fire 1 (cont. 30) — 2026-06-13 — 2FA ENROLLMENT UI
 - Built `/account/security` page (client) — self-service 2FA: Enable (setup → shows base32 key + otpauth URI for manual/QR entry) → enter 6-digit code → Verify & enable; Disable. Glue over the already-tested `/api/auth/2fa/*` endpoints.
 - Verified: typecheck/lint/build/test all exit 0 (288 tests); **live render check — GET /account/security → HTTP 200 with the 2FA UI HTML present** (dev server, then stopped).
