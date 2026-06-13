@@ -94,6 +94,12 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 43) — 2026-06-14 — 2FA LIFECYCLE VERIFIED LIVE
+- Added `scripts/2fa-live-smoke.mjs` (+ `npm run smoke:2fa`): computes RFC-6238 TOTP locally and drives the full lifecycle against the running stack. **9/9 PASS:** password login→cookie; setup→secret; activate wrong-code→400; activate valid-code→200; **login w/o code→401 (2FA now required); login w/ code→200**; disable→200; password-only works again→200.
+- Proves DoD #2 2FA end-to-end LIVE (setup, code-verified activation, login enforcement, disable) against the production container. (Enrollment is per-container in-memory until the Frappe-persistence bridge lands.)
+- Gates: typecheck/lint/test green (299).
+- **Next start:** 2FA store→Frappe `Portal Two Factor` persistence bridge (async refactor of two-factor-store + getTotpSecretForUser; whitelist two_factor.py; live-verify a Portal Two Factor record is created); then portal-identity↔Frappe-user mapping (§17) for live per-role scoping.
+
 ### Fire 1 (cont. 42) — 2026-06-14 — LIVE BROWSER QA (Chrome extension)
 - Drove the real portal in Chrome (→ NGINX :8080 → Next → Frappe), logged in as Super Admin:
   - **Login**: typed creds on `/login`, Sign in → redirected to `/` dashboard. ✅

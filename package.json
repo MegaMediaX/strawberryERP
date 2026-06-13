@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "smoke": "node scripts/phase2-smoke.mjs",
+    "smoke:2fa": "node scripts/2fa-live-smoke.mjs",
     "smoke:frappe": "node scripts/frappe-live-smoke.mjs",
     "smoke:frappe:permissions": "node scripts/frappe-permission-smoke.mjs",
     "smoke:frappe:operations": "node scripts/frappe-operations-smoke.mjs",
