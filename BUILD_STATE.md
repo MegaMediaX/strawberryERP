@@ -27,7 +27,7 @@ Mark `[x]` **only after verified by running**, not when written.
 ## Definition of Done — top-level gates
 
 - [ ] **#1** Every MASTER-spec module implemented (module list below)
-- [~] **#2** Production auth — **real login implemented**: credential form → scrypt-hashed passwords → HMAC-signed session cookie → verified server-side identity; logout; signed cookie is authoritative; **dev identity header fails closed in production** (§17). Remaining: OIDC/SSO option, 2FA (authenticator), edge header-stripping config.
+- [~] **#2** Production auth — **real login + 2FA implemented**: credential form → scrypt-hashed passwords → HMAC-signed session cookie → verified server-side identity; logout; signed cookie authoritative; dev identity header fails closed in production (§17); **RFC 6238 TOTP 2FA** (`totp.ts`, RFC-vector-verified) wired as optional login gate (enforced when a user has a secret). Remaining: OIDC/SSO option, per-user 2FA enrollment UI + secret persistence, edge header-stripping config.
 - [ ] **#3** All Frappe DocTypes defined + indexed; `bench migrate` clean; app installs
 - [x] **#4** `typecheck` + `lint` + `build` pass, zero errors *(verified 2026-06-13, all exit 0)*
 - [ ] **#5** Tests pass for business logic + security invariants + scale
@@ -86,6 +86,11 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ---
 
 ## Resume journal (newest first)
+
+### Fire 1 (cont. 28) — 2026-06-13 — 2FA
+- **Implemented RFC 6238 TOTP 2FA** (`src/lib/auth/totp.ts`, node:crypto only): HOTP/TOTP, base32, otpauth:// URL, ±window verify, `loginTotpCheck` gate. Verified against the **published RFC 6238 test vectors** (6 exact-match vectors) — authoritative correctness.
+- Wired optional 2FA into `POST /api/auth/login`: enforced only when a user has a `totpSecret` (TOTP_REQUIRED / TOTP_INVALID → 401); seeds remain password-only so existing creds work. 16 TOTP tests. **286 total, all green** (typecheck/lint/build/test exit 0).
+- **Next start:** per-user 2FA enrollment endpoint + secret persistence (dev-store) + QR on an account page; then Docker-gated #3/#6.
 
 ### Fire 1 (cont. 27) — 2026-06-13 — REAL LOGIN
 - **Implemented production-style authentication** (user-requested): `src/lib/auth/{passwords,session-token,credentials}.ts` (scrypt hashing, HMAC-signed stateless session token w/ expiry+tamper detection, seeded creds as hashes only) + `POST /api/auth/login` (sets httpOnly session cookie) + `POST /api/auth/logout` + real credential form at `/login`.

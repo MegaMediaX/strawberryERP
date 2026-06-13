@@ -13,6 +13,8 @@ interface CredentialRecord {
   email: string;
   userId: string;
   passwordHash: string;
+  /** Base32 TOTP secret. When set, 2FA is enforced for this user at login. */
+  totpSecret?: string;
 }
 
 const SEED_CREDENTIALS: CredentialRecord[] = [
@@ -60,4 +62,9 @@ export function authenticate(email: string, password: string): string | null {
 
   const user = portalUsers.find((u) => u.id === record.userId && u.active);
   return user ? user.id : null;
+}
+
+/** Returns the TOTP secret for a user if 2FA is enabled, else undefined. */
+export function getTotpSecretForUser(userId: string): string | undefined {
+  return SEED_CREDENTIALS.find((c) => c.userId === userId)?.totpSecret;
 }
