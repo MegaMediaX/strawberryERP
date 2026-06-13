@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: #f6f8fb;
+  --foreground: #0f172a;
+  --app-bg: #f6f8fb;
+  --chart-blue: #2563eb;
+  --chart-amber: #d97706;
+  --chart-emerald: #059669;
+  --chart-violet: #7c3aed;
+  --chart-rose: #e11d48;
+  --chart-grid: #e2e8f0;
+  --tooltip-bg: #ffffff;
+  --tooltip-border: #e2e8f0;
+  --tooltip-text: #0f172a;
+}
+
+.dark {
+  --background: #020617;
+  --foreground: #f8fafc;
+  --app-bg: #020617;
+  --chart-grid: #1e293b;
+  --tooltip-bg: #0f172a;
+  --tooltip-border: #334155;
+  --tooltip-text: #f8fafc;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--background);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button svg,
+a svg,
+[data-icon] {
+  height: 1rem;
+  width: 1rem;
+  flex-shrink: 0;
+}
+
+aside nav button svg,
+.size-11 svg,
+.size-9 svg {
+  height: 1.1rem;
+  width: 1.1rem;
+}
+
+::selection {
+  background: #bfdbfe;
+  color: #0f172a;
+}

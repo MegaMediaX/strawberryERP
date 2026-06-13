@@ -1,0 +1,36 @@
+{
+  "doctype": "DocType",
+  "name": "Partner Lead",
+  "module": "LebTech Partner Platform",
+  "custom": 0,
+  "is_submittable": 0,
+  "track_changes": 1,
+  "autoname": "format:LEAD-{####}",
+  "title_field": "company_name",
+  "fields": [
+    { "fieldname": "company_name", "fieldtype": "Data", "label": "Company Name", "reqd": 1 },
+    { "fieldname": "country", "fieldtype": "Select", "label": "Country", "options": "Lebanon\nCyprus\nJordan\nSyria", "reqd": 1 },
+    { "fieldname": "assigned_user", "fieldtype": "Link", "label": "Assigned User", "options": "User", "reqd": 1 },
+    { "fieldname": "contact_first_name", "fieldtype": "Data", "label": "Contact First Name", "reqd": 1 },
+    { "fieldname": "contact_last_name", "fieldtype": "Data", "label": "Contact Last Name", "reqd": 1 },
+    { "fieldname": "gender", "fieldtype": "Select", "label": "Gender", "options": "Male\nFemale", "reqd": 1 },
+    { "fieldname": "phone", "fieldtype": "Data", "label": "Phone", "reqd": 1 },
+    { "fieldname": "email", "fieldtype": "Data", "label": "Email", "reqd": 1 },
+    { "fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "New Lead (Uncontacted)\nAttempted Contact (No Response)\nContacted (Awaiting Response)\nContacted (Not Interested)\nContacted (Interested)\nScheduled Follow-Up", "default": "New Lead (Uncontacted)" },
+    { "fieldname": "follow_up_date", "fieldtype": "Datetime", "label": "Follow-Up Date" },
+    { "fieldname": "priority", "fieldtype": "Select", "label": "Priority", "options": "Low\nMedium\nHigh\nVIP", "default": "Medium" },
+    { "fieldname": "reseller", "fieldtype": "Link", "label": "Reseller", "options": "Reseller" },
+    { "fieldname": "source", "fieldtype": "Data", "label": "Source" },
+    { "fieldname": "tags", "fieldtype": "Small Text", "label": "Tags" },
+    { "fieldname": "notes", "fieldtype": "Text Editor", "label": "Notes" },
+    { "fieldname": "custom_fields_json", "fieldtype": "JSON", "label": "Custom Fields" },
+    { "fieldname": "timeline_json", "fieldtype": "JSON", "label": "Timeline" },
+    { "fieldname": "customer", "fieldtype": "Link", "label": "Converted Customer", "options": "Customer", "read_only": 1 }
+  ],
+  "permissions": [
+    { "role": "Super Admin", "read": 1, "write": 1, "create": 1, "delete": 1 },
+    { "role": "Regional Director", "read": 1, "write": 0, "create": 0, "delete": 0 },
+    { "role": "Reseller Admin", "read": 1, "write": 1, "create": 1, "delete": 0 },
+    { "role": "Sales Team User", "read": 1, "write": 1, "create": 0, "delete": 0 }
+  ]
+}

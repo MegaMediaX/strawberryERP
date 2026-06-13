@@ -1,0 +1,67 @@
+[
+  {
+    "doctype": "Currency Setting",
+    "name": "USD",
+    "currency_code": "USD",
+    "currency_name": "US Dollar",
+    "symbol": "$",
+    "decimal_precision": 2,
+    "is_active": 1,
+    "is_default": 1,
+    "assigned_countries": "Lebanon,Cyprus,Jordan,Syria",
+    "assigned_resellers": "",
+    "manual_exchange_rate": 1
+  },
+  {
+    "doctype": "Currency Setting",
+    "name": "LBP",
+    "currency_code": "LBP",
+    "currency_name": "Lebanese Pound",
+    "symbol": "L.L.",
+    "decimal_precision": 0,
+    "is_active": 1,
+    "is_default": 0,
+    "assigned_countries": "Lebanon",
+    "assigned_resellers": "",
+    "manual_exchange_rate": 89500
+  },
+  {
+    "doctype": "Currency Setting",
+    "name": "EUR",
+    "currency_code": "EUR",
+    "currency_name": "Euro",
+    "symbol": "EUR",
+    "decimal_precision": 2,
+    "is_active": 1,
+    "is_default": 0,
+    "assigned_countries": "Cyprus",
+    "assigned_resellers": "",
+    "manual_exchange_rate": 0.92
+  },
+  {
+    "doctype": "Currency Setting",
+    "name": "JOD",
+    "currency_code": "JOD",
+    "currency_name": "Jordanian Dinar",
+    "symbol": "JOD",
+    "decimal_precision": 3,
+    "is_active": 1,
+    "is_default": 0,
+    "assigned_countries": "Jordan",
+    "assigned_resellers": "",
+    "manual_exchange_rate": 0.71
+  },
+  {
+    "doctype": "Currency Setting",
+    "name": "SYP",
+    "currency_code": "SYP",
+    "currency_name": "Syrian Pound",
+    "symbol": "SYP",
+    "decimal_precision": 0,
+    "is_active": 1,
+    "is_default": 0,
+    "assigned_countries": "Syria",
+    "assigned_resellers": "",
+    "manual_exchange_rate": 13000
+  }
+]

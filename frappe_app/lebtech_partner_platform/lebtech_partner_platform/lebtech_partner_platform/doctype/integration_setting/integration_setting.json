@@ -1,0 +1,21 @@
+{
+  "doctype": "DocType",
+  "name": "Integration Setting",
+  "module": "LebTech Partner Platform",
+  "custom": 0,
+  "is_submittable": 0,
+  "track_changes": 1,
+  "autoname": "format:INT-{####}",
+  "title_field": "integration_type",
+  "fields": [
+    { "fieldname": "integration_type", "fieldtype": "Select", "label": "Integration Type", "options": "WhatsApp\nSMTP\nGoogle Calendar\nGoogle Drive", "reqd": 1 },
+    { "fieldname": "provider", "fieldtype": "Data", "label": "Provider", "reqd": 1 },
+    { "fieldname": "config_json", "fieldtype": "JSON", "label": "Config JSON" },
+    { "fieldname": "is_enabled", "fieldtype": "Check", "label": "Is Enabled" },
+    { "fieldname": "connection_status", "fieldtype": "Select", "label": "Connection Status", "options": "Connected\nNot configured\nNeeds test\nFailed", "default": "Not configured" },
+    { "fieldname": "last_tested_at", "fieldtype": "Datetime", "label": "Last Tested At" }
+  ],
+  "permissions": [
+    { "role": "Super Admin", "read": 1, "write": 1, "create": 1, "delete": 0 }
+  ]
+}

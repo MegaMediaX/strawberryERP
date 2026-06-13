@@ -1,0 +1,11 @@
+[project]
+name = "lebtech_partner_platform"
+version = "0.1.0"
+description = "White-label reseller CRM and partner management app for ERPNext/Frappe."
+authors = [{ name = "LebTech" }]
+requires-python = ">=3.10"
+dependencies = []
+
+[build-system]
+requires = ["flit_core >=3.4,<4"]
+build-backend = "flit_core.buildapi"

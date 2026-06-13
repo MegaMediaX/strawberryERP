@@ -1,0 +1,20 @@
+{
+  "doctype": "DocType",
+  "name": "Pending Delete Queue",
+  "module": "LebTech Partner Platform",
+  "custom": 0,
+  "is_submittable": 0,
+  "track_changes": 1,
+  "autoname": "format:DEL-{####}",
+  "fields": [
+    { "fieldname": "target_doctype", "fieldtype": "Data", "label": "Target DocType", "reqd": 1 },
+    { "fieldname": "target_name", "fieldtype": "Data", "label": "Target Name", "reqd": 1 },
+    { "fieldname": "requested_by", "fieldtype": "Link", "label": "Requested By", "options": "User", "reqd": 1 },
+    { "fieldname": "reason", "fieldtype": "Small Text", "label": "Reason" },
+    { "fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Pending\nRestored\nPermanently Deleted\nCleared", "default": "Pending" }
+  ],
+  "permissions": [
+    { "role": "Super Admin", "read": 1, "write": 1, "create": 1, "delete": 1 },
+    { "role": "Reseller Admin", "read": 1, "write": 0, "create": 1, "delete": 0 }
+  ]
+}

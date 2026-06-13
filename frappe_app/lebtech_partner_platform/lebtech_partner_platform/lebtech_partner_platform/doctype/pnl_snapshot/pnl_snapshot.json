@@ -1,0 +1,83 @@
+{
+  "doctype": "DocType",
+  "name": "PNL Snapshot",
+  "module": "LebTech Partner Platform",
+  "custom": 0,
+  "is_submittable": 0,
+  "istable": 0,
+  "track_changes": 1,
+  "autoname": "format:PNL-{####}",
+  "fields": [
+    {
+      "fieldname": "scope",
+      "fieldtype": "Data",
+      "label": "Scope",
+      "reqd": true
+    },
+    {
+      "fieldname": "period_start",
+      "fieldtype": "Date",
+      "label": "Period Start"
+    },
+    {
+      "fieldname": "period_end",
+      "fieldtype": "Date",
+      "label": "Period End"
+    },
+    {
+      "fieldname": "revenue",
+      "fieldtype": "Currency",
+      "label": "Revenue"
+    },
+    {
+      "fieldname": "receipts",
+      "fieldtype": "Currency",
+      "label": "Receipts"
+    },
+    {
+      "fieldname": "commissions",
+      "fieldtype": "Currency",
+      "label": "Commissions"
+    },
+    {
+      "fieldname": "expenses",
+      "fieldtype": "Currency",
+      "label": "Expenses"
+    },
+    {
+      "fieldname": "profit",
+      "fieldtype": "Currency",
+      "label": "Profit"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Super Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0
+    },
+    {
+      "role": "Regional Director",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0
+    },
+    {
+      "role": "Reseller Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0
+    },
+    {
+      "role": "Sales Team User",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0
+    }
+  ]
+}

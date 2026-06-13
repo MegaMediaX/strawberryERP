@@ -1,0 +1,47 @@
+{
+  "name": "lebtech-partner-platform",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "smoke": "node scripts/phase2-smoke.mjs",
+    "smoke:frappe": "node scripts/frappe-live-smoke.mjs",
+    "smoke:frappe:permissions": "node scripts/frappe-permission-smoke.mjs",
+    "smoke:frappe:operations": "node scripts/frappe-operations-smoke.mjs",
+    "smoke:frappe:restore": "node scripts/frappe-restore-smoke.mjs",
+    "smoke:edge": "node scripts/edge-smoke.mjs",
+    "preflight:production": "node scripts/production-preflight.mjs",
+    "backup:export": "node scripts/frappe-backup-export.mjs",
+    "backup:offhost": "node scripts/backup-offhost.mjs",
+    "backup:verify": "node scripts/verify-backup.mjs",
+    "monitor:probe": "node scripts/monitoring-probe.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.17.0",
+    "next": "16.2.7",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "recharts": "^3.8.1",
+    "tailwind-merge": "^3.6.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.7",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  },
+  "optionalDependencies": {
+    "@tailwindcss/oxide-linux-x64-gnu": "4.3.0",
+    "lightningcss-linux-x64-gnu": "1.32.0"
+  }
+}

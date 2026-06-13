@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+    inputs:
+      run_frappe_live_smoke:
+        description: Run live Frappe smoke when secrets are configured
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+jobs:
+  validate:
+    name: Local validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Local smoke
+        run: npm run smoke
+
+      - name: Build
+        run: npm run build
+
+      - name: Compile Frappe app Python
+        run: python -m compileall frappe_app/lebtech_partner_platform
+
+      - name: Check live smoke script syntax
+        run: |
+          node --check scripts/frappe-live-smoke.mjs
+          node --check scripts/frappe-permission-smoke.mjs
+          node --check scripts/frappe-operations-smoke.mjs
+          node --check scripts/frappe-restore-smoke.mjs
+          node --check scripts/frappe-backup-export.mjs
+          node --check scripts/production-preflight.mjs
+          node --check scripts/edge-smoke.mjs
+          node --check scripts/monitoring-probe.mjs
+          node --check scripts/backup-offhost.mjs
+          node --check scripts/verify-backup.mjs
+          node --check scripts/lib/backup-crypto.mjs
+          node --check scripts/lib/backup-manifest.mjs
+
+      - name: Production configuration preflight
+        env:
+          PUBLIC_BASE_URL: https://portal.lebtech.test
+          FRAPPE_BASE_URL: http://backend:8000
+          FRAPPE_HOST_HEADER: lebtech.local
+          FRAPPE_API_KEY: ci-api-key-1234567890
+          FRAPPE_API_SECRET: ci-api-secret-1234567890
+          PORTAL_SESSION_SECRET: ci-session-secret-1234567890-abcdef
+          PORTAL_API_KEY_SECRET: ci-portal-api-secret-1234567890-abcd
+          API_KEY_HASH_SECRET: ci-api-hash-secret-1234567890-abcdef
+          MARIADB_ROOT_PASSWORD: ci-root-password-1234567890
+          MARIADB_PASSWORD: ci-database-password-1234567890
+          SITE_NAME: lebtech.local
+          BACKUP_EXPORT_DIR: /var/backups/lebtech-partner-platform
+          BACKUP_RETENTION_DAYS: "30"
+          ERPNEXT_IMAGE: frappe/erpnext:v15.111.0@sha256:f78d1cdca68f701b4d2c9bf9bfaf720e888b8e21189dfe465a593f7402fe3881
+          MARIADB_IMAGE: mariadb:10.6.27@sha256:daacc2f260f8ec999daa5e03a017a23a7e6fa3fb982aaf26e8b72f24daf03bc9
+          REDIS_IMAGE: redis:7-alpine@sha256:8b81dd37ff027bec4e516d41acfbe9fe2460070dc6d4a4570a2ac5b9d59df065
+          NGINX_IMAGE: nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10
+        run: npm run preflight:production
+
+  frappe-live-smoke:
+    name: Optional live Frappe smoke
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.event_name == 'workflow_dispatch' && inputs.run_frappe_live_smoke == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run live Frappe smoke
+        env:
+          FRAPPE_BASE_URL: ${{ secrets.FRAPPE_BASE_URL }}
+          FRAPPE_API_KEY: ${{ secrets.FRAPPE_API_KEY }}
+          FRAPPE_API_SECRET: ${{ secrets.FRAPPE_API_SECRET }}
+          PLATFORM_BASE_URL: ${{ secrets.PLATFORM_BASE_URL }}
+        run: |
+          if [ -z "$FRAPPE_BASE_URL" ] || [ -z "$FRAPPE_API_KEY" ] || [ -z "$FRAPPE_API_SECRET" ]; then
+            echo "Skipping live Frappe smoke: FRAPPE_BASE_URL, FRAPPE_API_KEY, and FRAPPE_API_SECRET secrets are required."
+            exit 0
+          fi
+          npm run smoke:frappe

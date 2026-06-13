@@ -1,0 +1,172 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      FRAPPE_BASE_URL: http://backend:8000
+      PORTAL_SESSION_SECRET: ${PORTAL_SESSION_SECRET}
+      PORTAL_API_KEY_SECRET: ${PORTAL_API_KEY_SECRET}
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  backend:
+    image: ${ERPNEXT_IMAGE:-frappe/erpnext:v15.111.0@sha256:f78d1cdca68f701b4d2c9bf9bfaf720e888b8e21189dfe465a593f7402fe3881}
+    command: bash -lc "./env/bin/python -m pip install -e apps/lebtech_partner_platform >/tmp/lebtech_partner_platform-pip.log && exec start.sh"
+    ports:
+      - "127.0.0.1:${FRAPPE_PORT:-8000}:8000"
+    env_file:
+      - .env
+    environment:
+      DB_HOST: mariadb
+      REDIS_CACHE: redis://redis-cache:6379
+      REDIS_QUEUE: redis://redis-queue:6379
+      REDIS_SOCKETIO: redis://redis-socketio:6379
+      GUNICORN_THREADS: ${GUNICORN_THREADS:-4}
+      GUNICORN_WORKERS: ${GUNICORN_WORKERS:-2}
+      GUNICORN_TIMEOUT: ${GUNICORN_TIMEOUT:-120}
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - ./frappe_app/lebtech_partner_platform:/home/frappe/frappe-bench/apps/lebtech_partner_platform
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis-cache:
+        condition: service_healthy
+      redis-queue:
+        condition: service_healthy
+      redis-socketio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python - <<'PY'\nimport os\nimport urllib.request\nhost = os.environ.get('FRAPPE_HOST_HEADER') or os.environ.get('SITE_NAME') or 'lebtech.local'\nrequest = urllib.request.Request('http://127.0.0.1:8000/api/method/ping', headers={'Host': host})\nurllib.request.urlopen(request, timeout=5)\nPY"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+
+  worker-short:
+    image: ${ERPNEXT_IMAGE:-frappe/erpnext:v15.111.0@sha256:f78d1cdca68f701b4d2c9bf9bfaf720e888b8e21189dfe465a593f7402fe3881}
+    command: bash -lc "./env/bin/python -m pip install -e apps/lebtech_partner_platform >/tmp/lebtech_partner_platform-pip.log && bench worker --queue short,default"
+    env_file:
+      - .env
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - ./frappe_app/lebtech_partner_platform:/home/frappe/frappe-bench/apps/lebtech_partner_platform
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worker-long:
+    image: ${ERPNEXT_IMAGE:-frappe/erpnext:v15.111.0@sha256:f78d1cdca68f701b4d2c9bf9bfaf720e888b8e21189dfe465a593f7402fe3881}
+    command: bash -lc "./env/bin/python -m pip install -e apps/lebtech_partner_platform >/tmp/lebtech_partner_platform-pip.log && bench worker --queue long,default,short"
+    env_file:
+      - .env
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - ./frappe_app/lebtech_partner_platform:/home/frappe/frappe-bench/apps/lebtech_partner_platform
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  scheduler:
+    image: ${ERPNEXT_IMAGE:-frappe/erpnext:v15.111.0@sha256:f78d1cdca68f701b4d2c9bf9bfaf720e888b8e21189dfe465a593f7402fe3881}
+    command: bash -lc "./env/bin/python -m pip install -e apps/lebtech_partner_platform >/tmp/lebtech_partner_platform-pip.log && bench schedule"
+    env_file:
+      - .env
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - ./frappe_app/lebtech_partner_platform:/home/frappe/frappe-bench/apps/lebtech_partner_platform
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  nginx:
+    image: ${NGINX_IMAGE:-nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10}
+    ports:
+      - "${NGINX_BIND_ADDRESS:-0.0.0.0}:${NGINX_HTTP_PORT:-80}:80"
+    volumes:
+      - ./infra/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      frontend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/api/health/ready >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  mariadb:
+    image: ${MARIADB_IMAGE:-mariadb:10.6.27@sha256:daacc2f260f8ec999daa5e03a017a23a7e6fa3fb982aaf26e8b72f24daf03bc9}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MARIADB_DATABASE}
+      MYSQL_USER: ${MARIADB_USER}
+      MYSQL_PASSWORD: ${MARIADB_PASSWORD}
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "healthcheck.sh --connect --innodb_initialized"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  redis-cache:
+    image: ${REDIS_IMAGE:-redis:7-alpine@sha256:8b81dd37ff027bec4e516d41acfbe9fe2460070dc6d4a4570a2ac5b9d59df065}
+    volumes:
+      - redis-cache-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  redis-queue:
+    image: ${REDIS_IMAGE:-redis:7-alpine@sha256:8b81dd37ff027bec4e516d41acfbe9fe2460070dc6d4a4570a2ac5b9d59df065}
+    volumes:
+      - redis-queue-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  redis-socketio:
+    image: ${REDIS_IMAGE:-redis:7-alpine@sha256:8b81dd37ff027bec4e516d41acfbe9fe2460070dc6d4a4570a2ac5b9d59df065}
+    volumes:
+      - redis-socketio-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  sites:
+  mariadb-data:
+  redis-cache-data:
+  redis-queue-data:
+  redis-socketio-data:

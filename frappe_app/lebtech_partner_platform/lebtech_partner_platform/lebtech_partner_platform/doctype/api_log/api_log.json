@@ -1,0 +1,22 @@
+{
+  "doctype": "DocType",
+  "name": "API Log",
+  "module": "LebTech Partner Platform",
+  "custom": 0,
+  "is_submittable": 0,
+  "track_changes": 0,
+  "autoname": "format:APILOG-{####}",
+  "fields": [
+    { "fieldname": "api_key", "fieldtype": "Link", "label": "API Key", "options": "API Key" },
+    { "fieldname": "endpoint", "fieldtype": "Data", "label": "Endpoint", "reqd": 1 },
+    { "fieldname": "method", "fieldtype": "Select", "label": "Method", "options": "GET\nPOST\nPATCH\nDELETE", "reqd": 1 },
+    { "fieldname": "ip_address", "fieldtype": "Data", "label": "IP Address" },
+    { "fieldname": "user_agent", "fieldtype": "Small Text", "label": "User Agent" },
+    { "fieldname": "status_code", "fieldtype": "Int", "label": "Status Code" },
+    { "fieldname": "response_time_ms", "fieldtype": "Int", "label": "Response Time MS" },
+    { "fieldname": "created_at", "fieldtype": "Datetime", "label": "Created At" }
+  ],
+  "permissions": [
+    { "role": "Super Admin", "read": 1, "write": 0, "create": 1, "delete": 0 }
+  ]
+}

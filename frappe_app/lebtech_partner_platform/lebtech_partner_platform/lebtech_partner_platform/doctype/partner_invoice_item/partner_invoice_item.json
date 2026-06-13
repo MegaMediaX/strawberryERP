@@ -1,0 +1,28 @@
+{
+  "doctype": "DocType",
+  "name": "Partner Invoice Item",
+  "module": "LebTech Partner Platform",
+  "custom": 0,
+  "is_submittable": 0,
+  "istable": 1,
+  "track_changes": 1,
+  "fields": [
+    {
+      "fieldname": "description",
+      "fieldtype": "Data",
+      "label": "Description",
+      "reqd": true
+    },
+    {
+      "fieldname": "quantity",
+      "fieldtype": "Float",
+      "label": "Quantity"
+    },
+    {
+      "fieldname": "unit_price",
+      "fieldtype": "Currency",
+      "label": "Unit Price"
+    }
+  ],
+  "permissions": []
+}

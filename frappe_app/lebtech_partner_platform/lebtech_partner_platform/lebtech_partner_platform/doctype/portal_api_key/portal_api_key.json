@@ -1,0 +1,120 @@
+{
+  "doctype": "DocType",
+  "name": "Portal API Key",
+  "module": "LebTech Partner Platform",
+  "custom": 0,
+  "is_submittable": 0,
+  "istable": 0,
+  "track_changes": 1,
+  "autoname": "format:PAPIK-{####}",
+  "title_field": "key_name",
+  "fields": [
+    {
+      "fieldname": "key_name",
+      "fieldtype": "Data",
+      "label": "Key Name",
+      "reqd": true
+    },
+    {
+      "fieldname": "description",
+      "fieldtype": "Small Text",
+      "label": "Description"
+    },
+    {
+      "fieldname": "key_hash",
+      "fieldtype": "Password",
+      "label": "Key Hash",
+      "reqd": true
+    },
+    {
+      "fieldname": "prefix",
+      "fieldtype": "Data",
+      "label": "Prefix"
+    },
+    {
+      "fieldname": "scopes",
+      "fieldtype": "JSON",
+      "label": "Scopes"
+    },
+    {
+      "fieldname": "read_access",
+      "fieldtype": "Check",
+      "label": "Read Access",
+      "default": 1
+    },
+    {
+      "fieldname": "write_access",
+      "fieldtype": "Check",
+      "label": "Write Access",
+      "default": 0
+    },
+    {
+      "fieldname": "expires_at",
+      "fieldtype": "Datetime",
+      "label": "Expires At"
+    },
+    {
+      "fieldname": "revoked_at",
+      "fieldtype": "Datetime",
+      "label": "Revoked At"
+    },
+    {
+      "fieldname": "ip_whitelist",
+      "fieldtype": "JSON",
+      "label": "IP Whitelist"
+    },
+    {
+      "fieldname": "rate_limit_per_minute",
+      "fieldtype": "Int",
+      "label": "Rate Limit Per Minute",
+      "default": 60
+    },
+    {
+      "fieldname": "is_active",
+      "fieldtype": "Check",
+      "label": "Is Active",
+      "default": 1
+    },
+    {
+      "fieldname": "created_by",
+      "fieldtype": "Link",
+      "label": "Created By",
+      "options": "User"
+    },
+    {
+      "fieldname": "last_used_at",
+      "fieldtype": "Datetime",
+      "label": "Last Used At"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Super Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0
+    },
+    {
+      "role": "Regional Director",
+      "read": 0,
+      "write": 0,
+      "create": 0,
+      "delete": 0
+    },
+    {
+      "role": "Reseller Admin",
+      "read": 0,
+      "write": 0,
+      "create": 0,
+      "delete": 0
+    },
+    {
+      "role": "Sales Team User",
+      "read": 0,
+      "write": 0,
+      "create": 0,
+      "delete": 0
+    }
+  ]
+}

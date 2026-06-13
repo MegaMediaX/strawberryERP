@@ -1,0 +1,71 @@
+{
+  "doctype": "DocType",
+  "name": "Custom Field Definition",
+  "module": "LebTech Partner Platform",
+  "custom": 0,
+  "is_submittable": 0,
+  "istable": 0,
+  "track_changes": 1,
+  "autoname": "format:CFD-{####}",
+  "fields": [
+    {
+      "fieldname": "target_doctype",
+      "fieldtype": "Data",
+      "label": "Target DocType",
+      "reqd": true
+    },
+    {
+      "fieldname": "field_name",
+      "fieldtype": "Data",
+      "label": "Field Name",
+      "reqd": true
+    },
+    {
+      "fieldname": "field_type",
+      "fieldtype": "Select",
+      "label": "Field Type",
+      "options": "text\nnumber\ndate\ndropdown\ncheckbox\ntextarea"
+    },
+    {
+      "fieldname": "options_json",
+      "fieldtype": "JSON",
+      "label": "Options"
+    },
+    {
+      "fieldname": "is_active",
+      "fieldtype": "Check",
+      "label": "Is Active",
+      "default": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Super Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0
+    },
+    {
+      "role": "Regional Director",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0
+    },
+    {
+      "role": "Reseller Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0
+    },
+    {
+      "role": "Sales Team User",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0
+    }
+  ]
+}

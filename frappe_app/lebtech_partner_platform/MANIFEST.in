@@ -1,0 +1,3 @@
+recursive-include lebtech_partner_platform *.json
+recursive-include lebtech_partner_platform *.py
+recursive-include lebtech_partner_platform *.txt

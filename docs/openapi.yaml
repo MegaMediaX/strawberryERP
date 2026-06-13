@@ -1,0 +1,644 @@
+openapi: 3.1.0
+info:
+  title: LebTech Partner Platform API
+  version: 0.4.0
+  description: Production frontend API boundary for ERPNext/Frappe with dev-store fallback. DELETE operations and delete scopes are intentionally not exposed. Frappe document and list queries enforce country, reseller, and assigned-user isolation. Public traffic terminates at the custom Next.js boundary; generic Frappe proxy access is disabled.
+servers:
+  - url: /api/frappe
+security:
+  - PortalSession: []
+  - PortalApiKey: []
+paths:
+  /api/health:
+    servers:
+      - url: /
+    get:
+      summary: Aggregate platform health
+      security: []
+      responses:
+        "200":
+          description: Frontend and authenticated Frappe readiness passed
+        "503":
+          description: Platform is degraded
+  /api/health/live:
+    servers:
+      - url: /
+    get:
+      summary: Process liveness
+      security: []
+      responses:
+        "200":
+          description: The portal process is alive
+  /api/health/ready:
+    servers:
+      - url: /
+    get:
+      summary: Portal and Frappe readiness
+      security: []
+      responses:
+        "200":
+          description: Portal is ready and authenticated Frappe connectivity passed
+        "503":
+          description: Required Frappe configuration is missing or Frappe is unavailable
+  /leads:
+    get:
+      summary: List partner leads
+      description: API-key compatible with `read:leads`.
+      responses:
+        "200":
+          description: Lead list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+    post:
+      summary: Create partner lead
+      description: API-key compatible with `write:leads`. Country validation blocks Israel, IL, and ISR.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LeadInput"
+      responses:
+        "201":
+          description: Lead created
+        "400":
+          $ref: "#/components/responses/Error"
+    patch:
+      summary: Update partner lead
+      description: API-key compatible with `write:leads`. Scheduled Follow-Up requires `follow_up_date`; gender is Male/Female only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Identifier"
+                - $ref: "#/components/schemas/LeadInput"
+      responses:
+        "200":
+          description: Lead updated
+        "400":
+          $ref: "#/components/responses/Error"
+  /customers:
+    get:
+      summary: List customers
+      description: API-key compatible with `read:customers`.
+      responses:
+        "200":
+          description: Customer list
+    post:
+      summary: Create customer
+      description: API-key compatible with `write:customers`.
+      responses:
+        "201":
+          description: Customer created
+    patch:
+      summary: Update customer
+      description: API-key compatible with `write:customers`.
+      responses:
+        "200":
+          description: Customer updated
+  /invoices:
+    get:
+      summary: List invoices
+      description: API-key compatible with `read:invoices`.
+      responses:
+        "200":
+          description: Invoice list
+    post:
+      summary: Create invoice
+      description: API-key compatible with `write:invoices`. Persists Partner Invoice and Partner Invoice Item in Frappe mode.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvoiceInput"
+      responses:
+        "201":
+          description: Invoice created and commission rules evaluated
+        "400":
+          $ref: "#/components/responses/Error"
+    patch:
+      summary: Update invoice
+      description: API-key compatible with `write:invoices`. Unexpected fields are rejected.
+      responses:
+        "200":
+          description: Invoice updated
+        "400":
+          $ref: "#/components/responses/Error"
+  /receipts:
+    get:
+      summary: List receipts
+      description: API-key compatible with `read:receipts`.
+      responses:
+        "200":
+          description: Receipt list
+    post:
+      summary: Create receipt from invoice
+      description: API-key compatible with `write:receipts`. Persists Partner Receipt and updates Partner Invoice payment status in Frappe mode.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReceiptInput"
+      responses:
+        "201":
+          description: Receipt created, invoice payment status updated, and commission rules evaluated
+        "400":
+          $ref: "#/components/responses/Error"
+    patch:
+      summary: Update receipt
+      description: API-key compatible with `write:receipts`. Unexpected fields are rejected.
+      responses:
+        "200":
+          description: Receipt updated
+        "400":
+          $ref: "#/components/responses/Error"
+  /resellers:
+    get:
+      summary: List resellers
+      description: API-key compatible with `read:resellers`.
+      responses:
+        "200":
+          description: Reseller list
+    post:
+      summary: Create reseller
+      description: API-key compatible with `write:resellers`.
+      responses:
+        "201":
+          description: Reseller created
+    patch:
+      summary: Update reseller
+      description: API-key compatible with `write:resellers`.
+      responses:
+        "200":
+          description: Reseller updated
+  /reports:
+    get:
+      summary: List available reports
+      description: API-key compatible with `read:reports`.
+      responses:
+        "200":
+          description: Report catalog
+  /reports/pnl:
+    get:
+      summary: P&L summary
+      description: Session scoped report route.
+      responses:
+        "200":
+          description: Role-scoped P&L
+  /commissions/entries:
+    get:
+      summary: List commission entries
+      description: API-key compatible with `read:commissions`.
+      responses:
+        "200":
+          description: Commission entries
+    patch:
+      summary: Approve, pay, or cancel commission entry
+      security:
+        - PortalSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, status]
+              properties:
+                id:
+                  type: string
+                status:
+                  enum: [Pending, Approved, Paid, Cancelled]
+      responses:
+        "200":
+          description: Commission entry updated
+        "403":
+          $ref: "#/components/responses/Error"
+  /commissions/rules:
+    get:
+      summary: List commission rules
+      responses:
+        "200":
+          description: Commission rules
+    post:
+      summary: Create commission rule
+      security:
+        - PortalSession: []
+      responses:
+        "201":
+          description: Commission rule created
+        "403":
+          $ref: "#/components/responses/Error"
+    patch:
+      summary: Update commission rule
+      security:
+        - PortalSession: []
+      responses:
+        "200":
+          description: Commission rule updated
+        "403":
+          $ref: "#/components/responses/Error"
+  /settings/api/keys:
+    get:
+      summary: List scoped API keys without plaintext secrets
+      security:
+        - PortalSession: []
+      responses:
+        "200":
+          description: API keys
+        "403":
+          $ref: "#/components/responses/Error"
+    post:
+      summary: Generate API key shown once
+      security:
+        - PortalSession: []
+      responses:
+        "201":
+          description: API key generated and shown once
+        "403":
+          $ref: "#/components/responses/Error"
+    patch:
+      summary: Revoke or update API key metadata
+      security:
+        - PortalSession: []
+      responses:
+        "200":
+          description: API key updated
+        "403":
+          $ref: "#/components/responses/Error"
+  /settings/api/logs:
+    get:
+      summary: List API logs
+      security:
+        - PortalSession: []
+      responses:
+        "200":
+          description: API logs
+        "403":
+          $ref: "#/components/responses/Error"
+  /settings/integrations:
+    get:
+      summary: List integration settings
+      security:
+        - PortalSession: []
+      responses:
+        "200":
+          description: Integration settings
+    post:
+      summary: Create integration setting
+      security:
+        - PortalSession: []
+      responses:
+        "201":
+          description: Integration setting created
+        "403":
+          $ref: "#/components/responses/Error"
+    patch:
+      summary: Update integration setting
+      security:
+        - PortalSession: []
+      responses:
+        "200":
+          description: Integration setting updated
+        "403":
+          $ref: "#/components/responses/Error"
+  /session:
+    get:
+      summary: Read resolved portal session context
+      security:
+        - PortalSession: []
+      responses:
+        "200":
+          description: Portal session and effective user context
+  /session/impersonation:
+    post:
+      summary: Start an audited impersonation context
+      security:
+        - PortalSession: []
+      responses:
+        "201":
+          description: Impersonation event logged
+        "403":
+          $ref: "#/components/responses/Error"
+  /settings/delete-queue:
+    get:
+      summary: List pending delete queue records
+      security:
+        - PortalSession: []
+      responses:
+        "200":
+          description: Delete queue records
+    post:
+      summary: Queue a soft-delete request
+      security:
+        - PortalSession: []
+      responses:
+        "201":
+          description: Delete request queued
+    patch:
+      summary: Resolve a delete queue record
+      security:
+        - PortalSession: []
+      responses:
+        "200":
+          description: Record restored, permanently deleted, or cleared
+        "403":
+          $ref: "#/components/responses/Error"
+  /delete-queue/request:
+    post:
+      summary: Queue a production soft-delete request
+      security:
+        - PortalSession: []
+      responses:
+        "201":
+          description: Delete request queued
+        "403":
+          $ref: "#/components/responses/Error"
+  /delete-queue/resolve:
+    post:
+      summary: Resolve production delete queue records
+      security:
+        - PortalSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+                status:
+                  enum: [Restored, Permanently Deleted, Cleared]
+                action:
+                  enum: [restore, permanently_clear, clear_all]
+      responses:
+        "200":
+          description: Queue item restored, permanently cleared, or all pending items cleared
+        "403":
+          $ref: "#/components/responses/Error"
+  /import/leads:
+    post:
+      summary: Validate lead CSV import
+      description: API-key compatible with `write:leads`; validates blocked countries and required lead fields.
+      responses:
+        "200":
+          description: Accepted rows and warnings
+  /import/customers:
+    post:
+      summary: Validate customer CSV import
+      description: API-key compatible with `write:customers`; validates blocked countries and required customer fields.
+      responses:
+        "200":
+          description: Accepted rows and warnings
+  /export:
+    get:
+      summary: Export CSV data
+      description: API-key compatible with `read:reports`; finance exports remain session-only where protected by the portal UI.
+      parameters:
+        - in: query
+          name: type
+          schema:
+            enum: [leads, customers, invoices, receipts, commissions, audit-logs, reports]
+      responses:
+        "200":
+          description: CSV export
+  /integrations/whatsapp:
+    get:
+      summary: Read WhatsApp provider settings schema
+      security:
+        - PortalSession: []
+      responses:
+        "200":
+          description: WhatsApp settings schema
+    post:
+      summary: Queue WhatsApp template message
+      security:
+        - PortalSession: []
+      responses:
+        "200":
+          description: Message queued
+    patch:
+      summary: Update WhatsApp provider settings
+      security:
+        - PortalSession: []
+      responses:
+        "200":
+          description: Settings accepted
+        "403":
+          $ref: "#/components/responses/Error"
+components:
+  responses:
+    Error:
+      description: Standard API error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  securitySchemes:
+    PortalSession:
+      type: http
+      scheme: bearer
+      description: Production portal session token. Local development may use x-platform-user-id and x-platform-impersonate-user-id headers.
+    PortalApiKey:
+      type: apiKey
+      in: header
+      name: x-platform-api-key-id
+      description: Scoped portal API key id or prefix. Raw key is shown once during creation and never stored. API keys are accepted only on mapped operational routes with explicit scopes; admin, session, integration-management, and unscoped routes require PortalSession.
+  parameters:
+    SessionUser:
+      in: header
+      name: x-platform-user-id
+      schema:
+        type: string
+      description: Local dev fallback user id.
+    ImpersonationUser:
+      in: header
+      name: x-platform-impersonate-user-id
+      schema:
+        type: string
+      description: Local dev impersonation target. Sensitive actions remain blocked.
+  schemas:
+    SuccessResponse:
+      type: object
+      required: [ok, source, data]
+      properties:
+        ok:
+          type: boolean
+          const: true
+        source:
+          type: string
+          enum: [dev-store, frappe, sample-data]
+        data: {}
+    ErrorResponse:
+      type: object
+      required: [ok, error]
+      properties:
+        ok:
+          type: boolean
+          const: false
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum:
+                - VALIDATION_ERROR
+                - PERMISSION_DENIED
+                - UNAUTHENTICATED
+                - NOT_FOUND
+                - METHOD_NOT_ALLOWED
+                - BLOCKED_COUNTRY
+                - MISSING_SCOPE
+                - FRAPPE_CONNECTION_ERROR
+            message:
+              type: string
+    Identifier:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+    LeadInput:
+      type: object
+      required:
+        - companyName
+        - country
+        - assignedUser
+        - contactFirstName
+        - contactLastName
+        - gender
+        - phone
+        - email
+      properties:
+        companyName:
+          type: string
+        country:
+          enum: [Lebanon, Cyprus, Jordan, Syria]
+        assignedUser:
+          type: string
+        contactFirstName:
+          type: string
+        contactLastName:
+          type: string
+        gender:
+          enum: [Male, Female]
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        status:
+          enum:
+            - New Lead (Uncontacted)
+            - Attempted Contact (No Response)
+            - Contacted (Awaiting Response)
+            - Contacted (Not Interested)
+            - Contacted (Interested)
+            - Scheduled Follow-Up
+        followUpDate:
+          type: string
+          format: date-time
+        notes:
+          type: string
+        source:
+          type: string
+    InvoiceInput:
+      type: object
+      required: [country, reseller, customer, currency, lineItems]
+      properties:
+        country:
+          enum: [Lebanon, Cyprus, Jordan, Syria]
+        reseller:
+          type: string
+        customer:
+          type: string
+        currency:
+          type: string
+        lineItems:
+          type: array
+          items:
+            type: object
+            required: [description, quantity, unitPrice]
+            properties:
+              description:
+                type: string
+              quantity:
+                type: number
+              unitPrice:
+                type: number
+        discount:
+          type: number
+        taxAmount:
+          type: number
+        dueDate:
+          type: string
+          format: date
+    ReceiptInput:
+      type: object
+      required: [invoice, customer, reseller, country, amount, currency, paymentMethod]
+      properties:
+        invoice:
+          type: string
+        customer:
+          type: string
+        reseller:
+          type: string
+        country:
+          enum: [Lebanon, Cyprus, Jordan, Syria]
+        amount:
+          type: number
+        currency:
+          type: string
+        paymentMethod:
+          enum: [Cash, Bank Transfer, OMT, Whish, Credit/Debit Card, Crypto]
+        paymentReference:
+          type: string
+        attachmentUrl:
+          type: string
+    ApiKey:
+      type: object
+      required: [keyName, scopes]
+      properties:
+        keyName:
+          type: string
+        prefix:
+          type: string
+        scopes:
+          type: array
+          items:
+            enum:
+              - read:leads
+              - write:leads
+              - read:customers
+              - write:customers
+              - read:invoices
+              - write:invoices
+              - read:receipts
+              - write:receipts
+              - read:resellers
+              - write:resellers
+              - read:reports
+              - read:commissions
+        readAccess:
+          type: boolean
+        writeAccess:
+          type: boolean
+        expiresAt:
+          type: string
+          format: date-time
+        revokedAt:
+          type: string
+          format: date-time
+        rateLimitPerMinute:
+          type: integer

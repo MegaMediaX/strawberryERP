@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "lebtech-platform (root)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "claude-version",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "claude version", "run", "dev", "--", "-p", "3001"],
+      "port": 3001
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "doctype": "DocType",
+  "name": "Reseller",
+  "module": "LebTech Partner Platform",
+  "custom": 0,
+  "is_submittable": 0,
+  "track_changes": 1,
+  "autoname": "field:reseller_name",
+  "title_field": "reseller_name",
+  "fields": [
+    { "fieldname": "reseller_name", "fieldtype": "Data", "label": "Reseller Name", "reqd": 1, "unique": 1 },
+    { "fieldname": "countries", "fieldtype": "Table", "label": "Assigned Countries", "options": "Reseller Country" },
+    { "fieldname": "logo", "fieldtype": "Attach Image", "label": "Logo" },
+    { "fieldname": "primary_color", "fieldtype": "Color", "label": "Primary Color" },
+    { "fieldname": "secondary_color", "fieldtype": "Color", "label": "Secondary Color" },
+    { "fieldname": "invoice_prefix", "fieldtype": "Data", "label": "Invoice Prefix" },
+    { "fieldname": "default_currency", "fieldtype": "Select", "label": "Default Currency", "options": "USD\nLBP\nEUR\nJOD\nSYP", "default": "USD" },
+    { "fieldname": "commission_trigger", "fieldtype": "Select", "label": "Commission Trigger", "options": "invoice created\ndeposit paid\nfully paid invoice", "default": "deposit paid" },
+    { "fieldname": "commission_rate", "fieldtype": "Percent", "label": "Commission Rate" },
+    { "fieldname": "portal_branding_json", "fieldtype": "JSON", "label": "Portal Branding" },
+    { "fieldname": "visibility_rules_json", "fieldtype": "JSON", "label": "Visibility Rules" }
+  ],
+  "permissions": [
+    { "role": "Super Admin", "read": 1, "write": 1, "create": 1, "delete": 1 },
+    { "role": "Regional Director", "read": 1, "write": 0, "create": 0, "delete": 0 },
+    { "role": "Reseller Admin", "read": 1, "write": 1, "create": 0, "delete": 0 }
+  ]
+}

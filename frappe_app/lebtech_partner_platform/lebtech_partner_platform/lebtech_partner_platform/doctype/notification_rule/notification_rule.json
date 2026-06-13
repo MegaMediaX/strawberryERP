@@ -1,0 +1,22 @@
+{
+  "doctype": "DocType",
+  "name": "Notification Rule",
+  "module": "LebTech Partner Platform",
+  "custom": 0,
+  "is_submittable": 0,
+  "track_changes": 1,
+  "autoname": "format:NRULE-{####}",
+  "title_field": "event_type",
+  "fields": [
+    { "fieldname": "event_type", "fieldtype": "Select", "label": "Event Type", "options": "Lead Follow-Up Due\nInvoice Issued\nReceipt Issued\nContract Signed\nCustomer Converted\nCommission Created", "reqd": 1 },
+    { "fieldname": "channels", "fieldtype": "Small Text", "label": "Channels" },
+    { "fieldname": "country", "fieldtype": "Select", "label": "Country", "options": "All countries\nLebanon\nCyprus\nJordan\nSyria", "default": "All countries" },
+    { "fieldname": "reseller", "fieldtype": "Data", "label": "Reseller", "default": "All resellers" },
+    { "fieldname": "role", "fieldtype": "Data", "label": "Role", "default": "Any role" },
+    { "fieldname": "is_active", "fieldtype": "Check", "label": "Is Active", "default": 1 },
+    { "fieldname": "template_message", "fieldtype": "Text", "label": "Template Message" }
+  ],
+  "permissions": [
+    { "role": "Super Admin", "read": 1, "write": 1, "create": 1, "delete": 0 }
+  ]
+}

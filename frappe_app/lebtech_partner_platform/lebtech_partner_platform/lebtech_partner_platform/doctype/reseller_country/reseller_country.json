@@ -1,0 +1,11 @@
+{
+  "doctype": "DocType",
+  "name": "Reseller Country",
+  "module": "LebTech Partner Platform",
+  "custom": 0,
+  "istable": 1,
+  "fields": [
+    { "fieldname": "country", "fieldtype": "Select", "label": "Country", "options": "Lebanon\nCyprus\nJordan\nSyria", "reqd": 1 }
+  ],
+  "permissions": []
+}

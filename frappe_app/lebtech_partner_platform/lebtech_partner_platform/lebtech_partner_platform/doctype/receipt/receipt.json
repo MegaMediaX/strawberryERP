@@ -1,0 +1,32 @@
+{
+  "doctype": "DocType",
+  "name": "Receipt",
+  "module": "LebTech Partner Platform",
+  "custom": 0,
+  "is_submittable": 0,
+  "track_changes": 1,
+  "autoname": "field:receipt_number",
+  "title_field": "receipt_number",
+  "fields": [
+    { "fieldname": "receipt_number", "fieldtype": "Data", "label": "Receipt Number", "reqd": 1, "unique": 1 },
+    { "fieldname": "invoice", "fieldtype": "Link", "label": "Invoice", "options": "Invoice", "reqd": 1 },
+    { "fieldname": "customer", "fieldtype": "Link", "label": "Customer", "options": "Customer", "reqd": 1 },
+    { "fieldname": "reseller", "fieldtype": "Link", "label": "Reseller", "options": "Reseller", "reqd": 1 },
+    { "fieldname": "country", "fieldtype": "Select", "label": "Country", "options": "Lebanon\nCyprus\nJordan\nSyria", "reqd": 1 },
+    { "fieldname": "amount", "fieldtype": "Currency", "label": "Amount", "reqd": 1 },
+    { "fieldname": "currency", "fieldtype": "Link", "label": "Currency", "options": "Currency Setting", "reqd": 1 },
+    { "fieldname": "payment_method", "fieldtype": "Link", "label": "Payment Method", "options": "Payment Method", "reqd": 1 },
+    { "fieldname": "payment_reference", "fieldtype": "Data", "label": "Payment Reference" },
+    { "fieldname": "attachment_url", "fieldtype": "Data", "label": "Attachment URL" },
+    { "fieldname": "receipt_pdf_url", "fieldtype": "Data", "label": "Receipt PDF URL" },
+    { "fieldname": "issued_by", "fieldtype": "Link", "label": "Issued By", "options": "User" },
+    { "fieldname": "issued_at", "fieldtype": "Datetime", "label": "Issued At" },
+    { "fieldname": "custom_fields_json", "fieldtype": "JSON", "label": "Custom Fields" }
+  ],
+  "permissions": [
+    { "role": "Super Admin", "read": 1, "write": 1, "create": 1, "delete": 0 },
+    { "role": "Regional Director", "read": 1, "write": 0, "create": 0, "delete": 0 },
+    { "role": "Reseller Admin", "read": 1, "write": 1, "create": 1, "delete": 0 },
+    { "role": "Sales Team User", "read": 1, "write": 1, "create": 1, "delete": 0 }
+  ]
+}

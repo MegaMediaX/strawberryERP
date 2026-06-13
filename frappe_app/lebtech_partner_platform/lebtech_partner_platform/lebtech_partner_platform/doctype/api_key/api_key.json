@@ -1,0 +1,29 @@
+{
+  "doctype": "DocType",
+  "name": "API Key",
+  "module": "LebTech Partner Platform",
+  "custom": 0,
+  "is_submittable": 0,
+  "track_changes": 1,
+  "autoname": "format:APIK-{####}",
+  "title_field": "key_name",
+  "fields": [
+    { "fieldname": "key_name", "fieldtype": "Data", "label": "Key Name", "reqd": 1 },
+    { "fieldname": "description", "fieldtype": "Small Text", "label": "Description" },
+    { "fieldname": "key_hash", "fieldtype": "Password", "label": "Key Hash", "reqd": 1 },
+    { "fieldname": "prefix", "fieldtype": "Data", "label": "Prefix", "read_only": 1 },
+    { "fieldname": "scopes", "fieldtype": "JSON", "label": "Scopes" },
+    { "fieldname": "read_access", "fieldtype": "Check", "label": "Read Access", "default": 1 },
+    { "fieldname": "write_access", "fieldtype": "Check", "label": "Write Access" },
+    { "fieldname": "expires_at", "fieldtype": "Datetime", "label": "Expires At" },
+    { "fieldname": "ip_whitelist", "fieldtype": "JSON", "label": "IP Whitelist" },
+    { "fieldname": "rate_limit_per_minute", "fieldtype": "Int", "label": "Rate Limit Per Minute", "default": 60 },
+    { "fieldname": "is_active", "fieldtype": "Check", "label": "Is Active", "default": 1 },
+    { "fieldname": "revoked_at", "fieldtype": "Datetime", "label": "Revoked At", "read_only": 1 },
+    { "fieldname": "created_by", "fieldtype": "Link", "label": "Created By", "options": "User" },
+    { "fieldname": "last_used_at", "fieldtype": "Datetime", "label": "Last Used At", "read_only": 1 }
+  ],
+  "permissions": [
+    { "role": "Super Admin", "read": 1, "write": 1, "create": 1, "delete": 0 }
+  ]
+}

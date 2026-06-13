@@ -1,0 +1,26 @@
+{
+  "doctype": "DocType",
+  "name": "Currency Setting",
+  "module": "LebTech Partner Platform",
+  "custom": 0,
+  "is_submittable": 0,
+  "track_changes": 1,
+  "autoname": "field:currency_code",
+  "title_field": "currency_code",
+  "fields": [
+    { "fieldname": "currency_code", "fieldtype": "Data", "label": "Currency Code", "reqd": 1, "unique": 1 },
+    { "fieldname": "currency_name", "fieldtype": "Data", "label": "Currency Name", "reqd": 1 },
+    { "fieldname": "symbol", "fieldtype": "Data", "label": "Symbol", "reqd": 1 },
+    { "fieldname": "decimal_precision", "fieldtype": "Int", "label": "Decimal Precision", "default": 2 },
+    { "fieldname": "is_active", "fieldtype": "Check", "label": "Is Active", "default": 1 },
+    { "fieldname": "is_default", "fieldtype": "Check", "label": "Is Default" },
+    { "fieldname": "assigned_countries", "fieldtype": "Small Text", "label": "Assigned Countries" },
+    { "fieldname": "assigned_resellers", "fieldtype": "Small Text", "label": "Assigned Resellers" },
+    { "fieldname": "manual_exchange_rate", "fieldtype": "Float", "label": "Manual Exchange Rate", "default": 1 }
+  ],
+  "permissions": [
+    { "role": "Super Admin", "read": 1, "write": 1, "create": 1, "delete": 0 },
+    { "role": "Regional Director", "read": 1, "write": 0, "create": 0, "delete": 0 },
+    { "role": "Reseller Admin", "read": 1, "write": 0, "create": 0, "delete": 0 }
+  ]
+}

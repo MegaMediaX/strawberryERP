@@ -1,0 +1,27 @@
+{
+  "doctype": "DocType",
+  "name": "Commission Entry",
+  "module": "LebTech Partner Platform",
+  "custom": 0,
+  "is_submittable": 0,
+  "track_changes": 1,
+  "autoname": "format:CENT-{####}",
+  "title_field": "reseller",
+  "fields": [
+    { "fieldname": "commission_rule", "fieldtype": "Link", "label": "Commission Rule", "options": "Commission Rule", "reqd": 1 },
+    { "fieldname": "reseller", "fieldtype": "Link", "label": "Reseller", "options": "Reseller", "reqd": 1 },
+    { "fieldname": "country", "fieldtype": "Select", "label": "Country", "options": "Lebanon\nCyprus\nJordan\nSyria", "reqd": 1 },
+    { "fieldname": "invoice", "fieldtype": "Link", "label": "Invoice", "options": "Partner Invoice", "reqd": 1 },
+    { "fieldname": "receipt", "fieldtype": "Link", "label": "Receipt", "options": "Partner Receipt" },
+    { "fieldname": "base_amount", "fieldtype": "Currency", "label": "Base Amount", "reqd": 1 },
+    { "fieldname": "commission_percentage", "fieldtype": "Percent", "label": "Commission Percentage", "reqd": 1 },
+    { "fieldname": "commission_amount", "fieldtype": "Currency", "label": "Commission Amount", "read_only": 1 },
+    { "fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Pending\nApproved\nPaid\nCancelled", "default": "Pending" },
+    { "fieldname": "calculated_at", "fieldtype": "Datetime", "label": "Calculated At" }
+  ],
+  "permissions": [
+    { "role": "Super Admin", "read": 1, "write": 1, "create": 1, "delete": 0 },
+    { "role": "Regional Director", "read": 1, "write": 0, "create": 0, "delete": 0 },
+    { "role": "Reseller Admin", "read": 1, "write": 0, "create": 0, "delete": 0 }
+  ]
+}

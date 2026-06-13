@@ -1,0 +1,65 @@
+{
+  "doctype": "DocType",
+  "name": "Partner Country",
+  "module": "LebTech Partner Platform",
+  "custom": 0,
+  "is_submittable": 0,
+  "istable": 0,
+  "track_changes": 1,
+  "autoname": "field:country_name",
+  "title_field": "country_name",
+  "fields": [
+    {
+      "fieldname": "country_name",
+      "fieldtype": "Data",
+      "label": "Country Name",
+      "reqd": true
+    },
+    {
+      "fieldname": "iso_2",
+      "fieldtype": "Data",
+      "label": "ISO 2"
+    },
+    {
+      "fieldname": "iso_3",
+      "fieldtype": "Data",
+      "label": "ISO 3"
+    },
+    {
+      "fieldname": "is_enabled",
+      "fieldtype": "Check",
+      "label": "Is Enabled",
+      "default": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Super Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0
+    },
+    {
+      "role": "Regional Director",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0
+    },
+    {
+      "role": "Reseller Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0
+    },
+    {
+      "role": "Sales Team User",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0
+    }
+  ]
+}

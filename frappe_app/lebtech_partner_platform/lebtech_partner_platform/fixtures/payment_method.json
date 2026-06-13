@@ -1,0 +1,74 @@
+[
+  {
+    "doctype": "Payment Method",
+    "name": "Cash",
+    "method_name": "Cash",
+    "is_active": 1,
+    "countries": "Lebanon,Cyprus,Jordan,Syria",
+    "resellers": "",
+    "requires_reference": 0,
+    "requires_attachment": 0,
+    "icon": "cash",
+    "display_order": 1
+  },
+  {
+    "doctype": "Payment Method",
+    "name": "Bank Transfer",
+    "method_name": "Bank Transfer",
+    "is_active": 1,
+    "countries": "Lebanon,Cyprus,Jordan,Syria",
+    "resellers": "",
+    "requires_reference": 1,
+    "requires_attachment": 1,
+    "icon": "bank",
+    "display_order": 2
+  },
+  {
+    "doctype": "Payment Method",
+    "name": "OMT",
+    "method_name": "OMT",
+    "is_active": 1,
+    "countries": "Lebanon",
+    "resellers": "",
+    "requires_reference": 1,
+    "requires_attachment": 1,
+    "icon": "receipt",
+    "display_order": 3
+  },
+  {
+    "doctype": "Payment Method",
+    "name": "Whish",
+    "method_name": "Whish",
+    "is_active": 1,
+    "countries": "Lebanon",
+    "resellers": "",
+    "requires_reference": 1,
+    "requires_attachment": 1,
+    "icon": "wallet",
+    "display_order": 4
+  },
+  {
+    "doctype": "Payment Method",
+    "name": "Credit/Debit Card",
+    "method_name": "Credit/Debit Card",
+    "is_active": 1,
+    "countries": "Lebanon,Cyprus,Jordan",
+    "resellers": "",
+    "requires_reference": 1,
+    "requires_attachment": 0,
+    "icon": "card",
+    "display_order": 5
+  },
+  {
+    "doctype": "Payment Method",
+    "name": "Crypto",
+    "method_name": "Crypto",
+    "is_active": 0,
+    "countries": "Lebanon,Cyprus",
+    "resellers": "",
+    "requires_reference": 1,
+    "requires_attachment": 1,
+    "icon": "crypto",
+    "display_order": 6
+  }
+]

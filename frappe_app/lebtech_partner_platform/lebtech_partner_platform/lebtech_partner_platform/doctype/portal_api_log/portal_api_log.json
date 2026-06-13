@@ -1,0 +1,79 @@
+{
+  "doctype": "DocType",
+  "name": "Portal API Log",
+  "module": "LebTech Partner Platform",
+  "custom": 0,
+  "is_submittable": 0,
+  "istable": 0,
+  "track_changes": 1,
+  "autoname": "format:PAPILOG-{####}",
+  "fields": [
+    {
+      "fieldname": "api_key",
+      "fieldtype": "Link",
+      "label": "API Key",
+      "options": "Portal API Key"
+    },
+    {
+      "fieldname": "endpoint",
+      "fieldtype": "Data",
+      "label": "Endpoint"
+    },
+    {
+      "fieldname": "method",
+      "fieldtype": "Select",
+      "label": "Method",
+      "options": "GET\nPOST\nPATCH"
+    },
+    {
+      "fieldname": "status_code",
+      "fieldtype": "Int",
+      "label": "Status Code"
+    },
+    {
+      "fieldname": "ip_address",
+      "fieldtype": "Data",
+      "label": "IP Address"
+    },
+    {
+      "fieldname": "user_agent",
+      "fieldtype": "Data",
+      "label": "User Agent"
+    },
+    {
+      "fieldname": "response_time_ms",
+      "fieldtype": "Int",
+      "label": "Response Time Ms"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Super Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0
+    },
+    {
+      "role": "Regional Director",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0
+    },
+    {
+      "role": "Reseller Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0
+    },
+    {
+      "role": "Sales Team User",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0
+    }
+  ]
+}
