@@ -38,7 +38,7 @@ Mark `[x]` **only after verified by running**, not when written.
   - [x] Country block (IL/ISR/occupied-palestine) test (13 tests)
   - [~] Business logic: invoice totals + commission formula (6) ✓; lead status-transition guard (10) ✓ + PATCH-boundary enforcement (3) ✓; receipt→invoice payment-state + trigger + country block (5) ✓; lead→customer conversion preservation still TODO (lives in Frappe Python — bench fire)
   - [x] SCALE: seeded pagination/scoping correctness + portal-layer latency (8 tests; p95 0.86ms @ 10k/5k)
-- [ ] **#6** `docker compose -f docker-compose.prod.yml up` boots full stack; health green; Hostinger runbook verified
+- [ ] **#6** `docker compose up` boots full stack; health green; Hostinger runbook verified. NOTE: this tree's production compose is **`docker-compose.yml`** (handoff §12 — full topology, pinned images, healthchecks); there is no separate `docker-compose.prod.yml` here. Structure host-verified (see cont.25); live boot needs Docker.
 - [ ] **#7** All §9/§18 invariants preserved (partially proven by #5 invariant tests)
 
 ---
@@ -86,6 +86,11 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ---
 
 ## Resume journal (newest first)
+
+### Fire 1 (cont. 25) — 2026-06-13
+- Compose topology test (`src/lib/frappe/__tests__/compose-topology.test.ts`, parses `docker-compose.yml` via js-yaml): all 10 required services present (NGINX/Next/Frappe/MariaDB/Redis×3/workers/scheduler), restart policies, healthchecks on stateful+edge; **§9/§12 edge invariants locked — Frappe bound to 127.0.0.1, MariaDB/Redis unpublished, NGINX the only public port.** 6 tests. Guards #6 structurally without a daemon. **249 total, all green** (typecheck/lint/test exit 0; build unaffected — test-only).
+- Corrected DoD #6: this tree's prod compose is `docker-compose.yml` (no separate prod file).
+- **Next start (Docker-gated):** #3 `bench migrate`; #6 live `docker compose up`; DB latency; conversion-preservation; DocType persistence. Host de-risking now near-complete (Dockerfile lint, .env.example completeness are minor remaining options).
 
 ### Fire 1 (cont. 24) — 2026-06-13
 - DocType integrity test (`src/lib/frappe/__tests__/doctype-integrity.test.ts`): all 37 DocType JSONs parse + valid shape (doctype/name/module/fields), every field has fieldname+fieldtype, **§18 invariant locked at data model — no non-Super-Admin delete grant**, and partner_lead scale indexes present. 5 tests. De-risks `bench migrate`. **243 total, all green** (typecheck/lint/build/test exit 0).
