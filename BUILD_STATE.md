@@ -87,6 +87,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 14) — 2026-06-13
+- Built custom-field-builder validation (`src/lib/business/custom-fields.ts`, new module): target/type allowlist (fail-closed), required label, snake_case machine name, reserved-name rejection, dropdown-requires-options. 8 tests. **185 total, all green** (typecheck/lint/build/test exit 0).
+- **Next start (Docker-gated):** Frappe-proxy pagination passthrough; #3 `bench migrate`; #6 `docker compose up`; DB latency; conversion-preservation. Host-side: wire `validateCustomFieldDefinition` into a create route + Custom Field Definition DocType; currency/numbering settings; static-data→Frappe audit (§17.4).
+
 ### Fire 1 (cont. 13) — 2026-06-13
 - Customer CSV import (`validateCustomerImportCsv`: country block, unconfigured-reseller rejection, name duplicate, required columns) + CSV export (`toCsv`: header union, quoting, double-quote escaping, empty cells). 8 tests. **177 total, all green** (typecheck/lint/build/test exit 0).
 - **Next start (Docker-gated):** Frappe-proxy pagination passthrough; #3 `bench migrate`; #6 `docker compose up`; DB latency; conversion-preservation. Host-side remaining: custom-field builder validation, currency/numbering settings, static-data→Frappe audit (§17.4), module UI completion.
