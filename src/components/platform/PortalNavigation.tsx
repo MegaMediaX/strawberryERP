@@ -67,6 +67,10 @@ const navigationGroups: Array<{ label: string; items: NavigationItem[] }> = [
       { label: "Custom Fields", href: "/settings/custom-fields", roles: superAdmin },
     ],
   },
+  {
+    label: "Account",
+    items: [{ label: "Security (2FA)", href: "/account/security", roles: all }],
+  },
 ];
 
 export function PortalNavigation({ role, impersonating }: { role: PortalRole; impersonating: boolean }) {

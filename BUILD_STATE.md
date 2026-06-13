@@ -87,6 +87,11 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 32) — 2026-06-13 — NAV LINK
+- Added an "Account → Security (2FA)" link (all roles) to `PortalNavigation`, making the `/account/security` enrollment page discoverable. Gates: typecheck/lint/build/test all exit 0 (288 tests).
+- **#2 production auth is now feature-complete on the portal** (login + signed session + prod-fail-closed headers + RFC-6238 2FA + enrollment lifecycle + QR UI + nav).
+- **Next start:** purely Docker-gated — #3 `bench migrate`; #6 `docker compose up`; Frappe persistence of identity/2FA secrets + Portal Role Assignment mapping. No remaining host-side work that closes a gate.
+
 ### Fire 1 (cont. 31) — 2026-06-13 — 2FA QR
 - Added a scannable **QR code** to `/account/security` (added `qrcode` dep + `@types/qrcode`): on Enable, the otpauth URI renders as a QR image (client-side `QRCode.toDataURL`), with the base32 key as manual-entry fallback.
 - Verified: typecheck/lint/build/test all exit 0 (288 tests); live render GET /account/security → HTTP 200 with 2FA UI (dev server, then stopped).
