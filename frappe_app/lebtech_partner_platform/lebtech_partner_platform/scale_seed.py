@@ -100,3 +100,21 @@ def measure_latency(iterations: int = 200):
     total = frappe.db.count("Partner Lead")
     print(f"[scale_latency] leads={total} iters={len(samples)} p50={p50:.1f}ms p95={p95:.1f}ms")
     return {"leads": total, "p50_ms": round(p50, 1), "p95_ms": round(p95, 1)}
+
+
+def measure_dashboard(iterations: int = 50):
+    """Measure typical dashboard aggregate queries (group-by counts) at scale."""
+    samples = []
+    for _ in range(int(iterations)):
+        t0 = time.perf_counter()
+        # Counts grouped by status, country, and priority — the dashboard cards.
+        frappe.db.sql("SELECT status, COUNT(*) FROM `tabPartner Lead` GROUP BY status")
+        frappe.db.sql("SELECT country, COUNT(*) FROM `tabPartner Lead` GROUP BY country")
+        frappe.db.sql("SELECT priority, COUNT(*) FROM `tabPartner Lead` GROUP BY priority")
+        frappe.db.sql("SELECT COUNT(*) FROM `tabPartner Customer`")
+        samples.append((time.perf_counter() - t0) * 1000.0)
+
+    p50 = _percentile(samples, 50)
+    p95 = _percentile(samples, 95)
+    print(f"[dashboard_latency] iters={len(samples)} p50={p50:.1f}ms p95={p95:.1f}ms (4 aggregates/iter)")
+    return {"p50_ms": round(p50, 1), "p95_ms": round(p95, 1)}

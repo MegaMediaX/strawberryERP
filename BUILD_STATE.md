@@ -47,6 +47,8 @@ Mark `[x]` **only after verified by running**, not when written.
 - Seeded **10,001 leads + 5,001 customers** into live Frappe (`scale_seed.py`, bulk_insert).
 - Indexes confirmed in live MariaDB on country/assigned_user/status/priority/reseller/follow_up_date.
 - **DB-side scoped+filtered+paginated p95 = 4.1ms** (p50 3.4ms) @ 10k — ~100× under the 400ms budget.
+- **Dashboard aggregates p95 = 9.5ms** (p50 7.3ms; 4 group-by counts/iter) @ 10k/5k — ~84× under the 800ms budget.
+- Live access control verified: unauth `/leads` shows denied state with **0 real records** (no SSR leak); authed user sees real data + scoped API.
 
 ## Scale target (legacy notes)
 
@@ -91,6 +93,11 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ---
 
 ## Resume journal (newest first)
+
+### Fire 1 (cont. 41) — 2026-06-14 — DASHBOARD LATENCY + ACCESS-CONTROL QA (live)
+- Post-auth-fix verification (live, via NGINX): `/api/auth/session` returns correct identity from cookie; authed `/leads` renders real data; **unauth `/leads` shows denied state with 0 real records (no SSR leak)**; authed `/api/frappe/leads` returns live seeded leads. Auth fix didn't break legitimate access.
+- `scale_seed.measure_dashboard`: 4 group-by aggregates over 10k/5k → **p50=7.3ms, p95=9.5ms** — ~84× under the 800ms dashboard budget. **DoD #5 now FULLY met (list + dashboard) live.**
+- **Next start:** bridge 2FA store→Frappe `api/two_factor.py`; broader browser role-matrix QA (Sales/Reseller scoping live); document the access-control evidence.
 
 ### Fire 1 (cont. 40) — 2026-06-14 — 🔒 CRITICAL AUTH-BYPASS FIX (found via live testing)
 - **Found live:** unauthenticated `GET /api/frappe/*` through NGINX (NODE_ENV=production) returned real Frappe data 200 — `resolvePortalSession` defaulted to USR-SUPER and (unlike `resolveExplicitPortalSession`) was NOT fail-closed. Full read/write bypass.
