@@ -20,6 +20,8 @@ export type PortalSession = {
   sessionToken?: string;
   source: "dev-header" | "session-token";
   auditLabel: string;
+  /** False only when production has no verified session — used to fail closed. */
+  authenticated?: boolean;
 };
 
 export type PortalRole = Role;
@@ -92,13 +94,29 @@ export function getDefaultSession(): PortalSession {
 }
 
 export function resolvePortalSession(request: Request): PortalSession {
+  // 1. A verified, signed session cookie is authoritative (real login).
+  const payload = verifySessionToken(readSessionCookie(request.headers));
+  if (payload) {
+    const sessionUser = portalUsers.find((item) => item.id === payload.sub && item.active);
+    if (sessionUser) {
+      return { ...buildSession(sessionUser, request.headers, "session-token"), authenticated: true };
+    }
+  }
+
+  // 2. Dev/proxy identity headers. In production these are NOT trusted — fail
+  // closed so an unauthenticated request can never resolve to a privileged user
+  // (CLAUDE_HANDOFF §17/§18). The edge must strip x-platform-* anyway.
+  const allowDevHeaders =
+    process.env.NODE_ENV !== "production" || process.env.ALLOW_DEV_IDENTITY_HEADERS === "true";
+
   const authHeader = request.headers.get("authorization");
   const bearerToken = authHeader?.toLowerCase().startsWith("bearer ") ? authHeader.slice(7) : undefined;
   const sessionToken = request.headers.get("x-portal-session-token") ?? bearerToken;
   const expiresAt = request.headers.get("x-platform-session-expires-at") ?? undefined;
-  const userId = request.headers.get("x-platform-user-id") ?? "USR-SUPER";
-  const impersonatedUserId = request.headers.get("x-platform-impersonate-user-id");
-  const user = portalUsers.find((item) => item.id === userId && item.active) ?? portalUsers[0];
+  const userId = allowDevHeaders ? (request.headers.get("x-platform-user-id") ?? "USR-SUPER") : null;
+  const user = (userId ? portalUsers.find((item) => item.id === userId && item.active) : undefined) ?? portalUsers[0];
+
+  const impersonatedUserId = allowDevHeaders ? request.headers.get("x-platform-impersonate-user-id") : null;
   const impersonated = impersonatedUserId
     ? portalUsers.find((item) => item.id === impersonatedUserId && item.active)
     : undefined;
@@ -114,6 +132,8 @@ export function resolvePortalSession(request: Request): PortalSession {
     sessionToken,
     source: sessionToken ? "session-token" : "dev-header",
     auditLabel: canImpersonate ? `${user.name} impersonating ${effectiveUser.name}` : `${user.name} as ${user.role}`,
+    // No verified cookie + dev headers disallowed (production) => unauthenticated.
+    authenticated: allowDevHeaders,
   };
 }
 

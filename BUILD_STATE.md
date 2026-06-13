@@ -92,6 +92,13 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 40) — 2026-06-14 — 🔒 CRITICAL AUTH-BYPASS FIX (found via live testing)
+- **Found live:** unauthenticated `GET /api/frappe/*` through NGINX (NODE_ENV=production) returned real Frappe data 200 — `resolvePortalSession` defaulted to USR-SUPER and (unlike `resolveExplicitPortalSession`) was NOT fail-closed. Full read/write bypass.
+- **Fixed:** `resolvePortalSession` now (1) trusts a verified signed cookie first, (2) fails closed in production (`authenticated:false` when no cookie + dev headers disallowed). `evaluateApiPermission` denies 401 when `authenticated===false` and no API key. Dev/test behavior unchanged (USR-SUPER default still works when NODE_ENV!=production). API keys still authorize.
+- 4 regression tests (production deny / spoof-ignore / cookie-allow / dev-allow). **299 total green** (typecheck/lint/build/test exit 0).
+- **Verified LIVE** (rebuilt frontend image, via NGINX): unauth→401, spoofed-header→401, login-cookie→200.
+- **Next start:** dashboard-aggregate latency live check; bridge 2FA store→Frappe; browser role-matrix QA.
+
 ### Fire 1 (cont. 39) — 2026-06-14 — SCALE BAR MET LIVE
 - `scale_seed.py`: bulk-seeded **10,001 Partner Lead + 5,001 Partner Customer** into live Frappe (frappe.db.bulk_insert, deterministic).
 - Verified live MariaDB indexes on country/assigned_user/status/priority/reseller/follow_up_date (the search_index fields migrated correctly).

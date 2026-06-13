@@ -82,6 +82,11 @@ export function evaluateApiPermission({
   const session = resolvePortalSession(request);
   const apiKey = resolveApiKey(request);
 
+  // Fail closed: production with no verified session (and no API key) is denied.
+  if (session.authenticated === false && !apiKeyHeader(request)) {
+    return deny(session, "Authentication required.", 401, apiKey);
+  }
+
   if (session.expiresAt && new Date(session.expiresAt).getTime() < Date.now()) {
     return deny(session, "Portal session has expired.", 401, apiKey);
   }
