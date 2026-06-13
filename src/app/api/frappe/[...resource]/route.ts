@@ -15,6 +15,12 @@ import { devStoreResponse, maybeRouteToFrappe } from "@/lib/backend/backend-rout
 import { paginate } from "@/lib/query/scoped-page";
 import { validateCustomFieldDefinition, type CustomFieldDefinition } from "@/lib/business/custom-fields";
 import {
+  validateCurrencySetting,
+  validateInvoiceNumbering,
+  type InvoiceNumberingConfig,
+} from "@/lib/business/billing-settings";
+import type { CurrencySetting } from "@/lib/phase2-data";
+import {
   apiAuditEvent,
   commissionRules,
   contracts,
@@ -244,6 +250,40 @@ export async function POST(request: Request, context: RouteContext) {
       performedBy: session.auditLabel,
     });
     return sampleResponse({ id: `CFD-${Date.now()}`, ...objectPayload }, { status: 201, audit });
+  }
+
+  if (contextKey === "settings/currencies") {
+    const settingError = validateCurrencySetting(objectPayload as Partial<CurrencySetting>);
+    if (settingError) {
+      return jsonError(settingError);
+    }
+
+    const audit = appendAudit({
+      entityType: "Currency Setting",
+      entityId: String(objectPayload.currencyCode ?? ""),
+      action: "create",
+      oldValue: "",
+      newValue: String(objectPayload.currencyName ?? ""),
+      performedBy: session.auditLabel,
+    });
+    return sampleResponse({ ...objectPayload }, { status: 201, audit });
+  }
+
+  if (contextKey === "settings/invoice-numbering") {
+    const numberingError = validateInvoiceNumbering(objectPayload as Partial<InvoiceNumberingConfig>);
+    if (numberingError) {
+      return jsonError(numberingError);
+    }
+
+    const audit = appendAudit({
+      entityType: "Invoice Numbering Setting",
+      entityId: String(objectPayload.mode ?? ""),
+      action: "update",
+      oldValue: "",
+      newValue: String(objectPayload.mode ?? ""),
+      performedBy: session.auditLabel,
+    });
+    return sampleResponse({ ...objectPayload }, { status: 201, audit });
   }
 
   if (contextKey === "invoices") {
