@@ -1,0 +1,7 @@
+# Shell scripts and Docker/entrypoint files must stay LF — they run in Linux
+# containers and CRLF breaks the interpreter line.
+*.sh text eol=lf
+*.mjs text eol=lf
+Dockerfile text eol=lf
+deploy/** text eol=lf
+infra/** text eol=lf
