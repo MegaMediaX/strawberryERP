@@ -35,7 +35,7 @@ Mark `[x]` **only after verified by running**, not when written.
   - [x] Security invariants: no-DELETE, no-delete-scope, admin-route key rejection, scope mapping, sensitive-action flag — **56 tests passing**
   - [x] Impersonation no-privilege-escalation test (23 tests)
   - [x] Country block (IL/ISR/occupied-palestine) test (13 tests)
-  - [ ] Business logic: commission math, lead status transitions, invoice payment-state, conversion preservation
+  - [~] Business logic: invoice totals + commission formula (6 tests) ✓; lead status transitions, invoice payment-state update, conversion preservation still TODO
   - [x] SCALE: seeded pagination/scoping correctness + portal-layer latency (8 tests; p95 0.86ms @ 10k/5k)
 - [ ] **#6** `docker compose -f docker-compose.prod.yml up` boots full stack; health green; Hostinger runbook verified
 - [ ] **#7** All §9/§18 invariants preserved (partially proven by #5 invariant tests)
@@ -85,6 +85,11 @@ _(none yet)_
 ---
 
 ## Resume journal (newest first)
+
+### Fire 1 (cont. 2) — 2026-06-13
+- +6 business-logic tests: `calculateInvoiceTotals` (subtotal/discount/tax/clamp) + `calculateCommissionEntries` (formula base×pct/100, country/reseller scope isolation, verified against real fixtures). **106 tests total, all green.**
+- Full gate set re-verified: typecheck/lint/build/test all exit 0.
+- **Next start:** lead status-transition + lead→customer conversion-preservation tests; then wire `scopedPage` into `/api/frappe/leads` + `[...slug]` list handlers (replace any full-table loads); then the Docker fire (#3 bench migrate, #6 compose up, DB-side latency).
 
 ### Fire 1 (cont.) — 2026-06-13
 - +36 security tests: country-block (13) + impersonation no-escalation (23). Total 92.
