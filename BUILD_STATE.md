@@ -87,6 +87,11 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 19) — 2026-06-13
+- Payment-method validation (`src/lib/business/payment-methods.ts`: method-name allowlist, country block on assigned countries, non-negative display order) **+ wired into `POST settings/payment-methods`** (Super-Admin-only, sensitive, invalid→400). 8 tests. **223 total, all green** (typecheck/lint/build/test exit 0).
+- All 5 Super-Admin settings surfaces now validated + wired + authz'd: custom-fields, currencies, invoice-numbering, notifications, payment-methods.
+- **Next start (Docker-gated):** Frappe-proxy pagination passthrough; #3 `bench migrate`; #6 `docker compose up`; conversion-preservation; DocType persistence. Host-side: static-data→Frappe audit (§17.4), commission-rule validation, module UI.
+
 ### Fire 1 (cont. 18) — 2026-06-13
 - Notification-rules validation (`src/lib/business/notifications.ts`: event/channel allowlists, country block on non-wildcard country, role check, template required) **+ wired into `POST settings/notifications`** (Super-Admin-only, sensitive, invalid→400). 10 tests. **215 total, all green** (typecheck/lint/build/test exit 0).
 - **Next start (Docker-gated):** Frappe-proxy pagination passthrough; #3 `bench migrate`; #6 `docker compose up`; conversion-preservation; DocType persistence. Host-side: payment-method validation + wiring, static-data→Frappe audit (§17.4).

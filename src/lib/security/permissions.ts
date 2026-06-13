@@ -31,6 +31,8 @@ const sensitiveRoutes = new Set([
   "settings/invoice-numbering:PATCH",
   "settings/notifications:POST",
   "settings/notifications:PATCH",
+  "settings/payment-methods:POST",
+  "settings/payment-methods:PATCH",
   "settings/integrations:POST",
   "settings/integrations:PATCH",
   "integrations/whatsapp:PATCH",

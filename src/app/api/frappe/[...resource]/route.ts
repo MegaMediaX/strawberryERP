@@ -19,8 +19,9 @@ import {
   validateInvoiceNumbering,
   type InvoiceNumberingConfig,
 } from "@/lib/business/billing-settings";
-import type { CurrencySetting, NotificationRule } from "@/lib/phase2-data";
+import type { CurrencySetting, NotificationRule, PaymentMethod } from "@/lib/phase2-data";
 import { validateNotificationRule } from "@/lib/business/notifications";
+import { validatePaymentMethod } from "@/lib/business/payment-methods";
 import {
   apiAuditEvent,
   commissionRules,
@@ -265,6 +266,23 @@ export async function POST(request: Request, context: RouteContext) {
       action: "create",
       oldValue: "",
       newValue: String(objectPayload.currencyName ?? ""),
+      performedBy: session.auditLabel,
+    });
+    return sampleResponse({ ...objectPayload }, { status: 201, audit });
+  }
+
+  if (contextKey === "settings/payment-methods") {
+    const methodError = validatePaymentMethod(objectPayload as Partial<PaymentMethod>);
+    if (methodError) {
+      return jsonError(methodError);
+    }
+
+    const audit = appendAudit({
+      entityType: "Payment Method",
+      entityId: String(objectPayload.methodName ?? ""),
+      action: "create",
+      oldValue: "",
+      newValue: String(objectPayload.methodName ?? ""),
       performedBy: session.auditLabel,
     });
     return sampleResponse({ ...objectPayload }, { status: 201, audit });
