@@ -87,6 +87,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 11) — 2026-06-13
+- Invoice creation/numbering test (`createInvoiceFromPayload`): country-prefix numbering (LE/JO/CY), id format, derived PDF/QR/payment-link URLs, default line item from total, explicit-line-item subtotal, Unpaid/Issued defaults, Invoice-Created commission trigger, country block. 6 tests. **163 total, all green** (typecheck/lint/build/test exit 0).
+- **Next start (Docker-gated):** Frappe-proxy pagination passthrough; #3 `bench migrate`; #6 `docker compose up`; DB latency; conversion-preservation. Host-side: continue business-logic/module coverage (CSV import validation, custom-field builder, currency/numbering settings) + static-data→Frappe audit (§17.4).
+
 ### Fire 1 (cont. 10) — 2026-06-13
 - Secret-redaction test (`upsertIntegrationSetting`/`maskSecretConfig`): secret/token/password/key fields stored as `********`, raw values never retained, non-secret fields preserved, empty secret stays empty. 2 tests. **157 total, all green** (typecheck/lint/build/test exit 0).
 - **Next start (Docker-gated):** Frappe-proxy pagination passthrough; #3 `bench migrate`; #6 `docker compose up`; DB latency; conversion-preservation. Host-verifiable §9/§18 surface now comprehensive — further host work shifts toward module UI completion / static-data audit (handoff §17.4).
