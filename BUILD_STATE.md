@@ -87,6 +87,11 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 34) — 2026-06-13 — FRAPPE 2FA PERSISTENCE
+- Added **`Portal Two Factor` DocType** (user[unique/indexed], secret[Password=encrypted at rest], is_active[Check]; Super-Admin-only perms, §18-clean) + controller + `api/two_factor.py` persistence module (upsert/activate/disable/get_active_secret via get_password — secret never in list/read payloads). 38 DocTypes now.
+- Host-verified: `py_compile` clean + DocType-integrity test passes over the new DocType (fields valid, no non-super delete). **292 total, all green.**
+- **Next start (Docker-gated):** bridge the Next 2FA store → these Frappe methods when Frappe is configured; #3 `bench migrate`; #6 `docker compose up`; Portal Role Assignment mapping; Redis rate limiter.
+
 ### Fire 1 (cont. 33) — 2026-06-13 — LOGIN RATE LIMITING
 - Brute-force protection on `POST /api/auth/login`: fixed-window limiter (`rate-limit.ts`, keyed by email+IP, 10 attempts / 10 min) → 429 + Retry-After; counter resets on successful login. (Redis-swap noted for multi-instance prod.)
 - 4 tests (limiter under/over/reset + route 429 path). Existing login tests unaffected. **292 total, all green** (typecheck/lint/build/test exit 0).
