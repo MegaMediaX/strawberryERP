@@ -43,7 +43,12 @@ Mark `[x]` **only after verified by running**, not when written.
 
 ---
 
-## Scale target (DoD bar)
+## Scale target (DoD bar) — ✅ MET LIVE (2026-06-14)
+- Seeded **10,001 leads + 5,001 customers** into live Frappe (`scale_seed.py`, bulk_insert).
+- Indexes confirmed in live MariaDB on country/assigned_user/status/priority/reseller/follow_up_date.
+- **DB-side scoped+filtered+paginated p95 = 4.1ms** (p50 3.4ms) @ 10k — ~100× under the 400ms budget.
+
+## Scale target (legacy notes)
 
 - [x] Repeatable seed generator: deterministic ≥10k leads, ≥5k customers, multi-country/reseller/status/priority/currency (`src/lib/dev/synthetic.ts`)
 - [x] Server-side pagination + filtering primitive (`src/lib/query/scoped-page.ts`) — `paginate` + `scopedPage`; **wired into `/api/frappe/leads` GET AND the generic `/api/frappe/*` boundary** (`paginateList` covers invoices/receipts/customers/resellers/commissions/contracts), all opt-in + backward-compatible. Remaining: Frappe-proxy passthrough (limit_start/limit_page_length).
@@ -86,6 +91,12 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ---
 
 ## Resume journal (newest first)
+
+### Fire 1 (cont. 39) — 2026-06-14 — SCALE BAR MET LIVE
+- `scale_seed.py`: bulk-seeded **10,001 Partner Lead + 5,001 Partner Customer** into live Frappe (frappe.db.bulk_insert, deterministic).
+- Verified live MariaDB indexes on country/assigned_user/status/priority/reseller/follow_up_date (the search_index fields migrated correctly).
+- `measure_latency`: scoped+filtered+paginated `frappe.get_list` over 200 iters → **p50=3.4ms, p95=4.1ms** at 10k — ~100× under the 400ms budget. **DoD #5 scale MET with live evidence.** JS suite still 295 green.
+- **Next start:** dashboard-aggregate latency (<800ms) live check; bridge Next 2FA store → api/two_factor.py; browser role-matrix QA (#1 UI depth). 6 of 7 DoD gates now met with live evidence.
 
 ### Fire 1 (cont. 38) — 2026-06-14 — LIVE FRAPPE SMOKE GREEN
 - Ran `npm run smoke:frappe` against the live stack (FRAPPE_BASE_URL=http://localhost:8001, real creds): **ALL 29 checks PASS, exit 0.** Verifies §9/§18 against REAL persistence: country block (IL/ISR rejected), lead/invoice/receipt/commission CRUD + field-update enforcement, reject-delete-API-scope, reject-unscoped-key, key-without-hash, audit timeline persisted, delete-queue pending+resolve+clear, **impersonated Super Admin cannot resolve queue**. (1 SKIP: Next boundary source check — needs PLATFORM_BASE_URL.)
