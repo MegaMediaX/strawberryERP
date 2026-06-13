@@ -87,6 +87,11 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 9) — 2026-06-13
+- Delete-queue *route-level* authorization test (`evaluateApiPermission`): true Super Admin may resolve; impersonating Super Admin blocked (sensitive, 403); Reseller Admin / Sales / Regional Director all denied (403). 5 tests. **155 total, all green** (typecheck/lint/build/test exit 0).
+- Host-verifiable §9/§18 coverage now substantial: no-DELETE, country block, impersonation no-escalation, API-key scoping, delete-queue soft-delete + resolution-authz, scoped pagination at 10k/5k, lead workflow, billing.
+- **Next start (Docker-gated — needs a bench/Docker host):** Frappe-proxy pagination passthrough; #3 `bench migrate`; #6 `docker compose up`; DB-side latency; conversion-preservation (Frappe Python). On a host without Docker, remaining host-verifiable items are thin — consider: secret-redaction unit (maskSecretConfig is unexported → would need a small refactor) or more module UI work.
+
 ### Fire 1 (cont. 8) — 2026-06-13
 - Delete-queue soft-delete invariant test (`enqueueDelete`/`resolveDeleteQueue`): enqueue creates a Pending record (never hard-deletes), resolve transitions to Restored/Permanently Deleted/Cleared with resolvedAt, unknown id is a no-op. 4 tests. **150 total, all green** (typecheck/lint/build/test exit 0).
 - **Next start:** Frappe-proxy pagination passthrough + delete-queue *route-level* authorization (non-impersonating Super Admin only — partly covered by impersonation/api-key tests); then Docker fire (#3 migrate, #6 compose, DB latency) + conversion-preservation.
