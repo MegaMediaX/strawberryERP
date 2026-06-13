@@ -87,6 +87,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 38) — 2026-06-14 — LIVE FRAPPE SMOKE GREEN
+- Ran `npm run smoke:frappe` against the live stack (FRAPPE_BASE_URL=http://localhost:8001, real creds): **ALL 29 checks PASS, exit 0.** Verifies §9/§18 against REAL persistence: country block (IL/ISR rejected), lead/invoice/receipt/commission CRUD + field-update enforcement, reject-delete-API-scope, reject-unscoped-key, key-without-hash, audit timeline persisted, delete-queue pending+resolve+clear, **impersonated Super Admin cannot resolve queue**. (1 SKIP: Next boundary source check — needs PLATFORM_BASE_URL.)
+- This is live evidence for DoD #4 security invariants (beyond the 295 dev-store tests).
+
 ### Fire 1 (cont. 37) — 2026-06-14 — 🎉 DOCKER GATES CLOSED (#3 + #6)
 Docker became available (28.2.2). Ran the full close-out — both gates now MET with real evidence.
 - Prep: generated real `.env` secrets; `docker compose config` clean.
