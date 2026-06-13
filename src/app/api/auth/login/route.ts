@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 
 import { authenticate, getTotpSecretForUser } from "@/lib/auth/credentials";
+import { checkRateLimit, resetRateLimit } from "@/lib/auth/rate-limit";
 import { createSessionToken, SESSION_COOKIE } from "@/lib/auth/session-token";
 import { loginTotpCheck } from "@/lib/auth/totp";
 import { portalUsers } from "@/lib/portal-security";
 
 const TTL_MS = 12 * 60 * 60 * 1000;
+const MAX_ATTEMPTS = 10;
+const WINDOW_MS = 10 * 60 * 1000;
 
 export async function POST(request: Request) {
   let body: { email?: string; password?: string; totp?: string };
@@ -15,6 +18,17 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { ok: false, error: { code: "VALIDATION_ERROR", message: "Invalid request body." } },
       { status: 400 },
+    );
+  }
+
+  // Throttle by email + client IP to blunt brute-force / credential stuffing.
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+  const rateKey = `login:${(body.email ?? "").trim().toLowerCase()}:${ip}`;
+  const rl = checkRateLimit(rateKey, MAX_ATTEMPTS, WINDOW_MS);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { ok: false, error: { code: "RATE_LIMITED", message: "Too many attempts. Try again later." } },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) } },
     );
   }
 
@@ -40,6 +54,9 @@ export async function POST(request: Request) {
       { status: 401 },
     );
   }
+
+  // Successful login clears the throttle for this key.
+  resetRateLimit(rateKey);
 
   const user = portalUsers.find((u) => u.id === userId)!;
   const token = createSessionToken(userId, TTL_MS);

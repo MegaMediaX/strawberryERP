@@ -87,6 +87,11 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 33) — 2026-06-13 — LOGIN RATE LIMITING
+- Brute-force protection on `POST /api/auth/login`: fixed-window limiter (`rate-limit.ts`, keyed by email+IP, 10 attempts / 10 min) → 429 + Retry-After; counter resets on successful login. (Redis-swap noted for multi-instance prod.)
+- 4 tests (limiter under/over/reset + route 429 path). Existing login tests unaffected. **292 total, all green** (typecheck/lint/build/test exit 0).
+- **Next start:** purely Docker-gated — #3 `bench migrate`; #6 `docker compose up`; Frappe persistence of identity/2FA + Portal Role Assignment mapping; Redis-backed rate limiter on the bench fire.
+
 ### Fire 1 (cont. 32) — 2026-06-13 — NAV LINK
 - Added an "Account → Security (2FA)" link (all roles) to `PortalNavigation`, making the `/account/security` enrollment page discoverable. Gates: typecheck/lint/build/test all exit 0 (288 tests).
 - **#2 production auth is now feature-complete on the portal** (login + signed session + prod-fail-closed headers + RFC-6238 2FA + enrollment lifecycle + QR UI + nav).
