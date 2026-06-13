@@ -94,6 +94,14 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 42) — 2026-06-14 — LIVE BROWSER QA (Chrome extension)
+- Drove the real portal in Chrome (→ NGINX :8080 → Next → Frappe), logged in as Super Admin:
+  - **Login**: typed creds on `/login`, Sign in → redirected to `/` dashboard. ✅
+  - **Dashboard**: rendered with `Source: frappe`, Role: Super Admin, real seeded leads (Company 10000…9952) in the Lead command center, country-performance chart, all widget cards, "DELETE is intentionally absent" + "Blocked country guard: Cannot add Israel". ✅
+  - **2FA enrollment** (`/account/security`): Enable 2FA → live QR + base32 key + otpauth URL + 6-digit code input + "Verify & enable". ✅ (`/api/auth/2fa/setup` returns 200.)
+- Confirms the full browser→nginx→Next(auth)→/api/frappe→Frappe→MariaDB chain works end-to-end for a real user. (CDP screenshot capture is flaky on the heavy dashboard; page-text extraction used as the reliable check.)
+- **Next start:** TOTP-activate + enforced-login + logout live walkthrough; bridge 2FA store→Frappe `api/two_factor.py`; Sales/Reseller live scoping (needs portal-identity↔Frappe-user mapping, §17).
+
 ### Fire 1 (cont. 41) — 2026-06-14 — DASHBOARD LATENCY + ACCESS-CONTROL QA (live)
 - Post-auth-fix verification (live, via NGINX): `/api/auth/session` returns correct identity from cookie; authed `/leads` renders real data; **unauth `/leads` shows denied state with 0 real records (no SSR leak)**; authed `/api/frappe/leads` returns live seeded leads. Auth fix didn't break legitimate access.
 - `scale_seed.measure_dashboard`: 4 group-by aggregates over 10k/5k → **p50=7.3ms, p95=9.5ms** — ~84× under the 800ms dashboard budget. **DoD #5 now FULLY met (list + dashboard) live.**
