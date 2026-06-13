@@ -5,6 +5,7 @@ import { buildPermissionContext, filterByPermission } from "@/lib/phase2-data";
 import { allowedCountries, leads, leadStatuses, type Country } from "@/lib/sample-data";
 import { resolvePortalSession, roleHeadersFromSession } from "@/lib/portal-security";
 import { authorizeApiRequest, logSuccessfulApiRequest } from "@/lib/security/permissions";
+import { validateLeadTransition } from "@/lib/business/lead-workflow";
 
 type LeadPayload = {
   companyName?: string;
@@ -87,8 +88,16 @@ export async function PATCH(request: Request) {
     return jsonError("Lead id is required for updates.");
   }
 
-  if (payload.status === "Scheduled Follow-Up" && !payload.followUpDate) {
-    return jsonError("followUpDate is required for Scheduled Follow-Up.");
+  if (payload.status) {
+    const current = leads.find((lead) => lead.id === payload.id);
+    if (current) {
+      const transitionError = validateLeadTransition(current.status, payload.status, payload.followUpDate);
+      if (transitionError) {
+        return jsonError(transitionError);
+      }
+    } else if (payload.status === "Scheduled Follow-Up" && !payload.followUpDate) {
+      return jsonError("followUpDate is required for Scheduled Follow-Up.");
+    }
   }
 
   const proxied = await maybeRouteToFrappe("leads", "patch", { name: payload.id, ...mapLeadToFrappe(payload) });

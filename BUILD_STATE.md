@@ -35,7 +35,7 @@ Mark `[x]` **only after verified by running**, not when written.
   - [x] Security invariants: no-DELETE, no-delete-scope, admin-route key rejection, scope mapping, sensitive-action flag — **56 tests passing**
   - [x] Impersonation no-privilege-escalation test (23 tests)
   - [x] Country block (IL/ISR/occupied-palestine) test (13 tests)
-  - [~] Business logic: invoice totals + commission formula (6 tests) ✓; lead status transitions, invoice payment-state update, conversion preservation still TODO
+  - [~] Business logic: invoice totals + commission formula (6) ✓; lead status-transition guard (10) ✓ + enforced at PATCH boundary (3 route tests) ✓; invoice payment-state update + lead→customer conversion preservation still TODO
   - [x] SCALE: seeded pagination/scoping correctness + portal-layer latency (8 tests; p95 0.86ms @ 10k/5k)
 - [ ] **#6** `docker compose -f docker-compose.prod.yml up` boots full stack; health green; Hostinger runbook verified
 - [ ] **#7** All §9/§18 invariants preserved (partially proven by #5 invariant tests)
@@ -80,11 +80,16 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Decisions log (PM escalations)
 
-_(none yet)_
+- **2026-06-13 — Lead status-transition matrix.** Handoff §3 lists the 6 statuses + "Scheduled Follow-Up requires a date" but no transition matrix. Decided (self, documented, not a blocker): New→only attempt/contact; any progress state ↔ any other progress state (re-engagement allowed incl. reviving Not Interested); →Scheduled Follow-Up requires a date; no return to New after contact begins. Encoded in `src/lib/business/lead-workflow.ts`. Revisit if product specifies a stricter funnel.
 
 ---
 
 ## Resume journal (newest first)
+
+### Fire 1 (cont. 3) — 2026-06-13
+- Lead status-transition guard (`src/lib/business/lead-workflow.ts`, 10 unit tests) + **wired into `/api/frappe/leads` PATCH** with current-status lookup from the leads fixture; 3 route-level tests prove invalid transitions are rejected (400) and valid ones pass. **119 tests total, all green.** Matrix recorded under Decisions.
+- Gates: typecheck/lint/build/test all exit 0.
+- **Next start:** (a) lead→customer conversion-preservation test (timeline/notes/reseller/assignment) + invoice payment-state update on receipt; (b) opt-in server-side pagination on `/api/frappe/leads` GET via `scopedPage`/a `paginate` helper (currently loads full scoped array); (c) Docker fire for #3 bench migrate + #6 compose up + DB-side latency.
 
 ### Fire 1 (cont. 2) — 2026-06-13
 - +6 business-logic tests: `calculateInvoiceTotals` (subtotal/discount/tax/clamp) + `calculateCommissionEntries` (formula base×pct/100, country/reseller scope isolation, verified against real fixtures). **106 tests total, all green.**
