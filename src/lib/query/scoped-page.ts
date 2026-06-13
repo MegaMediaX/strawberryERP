@@ -72,23 +72,19 @@ function clampPageSize(size: number | undefined): number {
 }
 
 /**
- * Apply scope → filters → sort → page. Returns one page plus the scoped total.
+ * Apply filters → sort → page to an already-scoped (or unscoped) record set.
  * Pure and synchronous so it is trivially testable and benchmarkable.
  */
-export function scopedPage<T extends ScopedRecord>(
-  records: readonly T[],
-  scope: ScopeContext,
-  query: PageQuery = {},
-): Page<T> {
+export function paginate<T>(records: readonly T[], query: PageQuery = {}): Page<T> {
   const pageSize = clampPageSize(query.pageSize);
   const page = query.page && query.page > 0 ? Math.floor(query.page) : 1;
 
-  let scoped = records.filter((record) => inScope(record, scope));
+  let rowsAll = records as readonly T[];
 
   if (query.filters) {
     const entries = Object.entries(query.filters).filter(([, value]) => value !== undefined && value !== "");
     if (entries.length) {
-      scoped = scoped.filter((record) =>
+      rowsAll = rowsAll.filter((record) =>
         entries.every(([key, value]) => String((record as Record<string, unknown>)[key] ?? "") === value),
       );
     }
@@ -97,7 +93,7 @@ export function scopedPage<T extends ScopedRecord>(
   if (query.sortBy) {
     const dir = query.sortDir === "desc" ? -1 : 1;
     const key = query.sortBy;
-    scoped = [...scoped].sort((a, b) => {
+    rowsAll = [...rowsAll].sort((a, b) => {
       const av = (a as Record<string, unknown>)[key];
       const bv = (b as Record<string, unknown>)[key];
       if (av === bv) return 0;
@@ -105,10 +101,24 @@ export function scopedPage<T extends ScopedRecord>(
     });
   }
 
-  const total = scoped.length;
+  const total = rowsAll.length;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const start = (page - 1) * pageSize;
-  const rows = scoped.slice(start, start + pageSize);
+  const rows = rowsAll.slice(start, start + pageSize);
 
   return { rows, page, pageSize, total, totalPages };
+}
+
+/**
+ * Apply scope → filters → sort → page. Returns one page plus the scoped total.
+ * Scope is enforced BEFORE pagination so a scoped user can never page into
+ * out-of-scope records.
+ */
+export function scopedPage<T extends ScopedRecord>(
+  records: readonly T[],
+  scope: ScopeContext,
+  query: PageQuery = {},
+): Page<T> {
+  const scoped = records.filter((record) => inScope(record, scope));
+  return paginate(scoped, query);
 }

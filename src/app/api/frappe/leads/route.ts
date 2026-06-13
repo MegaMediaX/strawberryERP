@@ -6,6 +6,7 @@ import { allowedCountries, leads, leadStatuses, type Country } from "@/lib/sampl
 import { resolvePortalSession, roleHeadersFromSession } from "@/lib/portal-security";
 import { authorizeApiRequest, logSuccessfulApiRequest } from "@/lib/security/permissions";
 import { validateLeadTransition } from "@/lib/business/lead-workflow";
+import { paginate } from "@/lib/query/scoped-page";
 
 type LeadPayload = {
   companyName?: string;
@@ -42,6 +43,30 @@ export async function GET(request: Request) {
     ...roleHeadersFromSession(session),
     },
   );
+
+  const url = new URL(request.url);
+  const pageParam = url.searchParams.get("page");
+  const pageSizeParam = url.searchParams.get("pageSize");
+  if (pageParam || pageSizeParam) {
+    const result = paginate(scopedLeads, {
+      page: pageParam ? Number(pageParam) : undefined,
+      pageSize: pageSizeParam ? Number(pageSizeParam) : undefined,
+      sortBy: url.searchParams.get("sortBy") ?? undefined,
+      sortDir: url.searchParams.get("sortDir") === "desc" ? "desc" : "asc",
+      filters: {
+        status: url.searchParams.get("status") ?? "",
+        country: url.searchParams.get("country") ?? "",
+        priority: url.searchParams.get("priority") ?? "",
+      },
+    });
+    return devStoreResponse(result.rows, {
+      page: result.page,
+      pageSize: result.pageSize,
+      total: result.total,
+      totalPages: result.totalPages,
+      policy: "Configure FRAPPE_BASE_URL, FRAPPE_API_KEY, and FRAPPE_API_SECRET to proxy ERPNext data.",
+    });
+  }
 
   return devStoreResponse(scopedLeads, {
     policy: "Configure FRAPPE_BASE_URL, FRAPPE_API_KEY, and FRAPPE_API_SECRET to proxy ERPNext data.",

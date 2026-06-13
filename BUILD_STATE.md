@@ -45,7 +45,7 @@ Mark `[x]` **only after verified by running**, not when written.
 ## Scale target (DoD bar)
 
 - [x] Repeatable seed generator: deterministic ≥10k leads, ≥5k customers, multi-country/reseller/status/priority/currency (`src/lib/dev/synthetic.ts`)
-- [x] Server-side pagination + filtering primitive (`src/lib/query/scoped-page.ts`) — scope→filter→sort→page, page-size capped at 200
+- [x] Server-side pagination + filtering primitive (`src/lib/query/scoped-page.ts`) — `paginate` (filter→sort→page, cap 200) + `scopedPage` (scope-first); **wired into `/api/frappe/leads` GET as opt-in pagination** (page/pageSize/sortBy/sortDir/status/country/priority), backward-compatible. Remaining lists (customers, invoices, receipts, resellers) still load full scoped arrays.
 - [~] Indexed DocTypes: `search_index` added to partner_lead (country, assigned_user, status, follow_up_date, priority, reseller) + partner_customer (country, reseller). Remaining: invoices payment_state, receipts. **DB index effect verified only on `bench migrate` (Docker fire).**
 - [~] Latency: portal-layer p95 **0.86ms** @ 10k/5k (measured, in test output). DB-side p95 <400ms still needs indexed Frappe run.
 - [x] Pagination + scoping correctness under role at volume — proven: no scoped role pages into out-of-scope rows (6 tests over full 10k set)
@@ -85,6 +85,13 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ---
 
 ## Resume journal (newest first)
+
+### Fire 1 (cont. 4) — 2026-06-13
+- Extracted `paginate()` from `scopedPage` (5 unit tests) and **wired opt-in server-side pagination into `/api/frappe/leads` GET** (page/pageSize/sortBy/sortDir + status/country/priority filters; returns total/totalPages; full-array fallback when no params). 3 route GET tests. **127 tests total, all green.**
+- Note: pagination applies to the dev-store branch; the Frappe proxy branch needs matching `limit_start`/`limit_page_length` passthrough (next).
+- Conversion-preservation deferred: no TS conversion fn exists (lives in Frappe Python `api/leads.py`); build/test it in a bench-capable fire rather than guess a TS twin.
+- Gates: typecheck/lint/build/test all exit 0.
+- **Next start:** (a) Frappe-proxy pagination passthrough; (b) apply `paginate` to customers/invoices/receipts/resellers GET routes; (c) invoice payment-state-on-receipt test; (d) Docker fire (#3 migrate, #6 compose, DB latency).
 
 ### Fire 1 (cont. 3) — 2026-06-13
 - Lead status-transition guard (`src/lib/business/lead-workflow.ts`, 10 unit tests) + **wired into `/api/frappe/leads` PATCH** with current-status lookup from the leads fixture; 3 route-level tests prove invalid transitions are rejected (400) and valid ones pass. **119 tests total, all green.** Matrix recorded under Decisions.
