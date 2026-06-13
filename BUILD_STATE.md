@@ -87,6 +87,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 13) — 2026-06-13
+- Customer CSV import (`validateCustomerImportCsv`: country block, unconfigured-reseller rejection, name duplicate, required columns) + CSV export (`toCsv`: header union, quoting, double-quote escaping, empty cells). 8 tests. **177 total, all green** (typecheck/lint/build/test exit 0).
+- **Next start (Docker-gated):** Frappe-proxy pagination passthrough; #3 `bench migrate`; #6 `docker compose up`; DB latency; conversion-preservation. Host-side remaining: custom-field builder validation, currency/numbering settings, static-data→Frappe audit (§17.4), module UI completion.
+
 ### Fire 1 (cont. 12) — 2026-06-13
 - Lead CSV import validation test (`validateImportCsv`): header/required-column checks, accepts valid unique enabled-country row, rejects blocked country on import path (§9), rejects invalid gender, detects duplicate by email. 6 tests. **169 total, all green** (typecheck/lint/build/test exit 0).
 - **Next start (Docker-gated):** Frappe-proxy pagination passthrough; #3 `bench migrate`; #6 `docker compose up`; DB latency; conversion-preservation. Host-side: `validateCustomerImportCsv` test, custom-field builder validation, currency/numbering settings, static-data→Frappe audit (§17.4).
