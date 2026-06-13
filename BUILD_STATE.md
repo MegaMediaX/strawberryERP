@@ -87,6 +87,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 10) — 2026-06-13
+- Secret-redaction test (`upsertIntegrationSetting`/`maskSecretConfig`): secret/token/password/key fields stored as `********`, raw values never retained, non-secret fields preserved, empty secret stays empty. 2 tests. **157 total, all green** (typecheck/lint/build/test exit 0).
+- **Next start (Docker-gated):** Frappe-proxy pagination passthrough; #3 `bench migrate`; #6 `docker compose up`; DB latency; conversion-preservation. Host-verifiable §9/§18 surface now comprehensive — further host work shifts toward module UI completion / static-data audit (handoff §17.4).
+
 ### Fire 1 (cont. 9) — 2026-06-13
 - Delete-queue *route-level* authorization test (`evaluateApiPermission`): true Super Admin may resolve; impersonating Super Admin blocked (sensitive, 403); Reseller Admin / Sales / Regional Director all denied (403). 5 tests. **155 total, all green** (typecheck/lint/build/test exit 0).
 - Host-verifiable §9/§18 coverage now substantial: no-DELETE, country block, impersonation no-escalation, API-key scoping, delete-queue soft-delete + resolution-authz, scoped pagination at 10k/5k, lead workflow, billing.
