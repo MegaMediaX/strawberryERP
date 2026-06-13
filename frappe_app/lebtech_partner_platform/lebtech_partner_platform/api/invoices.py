@@ -6,12 +6,25 @@ from frappe.utils import now_datetime
 
 from lebtech_partner_platform.api.commissions import create_commission_entries_for_partner_invoice
 from lebtech_partner_platform.validators import validate_country_value, write_activity
+from lebtech_partner_platform.api._pagination import (
+    DEFAULT_PAGE_LENGTH,
+    MAX_PAGE_LENGTH,
+    safe_int,
+    safe_order_by,
+)
 
 INVOICE_DOCTYPE = "Partner Invoice"
+SORTABLE_FIELDS = {"issued_at", "modified", "creation", "country", "reseller", "payment_status", "total", "due_date"}
 
 
 @frappe.whitelist(methods=["GET"])
-def list_invoices(country: str | None = None, reseller: str | None = None):
+def list_invoices(
+    country: str | None = None,
+    reseller: str | None = None,
+    limit_start=None,
+    limit_page_length=None,
+    order_by: str | None = None,
+):
     filters = {}
     if country:
         validate_country_value(country)
@@ -39,7 +52,9 @@ def list_invoices(country: str | None = None, reseller: str | None = None):
             "due_date",
             "issued_at",
         ],
-        order_by="issued_at desc",
+        order_by=safe_order_by(order_by, SORTABLE_FIELDS, default="issued_at desc"),
+        limit_start=safe_int(limit_start, 0, 0),
+        limit_page_length=safe_int(limit_page_length, DEFAULT_PAGE_LENGTH, 1, MAX_PAGE_LENGTH),
     )
 
 

@@ -87,6 +87,11 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 23) — 2026-06-13
+- Mirrored the Frappe-side pagination pattern into `list_customers`, `list_invoices`, `list_receipts` (limit_start/limit_page_length/order_by via shared `_pagination` helpers + per-DocType sortable-field allowlists). Host-verified: `py_compile` clean on all four API modules + helper tests pass. JS suite still 238 green.
+- Portal↔Frappe pagination now end-to-end for leads/customers/invoices/receipts.
+- **Next start (Docker-gated):** #3 `bench migrate`; #6 `docker compose up`; DB-side latency at 10k/5k; conversion-preservation; DocType persistence. Host-side essentially exhausted.
+
 ### Fire 1 (cont. 22) — 2026-06-13
 - **Frappe-side pagination (Python):** `list_leads` now reads `limit_start`/`limit_page_length`/`order_by` and forwards them to `frappe.get_list`. Pure helpers extracted to `api/_pagination.py` (frappe-free) with an **order_by allowlist (SQL-injection guard)** + bounded page length. Host-verified: `python -m py_compile` clean + `test_pagination.py` helper tests pass (incl. injection-guard cases). JS suite still 238 green.
 - This closes the portal↔Frappe pagination loop for leads end to end (other list methods can mirror the same 3-line pattern on the bench fire).
