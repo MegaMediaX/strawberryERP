@@ -87,6 +87,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 24) — 2026-06-13
+- DocType integrity test (`src/lib/frappe/__tests__/doctype-integrity.test.ts`): all 37 DocType JSONs parse + valid shape (doctype/name/module/fields), every field has fieldname+fieldtype, **§18 invariant locked at data model — no non-Super-Admin delete grant**, and partner_lead scale indexes present. 5 tests. De-risks `bench migrate`. **243 total, all green** (typecheck/lint/build/test exit 0).
+- **Next start (Docker-gated):** #3 `bench migrate`; #6 `docker compose up`; DB latency; conversion-preservation; DocType persistence. Optional host-side: docker-compose.prod.yml structural-parse test (required services present) — guards #6 without a daemon.
+
 ### Fire 1 (cont. 23) — 2026-06-13
 - Mirrored the Frappe-side pagination pattern into `list_customers`, `list_invoices`, `list_receipts` (limit_start/limit_page_length/order_by via shared `_pagination` helpers + per-DocType sortable-field allowlists). Host-verified: `py_compile` clean on all four API modules + helper tests pass. JS suite still 238 green.
 - Portal↔Frappe pagination now end-to-end for leads/customers/invoices/receipts.
