@@ -87,6 +87,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 20) — 2026-06-13
+- Commission-rule validation (`src/lib/business/commission-rules.ts`: reseller required, country block, percentage in (0,100], trigger/appliesTo allowlists) **replacing the inline country-only check in `POST commissions/rules`**. 8 tests. **231 total, all green** (typecheck/lint/build/test exit 0).
+- **Next start (Docker-gated):** Frappe-proxy pagination passthrough; #3 `bench migrate`; #6 `docker compose up`; conversion-preservation; DocType persistence. Host-side getting sparse: reseller create validation, audit-log shape, or begin the static-data→Frappe audit (§17.4).
+
 ### Fire 1 (cont. 19) — 2026-06-13
 - Payment-method validation (`src/lib/business/payment-methods.ts`: method-name allowlist, country block on assigned countries, non-negative display order) **+ wired into `POST settings/payment-methods`** (Super-Admin-only, sensitive, invalid→400). 8 tests. **223 total, all green** (typecheck/lint/build/test exit 0).
 - All 5 Super-Admin settings surfaces now validated + wired + authz'd: custom-fields, currencies, invoice-numbering, notifications, payment-methods.

@@ -22,6 +22,8 @@ import {
 import type { CurrencySetting, NotificationRule, PaymentMethod } from "@/lib/phase2-data";
 import { validateNotificationRule } from "@/lib/business/notifications";
 import { validatePaymentMethod } from "@/lib/business/payment-methods";
+import { validateCommissionRule } from "@/lib/business/commission-rules";
+import type { CommissionRule } from "@/lib/phase2-data";
 import {
   apiAuditEvent,
   commissionRules,
@@ -389,9 +391,9 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   if (contextKey === "commissions/rules") {
-    const countryError = validateCountry(objectPayload.country as string | undefined);
-    if (countryError) {
-      return jsonError(countryError);
+    const ruleError = validateCommissionRule(objectPayload as Partial<CommissionRule>);
+    if (ruleError) {
+      return jsonError(ruleError);
     }
 
     return sampleResponse(
