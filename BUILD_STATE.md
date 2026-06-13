@@ -32,7 +32,8 @@ Mark `[x]` **only after verified by running**, not when written.
 - [x] **#4** `typecheck` + `lint` + `build` pass, zero errors *(verified 2026-06-13, all exit 0)*
 - [ ] **#5** Tests pass for business logic + security invariants + scale
   - [x] Test runner wired (Vitest, `@` alias) + `npm test`
-  - [x] Security invariants: no-DELETE, no-delete-scope, admin-route key rejection, scope mapping, sensitive-action flag — **56 tests passing**
+  - [x] Security invariants: no-DELETE, no-delete-scope, admin-route key rejection, scope mapping, sensitive-action flag — **56 tests**
+  - [x] API-key scoping at request level (`evaluateApiPermission`): scope grant/deny, read/write split, admin-route rejection, expired/revoked/unknown-key rejection, opt-in fall-through — **11 tests**
   - [x] Impersonation no-privilege-escalation test (23 tests)
   - [x] Country block (IL/ISR/occupied-palestine) test (13 tests)
   - [~] Business logic: invoice totals + commission formula (6) ✓; lead status-transition guard (10) ✓ + PATCH-boundary enforcement (3) ✓; receipt→invoice payment-state + trigger + country block (5) ✓; lead→customer conversion preservation still TODO (lives in Frappe Python — bench fire)
@@ -85,6 +86,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ---
 
 ## Resume journal (newest first)
+
+### Fire 1 (cont. 7) — 2026-06-13
+- Request-level API-key scoping integration test (`evaluateApiPermission` + seeded dev-store keys): in-scope allow, out-of-scope/read-only/admin-route deny (403), expired/revoked/unknown deny (401), no-key fall-through. 11 tests. **146 total, all green** (typecheck/lint/build/test exit 0).
+- **Next start:** Frappe-proxy pagination passthrough (limit_start/limit_page_length — bench fire, unverifiable on host); delete-queue resolve-route behavior test; then Docker fire (#3 migrate, #6 compose, DB latency) + conversion-preservation.
 
 ### Fire 1 (cont. 6) — 2026-06-13
 - Applied pagination to the generic `/api/frappe/*` boundary via a `paginateList` helper (invoices/receipts/customers/resellers/commissions/contracts), opt-in + backward-compatible. 3 boundary tests. **135 tests total, all green** (typecheck/lint/build/test exit 0).
