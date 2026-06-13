@@ -87,6 +87,11 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 30) — 2026-06-13 — 2FA ENROLLMENT UI
+- Built `/account/security` page (client) — self-service 2FA: Enable (setup → shows base32 key + otpauth URI for manual/QR entry) → enter 6-digit code → Verify & enable; Disable. Glue over the already-tested `/api/auth/2fa/*` endpoints.
+- Verified: typecheck/lint/build/test all exit 0 (288 tests); **live render check — GET /account/security → HTTP 200 with the 2FA UI HTML present** (dev server, then stopped).
+- **Next start:** optional QR image (add `qrcode` dep) and link the page into the nav; then Docker-gated #3/#6 + Frappe 2FA persistence.
+
 ### Fire 1 (cont. 29) — 2026-06-13 — 2FA ENROLLMENT
 - **2FA enrollment lifecycle**: `two-factor-store.ts` (per-user enrollment; secret active only after code confirmation) + `POST /api/auth/2fa/{setup,activate,disable}` (session-authenticated). `getTotpSecretForUser` now prefers an activated enrollment over any seed. Full-flow test: setup → wrong code rejected → valid code activates → login then requires 2FA → valid code logs in → disable → password-only again. **288 total, all green** (typecheck/lint/build/test exit 0). Build shows the 3 new routes.
 - **Next start:** enrollment QR UI page (account/security) rendering the otpauth URL; then Docker-gated #3/#6 + Frappe persistence of 2FA secrets.
