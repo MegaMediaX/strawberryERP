@@ -1,4 +1,5 @@
 import { allowedCountries, type Country, type Role } from "@/lib/sample-data";
+import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth/session-token";
 
 export type PortalUser = {
   id: string;
@@ -116,17 +117,21 @@ export function resolvePortalSession(request: Request): PortalSession {
   };
 }
 
-export function resolveExplicitPortalSession(headers: Headers): PortalSession | null {
-  const userId = headers.get("x-platform-user-id");
-  if (!userId) {
-    return null;
+function readSessionCookie(headers: Headers): string | undefined {
+  const raw = headers.get("cookie");
+  if (!raw) return undefined;
+  for (const part of raw.split(";")) {
+    const [name, ...rest] = part.trim().split("=");
+    if (name === SESSION_COOKIE) return rest.join("=");
   }
+  return undefined;
+}
 
-  const user = portalUsers.find((item) => item.id === userId && item.active);
-  if (!user) {
-    return null;
-  }
-
+function buildSession(
+  user: PortalUser,
+  headers: Headers,
+  source: PortalSession["source"],
+): PortalSession {
   const impersonatedUserId = headers.get("x-platform-impersonate-user-id");
   const impersonated = impersonatedUserId
     ? portalUsers.find((item) => item.id === impersonatedUserId && item.active)
@@ -139,9 +144,39 @@ export function resolveExplicitPortalSession(headers: Headers): PortalSession | 
     effectiveUser,
     impersonatedBy: canImpersonate ? user : undefined,
     startedAt: new Date().toISOString(),
-    source: "dev-header",
+    source,
     auditLabel: canImpersonate ? `${user.name} impersonating ${effectiveUser.name}` : `${user.name} as ${user.role}`,
   };
+}
+
+export function resolveExplicitPortalSession(headers: Headers): PortalSession | null {
+  // 1. A verified, signed session cookie is authoritative (real login).
+  const payload = verifySessionToken(readSessionCookie(headers));
+  if (payload) {
+    const sessionUser = portalUsers.find((item) => item.id === payload.sub && item.active);
+    if (sessionUser) {
+      return buildSession(sessionUser, headers, "session-token");
+    }
+  }
+
+  // 2. Dev/proxy fallback: trusted x-platform-user-id header.
+  // Fail closed in production — only a signed session cookie is trusted there,
+  // so spoofed identity headers cannot impersonate a user (CLAUDE_HANDOFF §17).
+  const allowDevHeaders =
+    process.env.NODE_ENV !== "production" || process.env.ALLOW_DEV_IDENTITY_HEADERS === "true";
+  if (!allowDevHeaders) {
+    return null;
+  }
+
+  const userId = headers.get("x-platform-user-id");
+  if (!userId) {
+    return null;
+  }
+  const user = portalUsers.find((item) => item.id === userId && item.active);
+  if (!user) {
+    return null;
+  }
+  return buildSession(user, headers, "dev-header");
 }
 
 export function canAccessSettings(session: PortalSession) {

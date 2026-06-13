@@ -27,7 +27,7 @@ Mark `[x]` **only after verified by running**, not when written.
 ## Definition of Done — top-level gates
 
 - [ ] **#1** Every MASTER-spec module implemented (module list below)
-- [ ] **#2** Production auth (handoff §17.1) — real login/session, header stripping, identity→role mapping
+- [~] **#2** Production auth — **real login implemented**: credential form → scrypt-hashed passwords → HMAC-signed session cookie → verified server-side identity; logout; signed cookie is authoritative; **dev identity header fails closed in production** (§17). Remaining: OIDC/SSO option, 2FA (authenticator), edge header-stripping config.
 - [ ] **#3** All Frappe DocTypes defined + indexed; `bench migrate` clean; app installs
 - [x] **#4** `typecheck` + `lint` + `build` pass, zero errors *(verified 2026-06-13, all exit 0)*
 - [ ] **#5** Tests pass for business logic + security invariants + scale
@@ -86,6 +86,12 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ---
 
 ## Resume journal (newest first)
+
+### Fire 1 (cont. 27) — 2026-06-13 — REAL LOGIN
+- **Implemented production-style authentication** (user-requested): `src/lib/auth/{passwords,session-token,credentials}.ts` (scrypt hashing, HMAC-signed stateless session token w/ expiry+tamper detection, seeded creds as hashes only) + `POST /api/auth/login` (sets httpOnly session cookie) + `POST /api/auth/logout` + real credential form at `/login`.
+- `resolveExplicitPortalSession` now trusts a **verified signed cookie first** (source "session-token"); the x-platform-user-id dev header **fails closed in production** (NODE_ENV=production ⇒ ignored unless ALLOW_DEV_IDENTITY_HEADERS=true) — §17 spoof defense.
+- 18 auth tests (password hash/verify, token sign/verify/tamper/expiry, authenticate, login 200+cookie / 401 / 400, logout clears cookie, cookie→identity resolution, production fail-closed). **270 total, all green** (typecheck/lint/build/test exit 0). Build shows /api/auth/login, /api/auth/logout, /login.
+- **Next start (Docker-gated):** #3 `bench migrate`; #6 `docker compose up`; plus 2FA + map login identities to Frappe Portal Role Assignment on the bench fire.
 
 ### Fire 1 (cont. 26) — 2026-06-13
 - Deploy env-completeness test (`src/lib/frappe/__tests__/env-completeness.test.ts`): every required (no-default `${VAR}`) compose variable is documented in `.env.example`/`.env.production.example`, incl. PORTAL_API_KEY_SECRET / PORTAL_SESSION_SECRET. Guards #6 runbook accuracy. 3 tests. **252 total, all green** (typecheck/lint/test exit 0; build unaffected — test-only).
