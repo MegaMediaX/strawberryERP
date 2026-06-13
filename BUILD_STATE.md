@@ -94,6 +94,13 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 44) — 2026-06-14 — 2FA→FRAPPE PERSISTENCE (server side, live)
+- **Secure Frappe-side 2FA persistence + verification**: added `api/_totp.py` (frappe-free RFC-6238 verify) + whitelisted server-to-server methods in `api/two_factor.py` — `enroll`, `verify(activate)`, `status`, `remove` — guarded to Administrator/System Manager only. **The secret is verified inside Frappe and NEVER returned over the API** (stored in the encrypted Password field).
+- Host-verified: `py_compile` + `test_totp.py` (RFC 6238 vectors) pass.
+- **Live-verified** against running Frappe (Administrator API key): enroll→{enrolled:true}; verify+activate(valid code)→{ok:true}; status→{active:true}; wrong code→{ok:false}; remove→{disabled:true}. Portal Two Factor record created/removed.
+- JS suite 299 green.
+- **Next start:** wire the Next 2FA routes (setup/activate/disable) + login to call these Frappe methods when `isFrappeConfigured()` (async store; the secret stays server-side — login calls `verify`, not a secret read). Then portal-identity↔Frappe mapping (§17).
+
 ### Fire 1 (cont. 43) — 2026-06-14 — 2FA LIFECYCLE VERIFIED LIVE
 - Added `scripts/2fa-live-smoke.mjs` (+ `npm run smoke:2fa`): computes RFC-6238 TOTP locally and drives the full lifecycle against the running stack. **9/9 PASS:** password login→cookie; setup→secret; activate wrong-code→400; activate valid-code→200; **login w/o code→401 (2FA now required); login w/ code→200**; disable→200; password-only works again→200.
 - Proves DoD #2 2FA end-to-end LIVE (setup, code-verified activation, login enforcement, disable) against the production container. (Enrollment is per-container in-memory until the Frappe-persistence bridge lands.)
