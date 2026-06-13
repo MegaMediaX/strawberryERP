@@ -20,13 +20,15 @@
       "fieldtype": "Select",
       "label": "Country",
       "options": "Lebanon\nCyprus\nJordan\nSyria",
-      "reqd": true
+      "reqd": true,
+      "search_index": true
     },
     {
       "fieldname": "reseller",
       "fieldtype": "Link",
       "label": "Reseller",
-      "options": "Reseller"
+      "options": "Reseller",
+      "search_index": true
     },
     {
       "fieldname": "email",
