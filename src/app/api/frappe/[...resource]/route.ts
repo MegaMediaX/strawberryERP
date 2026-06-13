@@ -19,7 +19,8 @@ import {
   validateInvoiceNumbering,
   type InvoiceNumberingConfig,
 } from "@/lib/business/billing-settings";
-import type { CurrencySetting } from "@/lib/phase2-data";
+import type { CurrencySetting, NotificationRule } from "@/lib/phase2-data";
+import { validateNotificationRule } from "@/lib/business/notifications";
 import {
   apiAuditEvent,
   commissionRules,
@@ -267,6 +268,23 @@ export async function POST(request: Request, context: RouteContext) {
       performedBy: session.auditLabel,
     });
     return sampleResponse({ ...objectPayload }, { status: 201, audit });
+  }
+
+  if (contextKey === "settings/notifications") {
+    const ruleError = validateNotificationRule(objectPayload as Partial<NotificationRule>);
+    if (ruleError) {
+      return jsonError(ruleError);
+    }
+
+    const audit = appendAudit({
+      entityType: "Notification Rule",
+      entityId: String(objectPayload.eventType ?? ""),
+      action: "create",
+      oldValue: "",
+      newValue: Array.isArray(objectPayload.channels) ? objectPayload.channels.join(",") : "",
+      performedBy: session.auditLabel,
+    });
+    return sampleResponse({ id: `NR-${Date.now()}`, ...objectPayload }, { status: 201, audit });
   }
 
   if (contextKey === "settings/invoice-numbering") {
