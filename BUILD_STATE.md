@@ -87,6 +87,11 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 26) — 2026-06-13
+- Deploy env-completeness test (`src/lib/frappe/__tests__/env-completeness.test.ts`): every required (no-default `${VAR}`) compose variable is documented in `.env.example`/`.env.production.example`, incl. PORTAL_API_KEY_SECRET / PORTAL_SESSION_SECRET. Guards #6 runbook accuracy. 3 tests. **252 total, all green** (typecheck/lint/test exit 0; build unaffected — test-only).
+- Host de-risking of the Docker-gated path is now essentially complete (DocType integrity, compose topology, env completeness all locked).
+- **Next start (Docker-gated, no further host work that closes gates):** #3 `bench migrate`; #6 live `docker compose up`; DB latency at 10k/5k; conversion-preservation; DocType persistence. These REQUIRE a Docker + Frappe-bench host.
+
 ### Fire 1 (cont. 25) — 2026-06-13
 - Compose topology test (`src/lib/frappe/__tests__/compose-topology.test.ts`, parses `docker-compose.yml` via js-yaml): all 10 required services present (NGINX/Next/Frappe/MariaDB/Redis×3/workers/scheduler), restart policies, healthchecks on stateful+edge; **§9/§12 edge invariants locked — Frappe bound to 127.0.0.1, MariaDB/Redis unpublished, NGINX the only public port.** 6 tests. Guards #6 structurally without a daemon. **249 total, all green** (typecheck/lint/test exit 0; build unaffected — test-only).
 - Corrected DoD #6: this tree's prod compose is `docker-compose.yml` (no separate prod file).
