@@ -13,6 +13,7 @@ import {
 } from "@/lib/dev-store";
 import { devStoreResponse, maybeRouteToFrappe } from "@/lib/backend/backend-router";
 import { paginate } from "@/lib/query/scoped-page";
+import { frappePaginationParams } from "@/lib/query/frappe-pagination";
 import { validateCustomFieldDefinition, type CustomFieldDefinition } from "@/lib/business/custom-fields";
 import {
   validateCurrencySetting,
@@ -81,7 +82,17 @@ export async function GET(request: Request, context: RouteContext) {
     return denied;
   }
 
-  const proxied = await maybeRouteToFrappe(contextKey, "get", scopePayloadForFrappe(contextKey, session));
+  const getUrl = new URL(request.url);
+  const frappePagination = frappePaginationParams({
+    page: getUrl.searchParams.get("page"),
+    pageSize: getUrl.searchParams.get("pageSize"),
+    sortBy: getUrl.searchParams.get("sortBy"),
+    sortDir: getUrl.searchParams.get("sortDir"),
+  });
+  const proxied = await maybeRouteToFrappe(contextKey, "get", {
+    ...scopePayloadForFrappe(contextKey, session),
+    ...frappePagination,
+  });
   if (proxied) {
     logSuccessfulApiRequest(request, contextKey, "GET", 200);
     return proxied;

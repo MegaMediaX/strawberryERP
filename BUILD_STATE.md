@@ -87,6 +87,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 21) — 2026-06-13
+- **Frappe-proxy pagination passthrough (portal side):** `frappePaginationParams` maps page/pageSize/sort → `limit_start`/`limit_page_length`/`order_by`, merged into the boundary GET proxy payload (forwarded as query params by the existing `withQuery`). 7 unit tests. **238 total, all green** (typecheck/lint/build/test exit 0). Python-side acceptance of these params is the remaining bench-fire concern.
+- **Next start (Docker-gated):** #3 `bench migrate`; #6 `docker compose up`; ensure whitelisted Frappe list methods read limit_start/limit_page_length/order_by; DB-side latency; conversion-preservation; DocType persistence. Host-side now very sparse.
+
 ### Fire 1 (cont. 20) — 2026-06-13
 - Commission-rule validation (`src/lib/business/commission-rules.ts`: reseller required, country block, percentage in (0,100], trigger/appliesTo allowlists) **replacing the inline country-only check in `POST commissions/rules`**. 8 tests. **231 total, all green** (typecheck/lint/build/test exit 0).
 - **Next start (Docker-gated):** Frappe-proxy pagination passthrough; #3 `bench migrate`; #6 `docker compose up`; conversion-preservation; DocType persistence. Host-side getting sparse: reseller create validation, audit-log shape, or begin the static-data→Frappe audit (§17.4).
