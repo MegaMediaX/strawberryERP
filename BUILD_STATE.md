@@ -35,7 +35,7 @@ Mark `[x]` **only after verified by running**, not when written.
   - [x] Security invariants: no-DELETE, no-delete-scope, admin-route key rejection, scope mapping, sensitive-action flag — **56 tests passing**
   - [x] Impersonation no-privilege-escalation test (23 tests)
   - [x] Country block (IL/ISR/occupied-palestine) test (13 tests)
-  - [~] Business logic: invoice totals + commission formula (6) ✓; lead status-transition guard (10) ✓ + enforced at PATCH boundary (3 route tests) ✓; invoice payment-state update + lead→customer conversion preservation still TODO
+  - [~] Business logic: invoice totals + commission formula (6) ✓; lead status-transition guard (10) ✓ + PATCH-boundary enforcement (3) ✓; receipt→invoice payment-state + trigger + country block (5) ✓; lead→customer conversion preservation still TODO (lives in Frappe Python — bench fire)
   - [x] SCALE: seeded pagination/scoping correctness + portal-layer latency (8 tests; p95 0.86ms @ 10k/5k)
 - [ ] **#6** `docker compose -f docker-compose.prod.yml up` boots full stack; health green; Hostinger runbook verified
 - [ ] **#7** All §9/§18 invariants preserved (partially proven by #5 invariant tests)
@@ -85,6 +85,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ---
 
 ## Resume journal (newest first)
+
+### Fire 1 (cont. 5) — 2026-06-13
+- Receipt→invoice payment-state test (`createReceiptFromPayload`): Fully Paid when amount covers total, Partially Paid for a deposit, negative-amount clamp, country block on receipt path, commission trigger linkage. 5 tests. **132 tests total, all green** (typecheck/lint/build/test exit 0).
+- **Next start:** Frappe-proxy pagination passthrough (limit_start/limit_page_length); apply `paginate` to customers/invoices/receipts/resellers GET; then Docker fire (#3 migrate, #6 compose, DB latency) + conversion-preservation (Frappe Python).
 
 ### Fire 1 (cont. 4) — 2026-06-13
 - Extracted `paginate()` from `scopedPage` (5 unit tests) and **wired opt-in server-side pagination into `/api/frappe/leads` GET** (page/pageSize/sortBy/sortDir + status/country/priority filters; returns total/totalPages; full-array fallback when no params). 3 route GET tests. **127 tests total, all green.**
