@@ -23,6 +23,8 @@ const sensitiveRoutes = new Set([
   "delete-queue/resolve:POST",
   "settings:POST",
   "settings:PATCH",
+  "settings/custom-fields:POST",
+  "settings/custom-fields:PATCH",
   "settings/integrations:POST",
   "settings/integrations:PATCH",
   "integrations/whatsapp:PATCH",

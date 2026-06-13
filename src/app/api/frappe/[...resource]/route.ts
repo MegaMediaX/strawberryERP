@@ -13,6 +13,7 @@ import {
 } from "@/lib/dev-store";
 import { devStoreResponse, maybeRouteToFrappe } from "@/lib/backend/backend-router";
 import { paginate } from "@/lib/query/scoped-page";
+import { validateCustomFieldDefinition, type CustomFieldDefinition } from "@/lib/business/custom-fields";
 import {
   apiAuditEvent,
   commissionRules,
@@ -226,6 +227,23 @@ export async function POST(request: Request, context: RouteContext) {
       performedBy: session.user.name,
     });
     return sampleResponse({ user: session.user, effectiveUser: target, impersonatedBy: session.user, audit }, { status: 201 });
+  }
+
+  if (contextKey === "settings/custom-fields") {
+    const definitionError = validateCustomFieldDefinition(objectPayload as Partial<CustomFieldDefinition>);
+    if (definitionError) {
+      return jsonError(definitionError);
+    }
+
+    const audit = appendAudit({
+      entityType: "Custom Field Definition",
+      entityId: String(objectPayload.fieldName ?? ""),
+      action: "create",
+      oldValue: "",
+      newValue: String(objectPayload.target ?? ""),
+      performedBy: session.auditLabel,
+    });
+    return sampleResponse({ id: `CFD-${Date.now()}`, ...objectPayload }, { status: 201, audit });
   }
 
   if (contextKey === "invoices") {

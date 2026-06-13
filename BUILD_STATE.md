@@ -87,6 +87,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 15) — 2026-06-13
+- **Wired custom-field validation into `POST settings/custom-fields`**: Super-Admin-only (non-super 403), sensitive → blocked during impersonation (added to sensitiveRoutes), invalid definition rejected (400), valid → 201 with audit. 4 route tests. **189 total, all green** (typecheck/lint/build/test exit 0).
+- **Next start (Docker-gated):** Frappe-proxy pagination passthrough; #3 `bench migrate`; #6 `docker compose up`; Custom Field Definition DocType persistence; conversion-preservation. Host-side: currency/numbering settings validation, static-data→Frappe audit (§17.4).
+
 ### Fire 1 (cont. 14) — 2026-06-13
 - Built custom-field-builder validation (`src/lib/business/custom-fields.ts`, new module): target/type allowlist (fail-closed), required label, snake_case machine name, reserved-name rejection, dropdown-requires-options. 8 tests. **185 total, all green** (typecheck/lint/build/test exit 0).
 - **Next start (Docker-gated):** Frappe-proxy pagination passthrough; #3 `bench migrate`; #6 `docker compose up`; DB latency; conversion-preservation. Host-side: wire `validateCustomFieldDefinition` into a create route + Custom Field Definition DocType; currency/numbering settings; static-data→Frappe audit (§17.4).
