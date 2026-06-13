@@ -87,6 +87,11 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 36) — 2026-06-13 — DOCKER FIRE RUNBOOK SCRIPT
+- Added `scripts/bench-fire.sh` — **turnkey close-out** for the Docker-gated DoD items: validates compose, brings the full stack up (#6), waits for backend health, creates site + installs ERPNext + the app + `bench migrate` (#3), then runs /api/health/live + /api/health/ready as evidence (#5). Idempotent where practical; fails loudly; fakes nothing. References real services/site/health endpoints.
+- Host-verified: `bash -n` clean. JS suite still 295 green. (Execution requires Docker.)
+- **The remaining DoD work is now one command on a Docker host:** `MARIADB_ROOT_PASSWORD=… bash scripts/bench-fire.sh`. After that: set FRAPPE_* and `npm run smoke:frappe`; bridge Next 2FA store → `api/two_factor.py`.
+
 ### Fire 1 (cont. 35) — 2026-06-13 — SESSION ENDPOINT
 - Added `GET /api/auth/session` ("who am I"): returns id/name/email/role + effectiveRole + impersonating + source from the verified cookie (or dev header outside prod); 401 with no session; never leaks secrets. 3 tests. **295 total, all green** (typecheck/lint/build/test exit 0).
 - Completes the client-facing auth surface: login / logout / session / 2fa setup-activate-disable.
