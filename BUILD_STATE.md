@@ -96,6 +96,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 19 (cont. 68) — 2026-06-14 — SALES UI slice 8: scoped global search [§23]
+- **PM ruling (recorded):** slice 8 = /sales/search scoped global search across the user's leads + reseller customers. Pure `global-search.ts` (`searchLeadsAndCustomers` grouped results + `saveRecentSearch` dedupe/trim-5) + tests. UI: input (autofocus) + grouped results (Leads w/ Open+Call, Customers display) + recent searches (localStorage). Both widths. §18 customer-detail / §20 notifications / §22 profile deferred. (WIP — evidence next entry.)
+
+
 ### Fire 18 (cont. 67) — 2026-06-14 — SALES UI slice 7: Start-Calling focused mode [§5,§6]
 - **PM ruling (recorded):** slice 7 = /sales/calling. Pure `order-calling-queue.ts` (`orderLeadsForCalling(leads, now)` — §4 priority: VIP-overdue > overdue > today > interested > new > rest, reuse bucketFollowUp + priorityRank, now injected) + tests with synthetic multi-lead cases. Page: order scoped leads, "Lead Queue Progress: i of n", render EXISTING LeadCallScreen for current lead, "Save & Next" advances index. Dashboard "Start Calling" already links here. Reuse call screen as-is.
 - **Built:** pure `order-calling-queue.ts` (`orderLeadsForCalling` + `callPrimaryRank`, §4 next-best order, reuse bucketFollowUp + priorityRank) + 5 tests (synthetic multi-lead, proving VIP-overdue-first + tie-break); `SalesCallingQueue` (progress "i of n", renders EXISTING LeadCallScreen for current lead, Skip + Save & Next/Finish advance index, Queue-complete + empty states); `/sales/calling` page orders scoped leads.
