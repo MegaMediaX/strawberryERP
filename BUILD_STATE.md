@@ -96,6 +96,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 20 (cont. 69) — 2026-06-14 — SALES UI slice 9: sales profile [§22]
+- **PM ruling (recorded):** slice 9 = /sales/profile. Sections: Account (read-only name/email/role/timezone), Appearance (functional dark-mode toggle — class strategy confirmed), Calendar (Not connected, disabled "coming soon"), Notification Preferences (REUSE NotificationPreferencesForm), Security (link to /account/security). Pure `profile-data.ts` (formatRole, getTimezoneLabel by country) + tests. No admin surfaces. (WIP — evidence next entry.)
+
+
 ### Fire 19 (cont. 68) — 2026-06-14 — SALES UI slice 8: scoped global search [§23]
 - **PM ruling (recorded):** slice 8 = /sales/search scoped global search across the user's leads + reseller customers. Pure `global-search.ts` (`searchLeadsAndCustomers` grouped results + `saveRecentSearch` dedupe/trim-5) + tests. UI: input (autofocus) + grouped results (Leads w/ Open+Call, Customers display) + recent searches (localStorage). Both widths. §18 customer-detail / §20 notifications / §22 profile deferred.
 - **Built:** pure `global-search.ts` (`searchLeadsAndCustomers` grouped/scoped + `saveRecentSearch` dedupe/trim-5) + 7 tests; `SalesGlobalSearch` (autofocus input, grouped Leads(Call+Open)/Customers, recent searches via localStorage, empty + no-match states); `/sales/search` page (scoped getUiLeads + permission-filtered getUiRows customers).
