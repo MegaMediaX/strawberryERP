@@ -96,6 +96,12 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire R2 (cont. 74) — 2026-06-14 — RESELLER ADMIN UI slice 2: dashboard [§4,5,6]
+- **PM ruling (recorded):** slice 2 = reseller dashboard. Pure `dashboard-metrics.ts` derives action-center tallies + 8 priority widgets + 6-stage pipeline from reseller-scoped leads/invoices/commissions (reuse bucketFollowUp; now injected). Contracts-not-signed → 0 (no per-customer contract data); recent-activity deferred. UI: action center (clickable) + pipeline (→/reseller/leads) + widgets grid. Slice 3 = reseller leads list.
+- **Built:** `dashboard-metrics.ts` + 4 tests; `ResellerDashboardView` (Today Action Center 6 tallies, pipeline 6 stages, widgets 2-col mobile/4-col desktop); dashboard page (scoped getUiLeads + getUiRows invoices/commissions).
+- **Verified:** 451 tests pass (was 447, +4), typecheck + lint clean, build green. Browser (dev-store): reseller-scoped (leads API → only Beirut Digital Partners); action-center heading + 6 pipeline cards + 8 widgets; **desktop** + **380px** (widgets 2-per-row), bottom nav, no overflow. HEAD `dab9a1c`. **DONE.**
+- Next: slice 3 — reseller leads list (table/cards) + filters + reassign/transfer/convert actions [§8,11,12], reuse lead-filters + reassign modal.
+
 ### Fire R1 (cont. 73) — 2026-06-14 — RESELLER ADMIN UI slice 1: persona shell [§2,3,31]
 - **PM ruling (recorded):** slice 1 = /reseller shell — desktop SIDEBAR (10 items) + mobile bottom nav (Home/Leads/Customers/Invoices/More) with More sheet (Team/Calendar/Reports/Commissions/Settings/Profile), role guard (Reseller Admin + Super Admin oversight) + confinement (Reseller Admin redirected from admin shell + /sales → /reseller/dashboard; mirror sales confinement in app/page.tsx + [...slug] + role-aware login), placeholder dashboard + 11 stub pages (no 404s). Pure `reseller/nav.ts` + tests. Slice 2 = reseller leads list.
 - **Built:** pure `reseller/nav.ts` (sidebar 10 / bottom-nav 5 / More 6 + `isActiveReseller`) + 5 tests; `ResellerNav` (`ResellerSidebar` + `ResellerBottomNav` with More sheet); `ResellerLayout` (desktop sidebar + mobile header + fixed bottom nav, role guard Reseller-Admin/Super-Admin); confinement added to app/page.tsx + [...slug] + role-aware login; `/reseller` index redirect, dashboard placeholder, 11 stub pages.
