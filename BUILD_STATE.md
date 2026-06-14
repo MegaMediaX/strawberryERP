@@ -97,7 +97,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ## Resume journal (newest first)
 
 ### Fire 6 (cont. 55) — 2026-06-14 — PHASE 2 slice 3: advanced reports
-- **PM ruling (recorded):** slice 3 = advanced reports, scoped to the two highest-value: **revenue by country** + **lead-conversion funnel**. Pure `reports.ts` (`revenueByCountry`, `leadConversionFunnel`) role-scoped (Super=all, Regional=their countries, ResellerAdmin=their reseller, Sales=none); date-range + country/reseller/source filters; UI report pages; `/reports/*` rejects Sales; Regional Director country-scoped (Cyprus request outside scope → blocked). (WIP — evidence next entry.)
+- **PM ruling (recorded):** slice 3 = advanced reports, scoped to the two highest-value: **revenue by country** + **lead-conversion funnel**. Pure `reports.ts` (`revenueByCountry`, `leadConversionFunnel`) role-scoped (Super=all, Regional=their countries, ResellerAdmin=their reseller, Sales=none); date-range + country/reseller/source filters; UI report pages; `/reports/*` rejects Sales; Regional Director country-scoped (Cyprus request outside scope → blocked).
+- **Built:** `reports.ts` (`revenueByCountry` + `leadConversionFunnel` + `rowInScope`/`assertReportScope`) + 13 unit tests; scoped GET `/api/frappe/reports/[type]` (revenue|conversion, no DELETE, 403 on out-of-scope filter); `ReportsView` UI at `/reports/insights` (date filter + both reports) + nav link. (`/reports/*` already denies Sales via route-access prefix.) Deviation from PM's two-route plan: one combined `/reports/insights` page (same security, fewer moving parts) — noted.
+- **Verified:** 364 tests pass (was 351), typecheck + lint clean, build green. Browser (dev-store): Super revenue/conversion → **200**; Regional own-country → **200**; Regional Cyprus (outside scope) → **403**; Sales → **403**; page renders both reports (Invoiced USD 14,751 / Collected 2,500 / 4 leads / 25% interested / top source WhatsApp). HEAD `b84401a`. **DONE.**
+- Phase 2 remaining: (4) settings CRUD, (5) notification prefs, (6) reseller management.
 
 
 ### Fire 5 (cont. 54) — 2026-06-14 — PHASE 2 slice 2: follow-up reminder rules (hooks-only)
