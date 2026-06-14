@@ -98,7 +98,9 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ### Fire 1 (cont. 50) — 2026-06-14 — PHASE 1/B1 slice 3: lead→customer conversion
 - **PM ruling (recorded):** next slice = B1 slice 3, lead→customer conversion via a "Convert to Customer" action on the call screen. Acceptance: pure mapper + tests; modal on call screen; POST creates customer (201) with country/scoping enforced; invalid (bad country / missing name) → 400; all gates green + browser-verified.
-- Approach: reuse existing POST `/api/frappe/customers` (validates country, returns CUST-…); add pure `src/lib/business/lead-conversion.ts` (`buildCustomerFromLead` + `validateConversion`) with unit tests; "Convert to Customer" modal on `LeadCallScreen`. (Work in progress — see next journal entry for evidence.)
+- Approach: reuse existing POST `/api/frappe/customers` (validates country, returns CUST-…); added pure `src/lib/business/lead-conversion.ts` (`buildCustomerFromLead` + `validateConversion`, records `convertedFromLead`) with 5 unit tests; "Convert to Customer" button + modal on `LeadCallScreen` (prefills from lead, country/reseller carry over).
+- **Verified:** 317 tests pass (was 312), typecheck + lint clean, build green. Browser (dev-store): convert valid → **201** (CUST-… id), Israel → **400 BLOCKED_COUNTRY**, modal opens prefilled (name/contact/email/phone) with Create/Cancel. HEAD `711ac59`. **DONE.**
+- Next: B1 slice 4 — lead transfer/reassignment (modal on call screen, PATCH assignedUser); then B2 mobile shell.
 
 
 ### Fire 1 (cont. 49) — 2026-06-14 — PHASE 1/B1 slice 2: interactive call screen
