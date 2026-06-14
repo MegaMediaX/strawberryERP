@@ -96,6 +96,12 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 49) — 2026-06-14 — PHASE 1/B1 slice 2: interactive call screen
+- **B1 slice 2 — Lead call screen** (`/leads/[id]`): replaced the static read-only detail with `LeadCallScreen.tsx` — Call/WhatsApp/Email contact actions (tel:/wa.me/mailto, number-sanitized), inline status-update form guarded client-side by `validateLeadTransition` + PATCH `/api/frappe/leads`, lead-facts + notes panel, back link. Reuses the already-tested transition guard (no new lib needed); PATCH route tests already cover valid 200 / invalid 400 / missing-id.
+- **Browser-verified** (dev-store): `/leads/LEAD-2408` (Cedar Cloud Services) renders, tel `+96170144221` / `wa.me/96170144221` / mailto correct, 6 status options; PATCH invalid (Scheduled→New) → **400 "Cannot move a lead…"**, valid (→Contacted Interested) → **200**.
+- **Gates:** 312 tests pass, typecheck + lint clean, build green. HEAD `59b4ab0`.
+- **Next (PM order):** B1 slice 3 — lead→customer conversion flow (entry point = a "Convert to Customer" action on this call screen); then lead transfer/reassignment; then B2 mobile shell.
+
 ### Fire 1 (cont. 48) — 2026-06-14 — PUSH + SECRETS SCRUB + PHASE 1/B1 New-Lead form
 - **GitHub push:** baseline build pushed to `MegaMediaX/strawberryERP` (user set repo PRIVATE first; verified PRIVATE before+after each push). HEAD now `1a08451`.
 - **Secrets scrub (PM step 1):** seed passwords removed from 6 tracked test/smoke files → env-var lookups (`SEED_ADMIN_PW`/`SEED_REGIONAL_PW`/`SEED_RESELLER_PW`/`SEED_SALES_PW`); real values in untracked `.env`, placeholders in `.env.example`; new `vitest.setup.ts` injects only `SEED_*` (keeps tests hermetic — loading full `.env` had flipped Frappe code paths → fixed); `scripts/load-env.mjs` for smoke scripts; shared `src/test/seed-credentials.ts`. `git grep` confirms zero plaintext in tracked files. NOTE: pre-scrub history (53 commits) still holds plaintext — fine while private; rewrite/rotate before public.
