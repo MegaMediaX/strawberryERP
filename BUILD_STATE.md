@@ -90,6 +90,8 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 - **2026-06-13 — Lead status-transition matrix.** Handoff §3 lists the 6 statuses + "Scheduled Follow-Up requires a date" but no transition matrix. Decided (self, documented, not a blocker): New→only attempt/contact; any progress state ↔ any other progress state (re-engagement allowed incl. reviving Not Interested); →Scheduled Follow-Up requires a date; no return to New after contact begins. Encoded in `src/lib/business/lead-workflow.ts`. Revisit if product specifies a stricter funnel.
 
+- **2026-06-14 — Post-DoD work order (PM ruling).** Build pushed to PRIVATE repo `MegaMediaX/strawberryERP`. PM (multi-tenant SaaS/CRM expert) sequenced: **(1) SCRUB SECRETS first** — hardcoded seed passwords were in 6 tracked test/smoke files; moved to env-var lookups (`SEED_ADMIN_PW`/`SEED_REGIONAL_PW`/`SEED_RESELLER_PW`/`SEED_SALES_PW`), real values in untracked `.env`, placeholders in `.env.example`, hermetic vitest setup injects only `SEED_*`. Done — 303 tests pass, typecheck/lint clean, pushed (`fb3c0b3`). **(2) Then PHASE 1 UX ROADMAP (B1→B2):** New-Lead form, full call screen, lead→customer conversion, lead transfer/reassignment (B1); then mobile shell bottom-nav + FAB (B2); each a 1–2 cycle fire with spec-flow validation + live browser QA. Principle: close credential-hygiene debt before it compounds, then ship user-visible value on a hardened base. NOTE: scrub covers the working tree + future commits only — the 53 commits of pre-scrub history still contain the plaintext; acceptable while private, rewrite (or rotate) required before any public-ization.
+
 ---
 
 ## Resume journal (newest first)
