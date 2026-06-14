@@ -97,7 +97,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ## Resume journal (newest first)
 
 ### Fire 14 (cont. 63) — 2026-06-14 — SALES UI slice 3: lead call screen [§6,7,8,9,10] (most important screen)
-- **PM ruling (recorded):** slice 3 = sales call screen at /sales/leads/:id, reuse LeadCallScreen + add: quick-outcome buttons (§10 pure mapping lib + tests), Important Details card (§8, read-only from per-reseller seed — admin editing deferred), Copy Number (§7). Notes/timeline polish (§11/§12) → slice 4. Extend LeadCallScreen via OPT-IN props so admin /leads/[id] is unaffected. (WIP — evidence next entry.)
+- **PM ruling (recorded):** slice 3 = sales call screen at /sales/leads/:id, reuse LeadCallScreen + add: quick-outcome buttons (§10 pure mapping lib + tests), Important Details card (§8, read-only from per-reseller seed — admin editing deferred), Copy Number (§7). Notes/timeline polish (§11/§12) → slice 4. Extend LeadCallScreen via OPT-IN props so admin /leads/[id] is unaffected.
+- **Built:** pure `business/quick-outcomes.ts` (6 outcomes → status/schedule/convert/flag mapping) + `sales/important-details.ts` (per-reseller instructions, global fallback) + 7 tests. Extended `LeadCallScreen` with opt-in `importantDetails[]` (§8 amber card) + `enableQuickOutcomes` (§10 6-button grid) + Copy Number (§7); refactored `save()` to accept a target status so one-tap outcomes save immediately (admin screen unchanged — doesn't pass the new props). `/sales/leads/[id]` route: role-scoped (unassigned → scoped-out message), Reassign hidden (no users[] passed), Convert kept.
+- **Verified:** 400 tests pass (was 393, +7), typecheck + lint clean, build green. Browser (dev-store): desktop + **380px** → native call/WhatsApp + Copy number + 6 quick outcomes + Important Details (reseller-specific "early-bird"); quick-outcome PATCH → **200**; **LEAD-2409 (not assigned) → scoped out**; Reassign absent; big call button (298px); no horizontal overflow. HEAD `221c7dd`. **DONE.**
+- Next: slice 4 — notes compose (§11 quick templates, latest-first) + activity timeline (§12) on the call screen.
 
 
 ### Fire 13 (cont. 62) — 2026-06-14 — SALES UI slice 2: /sales/leads list + filters + add-lead [§14,15,16,24]
