@@ -96,6 +96,13 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 48) — 2026-06-14 — PUSH + SECRETS SCRUB + PHASE 1/B1 New-Lead form
+- **GitHub push:** baseline build pushed to `MegaMediaX/strawberryERP` (user set repo PRIVATE first; verified PRIVATE before+after each push). HEAD now `1a08451`.
+- **Secrets scrub (PM step 1):** seed passwords removed from 6 tracked test/smoke files → env-var lookups (`SEED_ADMIN_PW`/`SEED_REGIONAL_PW`/`SEED_RESELLER_PW`/`SEED_SALES_PW`); real values in untracked `.env`, placeholders in `.env.example`; new `vitest.setup.ts` injects only `SEED_*` (keeps tests hermetic — loading full `.env` had flipped Frappe code paths → fixed); `scripts/load-env.mjs` for smoke scripts; shared `src/test/seed-credentials.ts`. `git grep` confirms zero plaintext in tracked files. NOTE: pre-scrub history (53 commits) still holds plaintext — fine while private; rewrite/rotate before public.
+- **Phase 1 / B1 slice 1 — New-Lead form:** `src/lib/business/new-lead.ts` (pure `validateNewLeadInput` + `toLeadRequestBody`, mirrors server rules), `NewLeadForm.tsx` (toggle card in LeadsWorkspace, posts to `/api/frappe/leads`), 9 unit tests. Browser-verified (dev-store via temp `.env.local`, since Frappe `backend` host only resolves in Docker): login 200, `/leads` renders, form 11 controls, valid create → 201, **Israel → 400 BLOCKED_COUNTRY**.
+- **Gates:** 312 tests pass (was 303), typecheck + lint clean, `npm run build` green.
+- **Next (PM order):** B1 cont. — full call screen, lead→customer conversion, lead transfer/reassignment; then B2 mobile shell (bottom-nav + FAB).
+
 ### Fire 1 (cont. 47) — 2026-06-14 — FRONTEND REDESIGN (simple/modern/friendly)
 - Audit: generic Geist font, slate/blue palette, dev-jargon header badges ("Phase 2 / ERPNext-backed boundary / No API delete access"), dense headers.
 - Redesign (design-system level → propagates everywhere): **Plus Jakarta Sans** + JetBrains Mono; token palette (warm neutral surfaces, single **indigo** brand `#4f46e5`, soft borders, larger radii, layered shadows) in `globals.css`; modernized Card (rounded-2xl, tokens), Button (brand primary, rounded-xl, ring focus), Badge (rounded-full pills). PlatformShell: clean app-bar (brand mark + user avatar/initials), dropped dev badges, smaller title. PortalNavigation: brand-active rounded-full pills. Dashboard sidebar: brand-indigo active + mark. Login + 2FA pages: brand inputs/buttons, soft glow.
