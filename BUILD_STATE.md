@@ -97,7 +97,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ## Resume journal (newest first)
 
 ### Fire 17 (cont. 66) — 2026-06-14 — SALES UI slice 6: dashboard priority widgets [§3]
-- **PM ruling (recorded):** slice 6 = the 8 priority widgets on /sales/dashboard (Today's Follow-Ups, Overdue, Interested, New, Attempted/No-Response, Recently Updated, Converted-This-Month, My Performance) — each a count + link into the relevant queue. Pure `dashboard-widgets.ts` (counts from scoped leads + injected now, reuse bucketFollowUp) + tests. Grid 2-col mobile / 4-col desktop. Slice 7 = Start-Calling focused mode §5/§6. (WIP — evidence next entry.)
+- **PM ruling (recorded):** slice 6 = the 8 priority widgets on /sales/dashboard (Today's Follow-Ups, Overdue, Interested, New, Attempted/No-Response, Recently Updated, Converted-This-Month, My Performance) — each a count + link into the relevant queue. Pure `dashboard-widgets.ts` (counts from scoped leads + injected now, reuse bucketFollowUp) + tests. Grid 2-col mobile / 4-col desktop. Slice 7 = Start-Calling focused mode §5/§6.
+- **Built:** pure `dashboard-widgets.ts` (`salesDashboardWidgets` → 8 widgets from scoped leads + injected now, reuses bucketFollowUp) + 5 tests; `SalesDashboardWidgets` (clickable tone-accented cards, Today/Overdue→follow-ups, rest→leads, 2-col mobile/4-col desktop); dashboard page wires it + removed placeholder note.
+- **Verified:** 418 tests pass (was 413, +5), typecheck + lint clean, build green. Browser (dev-store): 8 widgets in order with correct hrefs; desktop 4-col; **380px** 2-col (168px cards), no overflow. HEAD `1f1fb93`. **DONE.**
+- Next: slice 7 — Start-Calling focused mode at /sales/calling §5/§6 (next-best-lead queue + Save & Next), reusing the call screen + priorityRank/bucketFollowUp.
 
 
 ### Fire 16 (cont. 65) — 2026-06-14 — SALES UI slice 5: follow-up queue tabs + urgency [§13]
