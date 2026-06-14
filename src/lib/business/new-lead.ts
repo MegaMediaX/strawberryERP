@@ -59,7 +59,7 @@ const FIELD_LABELS: Partial<Record<keyof NewLeadInput, string>> = {
   email: "Email",
 };
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Returns a human-readable error string for the first problem found, or null

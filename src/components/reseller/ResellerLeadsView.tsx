@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, Upload, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,9 +76,14 @@ export function ResellerLeadsView({ leads: initialLeads, teamUsers, actingUser, 
           <h1 className="text-xl font-bold tracking-tight">Leads</h1>
           <p className="text-sm text-[var(--muted)]">{visible.length} of {leads.length} · {resellerName}</p>
         </div>
-        <Link href="/reseller/leads/new" className="hidden h-10 items-center justify-center gap-1.5 rounded-xl bg-[var(--brand)] px-4 text-sm font-semibold text-white shadow-[var(--shadow-sm)] hover:bg-[var(--brand-hover)] sm:inline-flex">
-          <Plus className="size-4" /> Add lead
-        </Link>
+        <div className="hidden gap-2 sm:flex">
+          <Link href="/reseller/leads/import" className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-[var(--border)] px-4 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--background)]">
+            <Upload className="size-4" /> Import CSV
+          </Link>
+          <Link href="/reseller/leads/new" className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[var(--brand)] px-4 text-sm font-semibold text-white shadow-[var(--shadow-sm)] hover:bg-[var(--brand-hover)]">
+            <Plus className="size-4" /> Add lead
+          </Link>
+        </div>
       </div>
 
       {/* Saved-view pills (spec §8) */}
