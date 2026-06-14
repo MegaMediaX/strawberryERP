@@ -98,7 +98,9 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ### Fire 3 (cont. 52) — 2026-06-14 — PHASE 1/B2: mobile shell (bottom-nav + FAB) [FINAL]
 - **PM ruling (recorded):** B2 = mobile shell. Bottom-nav on ≤md screens (hidden on desktop where header pills stay), ≤5 role-scoped destinations, active-route highlight, safe-area inset; FAB = "New lead" (role-aware, hidden for read-only Regional Director), hidden on desktop. Shipping B2 = **Phase 1 UX COMPLETE → stop loop.**
-- Approach: pure `src/lib/navigation/mobile-nav.ts` (`mobileNavItems(role)` ≤5, `isActiveMobile`, `fabForRole`) + unit tests; `MobileNav.tsx` client component rendered by `PlatformShell` (has session role); content gets `pb` so fixed bar doesn't overlap. (WIP — evidence in next entry.)
+- Approach: pure `src/lib/navigation/mobile-nav.ts` (`mobileNavItems(role)` ≤5, `isActiveMobile`, `fabForRole`) + 7 unit tests; `MobileNav.tsx` client component rendered by `PlatformShell` (has session role); content `pb-24 md:pb-5` so the fixed bar never overlaps.
+- **Verified:** 332 tests pass (was 325), typecheck + lint clean, build green. Browser: **380px** → bottom-nav visible & pinned, 5 role-scoped items (Home/Leads/Customers/Invoices/Security), Leads `aria-current=page`, FAB visible; **1280px** → bottom-nav + FAB `display:none`, header pills intact. HEAD `02beae3`. **DONE.**
+- **PHASE 1 UX COMPLETE** (B1 slices 1–4 + B2). Loop stop condition met → cron `d546f197` cancelled; no further fires.
 
 
 ### Fire 2 (cont. 51) — 2026-06-14 — PHASE 1/B1 slice 4: lead transfer/reassignment
