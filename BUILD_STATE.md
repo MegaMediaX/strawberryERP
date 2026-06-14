@@ -96,6 +96,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 23 (cont. 72) — 2026-06-14 — SALES UI slice 12: customer list [§18] — FINAL slice
+- **PM ruling (recorded):** slice 12 = minimal §18 sales customer LIST at /sales/customers (data-limited: customers are {id,name,country,reseller} only → list, not detail). Pure `customer-list.ts` (filter + sort) + tests; scoped list (mobile cards/desktop table) + search; nav link. Customer DETAIL (§18 full), §19 invoice, §25-27 consolidation deferred to Phase 3 (data/permission-gated). **After this ships → Sales UI spec functionally COMPLETE → stop loop.** (WIP — evidence next entry.)
+
+
 ### Fire 22 (cont. 71) — 2026-06-14 — SALES UI slice 11: calendar agenda [§21]
 - **PM ruling (recorded):** slice 11 = /sales/calendar AGENDA derived from follow-up dates (hooks-only; no meeting/invoice records exist). Pure `build-agenda.ts` (group scoped leads by bucket via bucketFollowUp, sort each by priorityRank) + tests. Sections Overdue/Today/Tomorrow/This Week/Later, each item Call/WhatsApp/Open → lead. "Synced from your follow-ups" + Google "Not connected" note (→ profile). Keep bottom nav at 5; reach via a cross-link.
 - **Built:** pure `build-agenda.ts` (`buildAgenda` → 5 ordered sections via bucketFollowUp + priorityRank sort) + 3 tests; `SalesCalendarAgenda` ("synced from follow-ups" + Google not-connected note→profile, sections w/ counts, item cards w/ native Call/WhatsApp/Open, overdue red, empty states); `/sales/calendar` page; "Calendar view →" cross-link on follow-ups.

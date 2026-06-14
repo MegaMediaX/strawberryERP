@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarClock, Home, Search, User, Users } from "lucide-react";
+import { CalendarClock, Home, Search, User, UserCheck, Users } from "lucide-react";
 import type { ComponentType } from "react";
 
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ type Item = { label: string; href: string; icon: ComponentType<{ className?: str
 const ITEMS: Item[] = [
   { label: "Home", href: "/sales/dashboard", icon: Home },
   { label: "Leads", href: "/sales/leads", icon: Users },
+  { label: "Customers", href: "/sales/customers", icon: UserCheck },
   { label: "Follow-Ups", href: "/sales/follow-ups", icon: CalendarClock },
   { label: "Search", href: "/sales/search", icon: Search },
   { label: "Profile", href: "/sales/profile", icon: User },
@@ -59,7 +60,7 @@ export function SalesBottomNav() {
       aria-label="Sales"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--surface)] pb-[env(safe-area-inset-bottom)] md:hidden"
     >
-      <ul className="grid grid-cols-5">
+      <ul className="grid" style={{ gridTemplateColumns: `repeat(${ITEMS.length}, minmax(0, 1fr))` }}>
         {ITEMS.map((item) => {
           const active = isActive(pathname, item.href);
           return (
