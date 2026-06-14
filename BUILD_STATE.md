@@ -97,7 +97,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ## Resume journal (newest first)
 
 ### Fire 12 (cont. 61) — 2026-06-14 — SALES UI slice 1: /sales persona shell + nav + guard [§24,28,29]
-- **PM ruling (recorded):** slice 1 = the /sales persona shell — sales-only layout (top bar + sales bottom nav), route guard (only Sales Team User lands in /sales; other roles redirected to /), placeholder /sales/dashboard hero (greeting + counts) + stub pages for nav targets so no 404s. Slice 2 = /sales/leads list + FAB + new-lead. Spec authority docs/SALES_UI_SPEC.md. (WIP — evidence next entry.)
+- **PM ruling (recorded):** slice 1 = the /sales persona shell — sales-only layout (top bar + sales bottom nav), route guard (only Sales Team User lands in /sales; other roles redirected to /), placeholder /sales/dashboard hero (greeting + counts) + stub pages for nav targets so no 404s. Slice 2 = /sales/leads list + FAB + new-lead. Spec authority docs/SALES_UI_SPEC.md.
+- **Built:** `src/app/sales/layout.tsx` (sticky top bar + role guard: non-Sales → redirect `/`), `SalesTopNav` (desktop tabs) + `SalesBottomNav` (fixed mobile bar, 5 items), `/sales/dashboard` hero (greeting + assigned/interested/new/scheduled counts + 3 actions), `/sales` index redirect, stub pages (leads/follow-ups/search/profile), pure `src/lib/sales/dashboard-summary.ts` (+greeting) + 3 tests. **Bug fixed:** mobile bottom nav rendered at top because the backdrop-blur header created a containing block for `position:fixed` — moved `SalesBottomNav` to the layout root.
+- **Verified:** 385 tests pass (was 382, +3), typecheck + lint clean, build green (`/sales/*` routes compiled). Browser (dev-store): sales user (rami) → shell renders (greeting "Good afternoon, Rami", 4 counts, 3 actions, 5 nav items); Regional Director → **redirected to `/`** (guard holds); **380px** → bottom nav pinned (edge=820=viewport, 5 items), desktop tabs hidden; **1280px** → bottom nav `display:none`, top tabs (5) shown. HEAD `8767e29`. **DONE.**
+- Next: slice 2 — /sales/leads list (cards/table) + sales filters + FAB + reuse NewLeadForm [§14,15,16,24].
 
 
 ### Fire 11 (cont. 60) — 2026-06-14 — PHASE 2 slice 6: reseller management (FINAL roadmap item)
