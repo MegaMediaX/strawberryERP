@@ -96,6 +96,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 7 (cont. 56) — 2026-06-14 — PHASE 2 slice 4: payment methods CRUD
+- **PM ruling (recorded):** settings CRUD tightened to **payment methods** this fire (currencies + invoice-numbering deferred to later fires). Reuse existing tested `validatePaymentMethod`; add UI create/edit form calling POST + newly-wired PATCH `settings/payment-methods`; Super-Admin-only write; method name locked to enum; countries country-blocked; audit-logged. (WIP — evidence next entry.)
+
+
 ### Fire 6 (cont. 55) — 2026-06-14 — PHASE 2 slice 3: advanced reports
 - **PM ruling (recorded):** slice 3 = advanced reports, scoped to the two highest-value: **revenue by country** + **lead-conversion funnel**. Pure `reports.ts` (`revenueByCountry`, `leadConversionFunnel`) role-scoped (Super=all, Regional=their countries, ResellerAdmin=their reseller, Sales=none); date-range + country/reseller/source filters; UI report pages; `/reports/*` rejects Sales; Regional Director country-scoped (Cyprus request outside scope → blocked).
 - **Built:** `reports.ts` (`revenueByCountry` + `leadConversionFunnel` + `rowInScope`/`assertReportScope`) + 13 unit tests; scoped GET `/api/frappe/reports/[type]` (revenue|conversion, no DELETE, 403 on out-of-scope filter); `ReportsView` UI at `/reports/insights` (date filter + both reports) + nav link. (`/reports/*` already denies Sales via route-access prefix.) Deviation from PM's two-route plan: one combined `/reports/insights` page (same security, fewer moving parts) — noted.

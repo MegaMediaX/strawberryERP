@@ -16,6 +16,7 @@ import { LeadCallScreen } from "@/components/platform/LeadCallScreen";
 import { CommissionApprovalConsole } from "@/components/platform/CommissionApprovalConsole";
 import { FollowUpReminderConsole } from "@/components/platform/FollowUpReminderConsole";
 import { ReportsView } from "@/components/platform/ReportsView";
+import { PaymentMethodForm } from "@/components/platform/PaymentMethodForm";
 import { ActionLink, DataTable, PlatformShell, StatGrid } from "@/components/platform/PlatformShell";
 import { ProtectedRoute } from "@/components/security/ProtectedRoute";
 import { getDevStore } from "@/lib/dev-store";
@@ -503,22 +504,52 @@ export default async function PlatformRoute({ params }: PageProps) {
   }
 
   if (path === "/settings/payment-methods") {
+    const methods = getDevStore().paymentMethods;
+    const canManage = session.effectiveUser.role === "Super Admin";
     return (
-      <PlatformShell activeHref="/settings" description="Payment methods are configurable by country and reseller, with reference and attachment requirements." title="Payment methods">
+      <PlatformShell
+        activeHref="/settings"
+        actions={canManage ? <ActionLink href="/settings/payment-methods/new">New method</ActionLink> : undefined}
+        description="Payment methods are configurable by country and reseller, with reference and attachment requirements."
+        title="Payment methods"
+      >
         <Card>
           <CardContent className="pt-5">
             <DataTable
-              columns={["Method", "Countries", "Requires reference", "Requires attachment", "Active"]}
-              rows={paymentMethods.map((method) => [
+              columns={["Method", "Countries", "Requires reference", "Requires attachment", "Active", ...(canManage ? ["Edit"] : [])]}
+              rows={methods.map((method) => [
                 method.methodName,
                 method.countries.join(", "),
                 method.requiresReference ? "Yes" : "No",
                 method.requiresAttachment ? "Yes" : "No",
                 method.isActive ? "Yes" : "No",
+                ...(canManage
+                  ? [<ActionLink href={`/settings/payment-methods/${encodeURIComponent(method.methodName)}/edit`} key={method.methodName} variant="secondary">Edit</ActionLink>]
+                  : []),
               ])}
             />
           </CardContent>
         </Card>
+      </PlatformShell>
+    );
+  }
+
+  if (path === "/settings/payment-methods/new") {
+    return (
+      <PlatformShell activeHref="/settings" description="Create a payment method. Names are a fixed set; assigned countries are validated." title="New payment method">
+        <PaymentMethodForm mode="create" />
+      </PlatformShell>
+    );
+  }
+
+  if (slug[0] === "settings" && slug[1] === "payment-methods" && slug[2] && slug[3] === "edit") {
+    const method = getDevStore().paymentMethods.find((m) => m.methodName === decodeURIComponent(slug[2]));
+    if (!method) {
+      return <MissingRecord entity="Payment method" href="/settings/payment-methods" />;
+    }
+    return (
+      <PlatformShell activeHref="/settings" description="Edit a payment method's countries, requirements, order, and active state." title="Edit payment method">
+        <PaymentMethodForm initial={method} mode="edit" />
       </PlatformShell>
     );
   }

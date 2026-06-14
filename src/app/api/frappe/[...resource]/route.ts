@@ -10,6 +10,7 @@ import {
   getDevStore,
   resolveDeleteQueue,
   upsertIntegrationSetting,
+  upsertPaymentMethod,
 } from "@/lib/dev-store";
 import { devStoreResponse, maybeRouteToFrappe } from "@/lib/backend/backend-router";
 import { paginate } from "@/lib/query/scoped-page";
@@ -40,7 +41,6 @@ import {
   getLegacyAuditEvents,
   integrationSettings,
   notificationRules,
-  paymentMethods,
   pnlRows,
   reportCatalog,
   resellers,
@@ -160,7 +160,7 @@ export async function GET(request: Request, context: RouteContext) {
   }
 
   if (contextKey === "settings/payment-methods") {
-    return sampleResponse(paymentMethods);
+    return sampleResponse(getDevStore().paymentMethods);
   }
 
   if (contextKey === "settings/currencies") {
@@ -291,15 +291,17 @@ export async function POST(request: Request, context: RouteContext) {
       return jsonError(methodError);
     }
 
+    const method = normalizePaymentMethod(objectPayload);
+    upsertPaymentMethod(method);
     const audit = appendAudit({
       entityType: "Payment Method",
-      entityId: String(objectPayload.methodName ?? ""),
+      entityId: method.methodName,
       action: "create",
       oldValue: "",
-      newValue: String(objectPayload.methodName ?? ""),
+      newValue: method.methodName,
       performedBy: session.auditLabel,
     });
-    return sampleResponse({ ...objectPayload }, { status: 201, audit });
+    return sampleResponse(method, { status: 201, audit });
   }
 
   if (contextKey === "settings/notifications") {
@@ -654,6 +656,29 @@ export async function PATCH(request: Request, context: RouteContext) {
     return sampleResponse({ ...customers[0], ...objectPayload, updatedAt: new Date().toISOString() });
   }
 
+  if (contextKey === "settings/payment-methods") {
+    const current = getDevStore().paymentMethods.find((m) => m.methodName === objectPayload.methodName);
+    if (!current) {
+      return jsonError("Payment method was not found.", 404);
+    }
+    const merged = { ...current, ...objectPayload, methodName: current.methodName };
+    const methodError = validatePaymentMethod(merged as Partial<PaymentMethod>);
+    if (methodError) {
+      return jsonError(methodError);
+    }
+    const method = normalizePaymentMethod(merged);
+    upsertPaymentMethod(method);
+    const audit = appendAudit({
+      entityType: "Payment Method",
+      entityId: method.methodName,
+      action: "update",
+      oldValue: String(current.isActive),
+      newValue: String(method.isActive),
+      performedBy: session.auditLabel,
+    });
+    return sampleResponse(method, { audit });
+  }
+
   if (contextKey === "resellers") {
     const countryError = validateCountry(objectPayload.country as string | undefined);
     if (objectPayload.country && countryError) {
@@ -744,6 +769,19 @@ async function readJson(request: Request) {
 
 function asObject(payload: unknown): Record<string, unknown> {
   return payload && typeof payload === "object" && !Array.isArray(payload) ? (payload as Record<string, unknown>) : {};
+}
+
+function normalizePaymentMethod(payload: Record<string, unknown>): PaymentMethod {
+  return {
+    methodName: payload.methodName as PaymentMethod["methodName"],
+    isActive: payload.isActive === undefined ? true : Boolean(payload.isActive),
+    countries: Array.isArray(payload.countries) ? (payload.countries as PaymentMethod["countries"]) : [],
+    resellers: Array.isArray(payload.resellers) ? (payload.resellers as string[]) : [],
+    requiresReference: Boolean(payload.requiresReference),
+    requiresAttachment: Boolean(payload.requiresAttachment),
+    icon: typeof payload.icon === "string" ? payload.icon : "card",
+    displayOrder: typeof payload.displayOrder === "number" ? payload.displayOrder : 99,
+  };
 }
 
 function sampleResponse(data: unknown, extra?: { status?: number } & Record<string, unknown>) {

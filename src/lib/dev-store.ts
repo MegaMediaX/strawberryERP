@@ -5,6 +5,7 @@ import {
   commissionEntries,
   invoices,
   integrationSettings,
+  paymentMethods,
   receipts,
   type ActivityTimelineEvent,
   type ApiKeyRecord,
@@ -12,6 +13,7 @@ import {
   type CommissionEntry,
   type IntegrationSetting,
   type Invoice,
+  type PaymentMethod,
   type Receipt,
 } from "@/lib/phase2-data";
 import type { DeleteQueueRecord } from "@/lib/portal-security";
@@ -27,6 +29,7 @@ type DevStore = {
   activityTimeline: ActivityTimelineEvent[];
   deleteQueue: DeleteQueueRecord[];
   reminderRules: FollowUpReminderRule[];
+  paymentMethods: PaymentMethod[];
 };
 
 const globalStore = globalThis as typeof globalThis & {
@@ -56,10 +59,21 @@ export function getDevStore() {
         },
       ],
       reminderRules: [...defaultReminderRules],
+      paymentMethods: [...paymentMethods],
     };
   }
 
   return globalStore.__lebtechDevStore;
+}
+
+/** Create or replace a payment method (keyed by its enum methodName). */
+export function upsertPaymentMethod(method: PaymentMethod) {
+  const store = getDevStore();
+  const exists = store.paymentMethods.some((m) => m.methodName === method.methodName);
+  store.paymentMethods = exists
+    ? store.paymentMethods.map((m) => (m.methodName === method.methodName ? method : m))
+    : [...store.paymentMethods, method];
+  return method;
 }
 
 export function appendReminderRule(rule: FollowUpReminderRule) {
