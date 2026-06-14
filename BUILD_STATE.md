@@ -97,7 +97,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ## Resume journal (newest first)
 
 ### Fire 9 (cont. 58) — 2026-06-14 — PHASE 2 slice 4c: invoice-numbering config (completes settings CRUD)
-- **PM ruling (recorded):** invoice-numbering **singleton** config form (not a list). Reuse `validateInvoiceNumbering`; dev-store singleton + get/upsert; GET + PATCH on `settings/invoice-numbering` (Super-Admin-only, audit); single `InvoiceNumberingForm` at `/settings/invoice-numbering` (load→edit→save) + nav link. After this, settings CRUD COMPLETE → next fire = (5) notification prefs. (WIP — evidence next entry.)
+- **PM ruling (recorded):** invoice-numbering **singleton** config form (not a list). Reuse `validateInvoiceNumbering`; dev-store singleton + get/upsert; GET + PATCH on `settings/invoice-numbering` (Super-Admin-only, audit); single `InvoiceNumberingForm` at `/settings/invoice-numbering` (load→edit→save) + nav link. After this, settings CRUD COMPLETE → next fire = (5) notification prefs.
+- **Built:** dev-store singleton `invoiceNumbering` + `setInvoiceNumbering`; GET + persisted POST + new PATCH branch on `settings/invoice-numbering` (Super-Admin-gated, impersonation-blocked, audit); `InvoiceNumberingForm` (load→edit→save, conditional prefix for Country Prefix, inline mode list) at `/settings/invoice-numbering` + route-access + nav link; 4 new route tests.
+- **Verified:** 368 tests pass (was 364, +4 PATCH/GET route tests), typecheck + lint clean, build green. Browser (dev-store): GET Global default → **200**; PATCH (Country Prefix/LB/42) → **200** & GET reflects; bad prefix → **400**; sales PATCH → **403**; form loads persisted config. HEAD `a401b77`. **DONE.**
+- **SETTINGS CRUD COMPLETE** (payment-methods + currencies + invoice-numbering). Phase 2 remaining: (5) notification preferences, (6) reseller management.
 
 
 ### Fire 8 (cont. 57) — 2026-06-14 — PHASE 2 slice 4b: currencies CRUD
