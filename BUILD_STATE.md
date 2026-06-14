@@ -98,7 +98,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ### Fire 4 (cont. 53) — 2026-06-14 — PHASE 2 slice 1: commission entry approval flow
 - **User said "proceed" → Phase 2 authorized.** PM roadmap: (1) commission approval flow, (2) calendar sync UI, (3) advanced reports, (4) settings CRUD, (5) notification prefs, (6) reseller management.
-- **PM ruling (recorded):** first slice = commission entry approval. Pure `commission-approval.ts` (`validateCommissionStatusTransition` Pending→Approved→Paid / any→Cancelled; `canApproveCommission(actingUser, entry)` — Super=any, Regional=country match, ResellerAdmin=reseller match, Sales=no). Enforce on PATCH `commissions/entries` (transition→400, perms→403, ok→200 + audit). UI approve/pay/cancel actions. Confirm reseller/country scoping + no-DELETE. (WIP — evidence next entry.)
+- **PM ruling (recorded):** first slice = commission entry approval. Pure `commission-approval.ts` (`validateCommissionStatusTransition` Pending→Approved→Paid / any→Cancelled; `canApproveCommission(actingUser, entry)` — Super=any, Regional=country match, ResellerAdmin=reseller match, Sales=no). Enforce on PATCH `commissions/entries` (transition→400, perms→403, ok→200 + audit). UI approve/pay/cancel actions. Confirm reseller/country scoping + no-DELETE.
+- **Built:** `commission-approval.ts` (`validateCommissionStatusTransition` + `canApproveCommission` + `evaluateCommissionApproval` — 403 perms before 400 transition) with 9 unit tests; enforced in PATCH `commissions/entries`; `CommissionApprovalConsole.tsx` replaces the read-only table (status filter + Approve/Pay/Cancel, disabled out-of-scope).
+- **Verified:** 341 tests pass (was 332), typecheck + lint clean, build green. Browser (dev-store): Pending→Paid (skip) → **400**, Pending→Approved → **200**, Approved→Paid → **200**, Paid→Approved (terminal) → **400**; console renders with filter + scoped actions. HEAD `76c4f9b`. **DONE.** (403 cross-reseller/role denials covered by unit tests.)
+- Phase 2 remaining: (2) calendar sync UI, (3) advanced reports, (4) settings CRUD, (5) notification prefs, (6) reseller management.
 
 
 ### Fire 3 (cont. 52) — 2026-06-14 — PHASE 1/B2: mobile shell (bottom-nav + FAB) [FINAL]
