@@ -18,6 +18,7 @@ import { FollowUpReminderConsole } from "@/components/platform/FollowUpReminderC
 import { ReportsView } from "@/components/platform/ReportsView";
 import { PaymentMethodForm } from "@/components/platform/PaymentMethodForm";
 import { CurrencyForm } from "@/components/platform/CurrencyForm";
+import { InvoiceNumberingForm } from "@/components/platform/InvoiceNumberingForm";
 import { ActionLink, DataTable, PlatformShell, StatGrid } from "@/components/platform/PlatformShell";
 import { ProtectedRoute } from "@/components/security/ProtectedRoute";
 import { getDevStore } from "@/lib/dev-store";
@@ -583,6 +584,14 @@ export default async function PlatformRoute({ params }: PageProps) {
             />
           </CardContent>
         </Card>
+      </PlatformShell>
+    );
+  }
+
+  if (path === "/settings/invoice-numbering") {
+    return (
+      <PlatformShell activeHref="/settings" description="Configure how invoice numbers are generated platform-wide." title="Invoice numbering">
+        <InvoiceNumberingForm />
       </PlatformShell>
     );
   }

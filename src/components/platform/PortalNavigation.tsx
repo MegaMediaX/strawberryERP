@@ -42,6 +42,7 @@ const navigationGroups: Array<{ label: string; items: NavigationItem[] }> = [
       { label: "Commissions", href: "/commissions", roles: operations },
       { label: "Payment Methods", href: "/settings/payment-methods", roles: superAdmin },
       { label: "Currencies", href: "/settings/currencies", roles: superAdmin },
+      { label: "Invoice Numbering", href: "/settings/invoice-numbering", roles: superAdmin },
     ],
   },
   {

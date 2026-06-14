@@ -20,6 +20,7 @@ import {
 } from "@/lib/phase2-data";
 import type { DeleteQueueRecord } from "@/lib/portal-security";
 import { defaultReminderRules, type FollowUpReminderRule } from "@/lib/business/followup-reminder-rules";
+import type { InvoiceNumberingConfig } from "@/lib/business/billing-settings";
 
 type DevStore = {
   invoices: Invoice[];
@@ -33,6 +34,7 @@ type DevStore = {
   reminderRules: FollowUpReminderRule[];
   paymentMethods: PaymentMethod[];
   currencySettings: CurrencySetting[];
+  invoiceNumbering: InvoiceNumberingConfig;
 };
 
 const globalStore = globalThis as typeof globalThis & {
@@ -64,10 +66,17 @@ export function getDevStore() {
       reminderRules: [...defaultReminderRules],
       paymentMethods: [...paymentMethods],
       currencySettings: [...currencySettings],
+      invoiceNumbering: { mode: "Global", nextSequence: 1 },
     };
   }
 
   return globalStore.__lebtechDevStore;
+}
+
+/** Replace the singleton invoice-numbering config. */
+export function setInvoiceNumbering(config: InvoiceNumberingConfig) {
+  getDevStore().invoiceNumbering = config;
+  return config;
 }
 
 /** Create or replace a payment method (keyed by its enum methodName). */

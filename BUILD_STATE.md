@@ -96,6 +96,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 9 (cont. 58) — 2026-06-14 — PHASE 2 slice 4c: invoice-numbering config (completes settings CRUD)
+- **PM ruling (recorded):** invoice-numbering **singleton** config form (not a list). Reuse `validateInvoiceNumbering`; dev-store singleton + get/upsert; GET + PATCH on `settings/invoice-numbering` (Super-Admin-only, audit); single `InvoiceNumberingForm` at `/settings/invoice-numbering` (load→edit→save) + nav link. After this, settings CRUD COMPLETE → next fire = (5) notification prefs. (WIP — evidence next entry.)
+
+
 ### Fire 8 (cont. 57) — 2026-06-14 — PHASE 2 slice 4b: currencies CRUD
 - **PM ruling (recorded):** continue settings CRUD with **currencies** (same slice-4 pattern). Reuse `validateCurrencySetting`; mutable dev-store + `upsertCurrency` keyed by currencyCode; GET(store)/POST/PATCH (Super-Admin-gated, country-block on assignedCountries, audit); `CurrencyForm` (code locked on edit, inline country list) at `/settings/currencies/new` + `/{code}/edit` + list actions. NO delete (no-DELETE invariant). Remaining settings CRUD after: invoice-numbering config.
 - **Built:** dev-store `currencySettings` + `upsertCurrency`; GET(store)/POST(persist)/new PATCH branch on `settings/currencies` (Super-Admin-gated, ISO-code + country-block validated, audit); `CurrencyForm` (code locked on edit, inline country list) at `/settings/currencies/new` + `/{code}/edit` + list actions.

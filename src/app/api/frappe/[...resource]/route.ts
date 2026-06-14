@@ -10,6 +10,7 @@ import {
   getDevStore,
   resolveDeleteQueue,
   upsertIntegrationSetting,
+  setInvoiceNumbering,
   upsertCurrency,
   upsertPaymentMethod,
 } from "@/lib/dev-store";
@@ -165,6 +166,10 @@ export async function GET(request: Request, context: RouteContext) {
 
   if (contextKey === "settings/currencies") {
     return sampleResponse(getDevStore().currencySettings);
+  }
+
+  if (contextKey === "settings/invoice-numbering") {
+    return sampleResponse(getDevStore().invoiceNumbering);
   }
 
   if (contextKey === "settings/notifications") {
@@ -329,15 +334,17 @@ export async function POST(request: Request, context: RouteContext) {
       return jsonError(numberingError);
     }
 
+    const config = normalizeInvoiceNumbering(objectPayload);
+    setInvoiceNumbering(config);
     const audit = appendAudit({
       entityType: "Invoice Numbering Setting",
-      entityId: String(objectPayload.mode ?? ""),
+      entityId: config.mode,
       action: "update",
       oldValue: "",
-      newValue: String(objectPayload.mode ?? ""),
+      newValue: config.mode,
       performedBy: session.auditLabel,
     });
-    return sampleResponse({ ...objectPayload }, { status: 201, audit });
+    return sampleResponse(config, { status: 201, audit });
   }
 
   if (contextKey === "invoices") {
@@ -658,6 +665,25 @@ export async function PATCH(request: Request, context: RouteContext) {
     return sampleResponse({ ...customers[0], ...objectPayload, updatedAt: new Date().toISOString() });
   }
 
+  if (contextKey === "settings/invoice-numbering") {
+    const merged = { ...getDevStore().invoiceNumbering, ...objectPayload };
+    const numberingError = validateInvoiceNumbering(merged as Partial<InvoiceNumberingConfig>);
+    if (numberingError) {
+      return jsonError(numberingError);
+    }
+    const config = normalizeInvoiceNumbering(merged);
+    setInvoiceNumbering(config);
+    const audit = appendAudit({
+      entityType: "Invoice Numbering Setting",
+      entityId: config.mode,
+      action: "update",
+      oldValue: "",
+      newValue: config.mode,
+      performedBy: session.auditLabel,
+    });
+    return sampleResponse(config, { audit });
+  }
+
   if (contextKey === "settings/currencies") {
     const current = getDevStore().currencySettings.find((c) => c.currencyCode === objectPayload.currencyCode);
     if (!current) {
@@ -794,6 +820,18 @@ async function readJson(request: Request) {
 
 function asObject(payload: unknown): Record<string, unknown> {
   return payload && typeof payload === "object" && !Array.isArray(payload) ? (payload as Record<string, unknown>) : {};
+}
+
+function normalizeInvoiceNumbering(payload: Record<string, unknown>): InvoiceNumberingConfig {
+  const mode = String(payload.mode ?? "Global");
+  const config: InvoiceNumberingConfig = {
+    mode,
+    nextSequence: typeof payload.nextSequence === "number" ? payload.nextSequence : 1,
+  };
+  if (mode === "Country Prefix" && typeof payload.prefix === "string" && payload.prefix) {
+    config.prefix = payload.prefix.toUpperCase();
+  }
+  return config;
 }
 
 function normalizeCurrency(payload: Record<string, unknown>): CurrencySetting {
