@@ -12,6 +12,7 @@ import {
   ReceiptBuilder,
 } from "@/components/platform/Phase2Forms";
 import { LeadsWorkspace } from "@/components/platform/LeadsWorkspace";
+import { LeadCallScreen } from "@/components/platform/LeadCallScreen";
 import { ActionLink, DataTable, PlatformShell, StatGrid } from "@/components/platform/PlatformShell";
 import { ProtectedRoute } from "@/components/security/ProtectedRoute";
 import { getDevStore } from "@/lib/dev-store";
@@ -75,19 +76,11 @@ export default async function PlatformRoute({ params }: PageProps) {
       return <MissingRecord entity="Lead" href="/leads" />;
     }
     return (
-      <PlatformShell description="Lead detail remains scoped to the authenticated user's organization, country, reseller, and assignment." title={lead.company}>
-        <Card>
-          <CardContent className="grid gap-4 pt-5 sm:grid-cols-2 xl:grid-cols-4">
-            <Detail label="Lead ID" value={lead.id} />
-            <Detail label="Contact" value={lead.contact} />
-            <Detail label="Country" value={lead.country} />
-            <Detail label="Priority" value={lead.priority} />
-            <Detail label="Status" value={lead.status} />
-            <Detail label="Follow-up" value={lead.followUp} />
-            <Detail label="Reseller" value={lead.reseller} />
-            <Detail label="Assigned user" value={lead.assignedTo} />
-          </CardContent>
-        </Card>
+      <PlatformShell description="Call screen — reach the lead, then record the outcome. Scoped to your organization, country, reseller, and assignment." title={lead.company}>
+        <div className="mb-1">
+          <ActionLink href="/leads" variant="secondary">← Back to leads</ActionLink>
+        </div>
+        <LeadCallScreen lead={lead} />
       </PlatformShell>
     );
   }
