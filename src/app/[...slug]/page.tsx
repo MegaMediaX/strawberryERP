@@ -80,7 +80,16 @@ export default async function PlatformRoute({ params }: PageProps) {
         <div className="mb-1">
           <ActionLink href="/leads" variant="secondary">← Back to leads</ActionLink>
         </div>
-        <LeadCallScreen lead={lead} />
+        <LeadCallScreen
+          lead={lead}
+          users={portalUsers}
+          actingUser={{
+            id: session.effectiveUser.id,
+            role: session.effectiveUser.role,
+            countries: session.effectiveUser.countries,
+            reseller: session.effectiveUser.reseller,
+          }}
+        />
       </PlatformShell>
     );
   }

@@ -8,7 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { validateLeadTransition } from "@/lib/business/lead-workflow";
 import { buildCustomerFromLead, validateConversion, type ConversionOverrides } from "@/lib/business/lead-conversion";
+import { eligibleAssignees, validateReassignment } from "@/lib/business/lead-reassignment";
 import { leadStatuses } from "@/lib/sample-data";
+import type { PortalRole, PortalUser } from "@/lib/portal-security";
 import type { PortalLead } from "@/lib/ui-data";
 
 const SCHEDULED = "Scheduled Follow-Up";
@@ -20,7 +22,15 @@ function priorityTone(priority: string): "rose" | "amber" | "blue" | "neutral" {
   return "neutral";
 }
 
-export function LeadCallScreen({ lead }: { lead: PortalLead }) {
+export function LeadCallScreen({
+  lead,
+  users = [],
+  actingUser,
+}: {
+  lead: PortalLead;
+  users?: PortalUser[];
+  actingUser?: { id: string; role: PortalRole; countries: string[]; reseller?: string };
+}) {
   const router = useRouter();
   const [currentStatus, setCurrentStatus] = useState<string>(lead.status);
   const [nextStatus, setNextStatus] = useState<string>(lead.status);
@@ -31,6 +41,12 @@ export function LeadCallScreen({ lead }: { lead: PortalLead }) {
   const [callLogged, setCallLogged] = useState(false);
   const [converting, setConverting] = useState(false);
   const [converted, setConverted] = useState<string | null>(null);
+  const [reassigning, setReassigning] = useState(false);
+  const [assignedTo, setAssignedTo] = useState(lead.assignedTo);
+
+  const actingFull = actingUser ? users.find((u) => u.id === actingUser.id) : undefined;
+  const candidates = actingFull ? eligibleAssignees(lead, actingFull, users) : [];
+  const canReassign = candidates.length > 0;
 
   const tel = lead.phone.replace(/[^\d+]/g, "");
   const wa = lead.phone.replace(/[^\d]/g, "");
@@ -83,6 +99,19 @@ export function LeadCallScreen({ lead }: { lead: PortalLead }) {
         }}
       />
     ) : null}
+    {reassigning && actingFull ? (
+      <ReassignModal
+        lead={lead}
+        actingUser={actingFull}
+        candidates={candidates}
+        onClose={() => setReassigning(false)}
+        onReassigned={(name) => {
+          setAssignedTo(name);
+          setReassigning(false);
+          router.refresh();
+        }}
+      />
+    ) : null}
     <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
       {/* Left: identity + contact actions + status */}
       <div className="grid gap-5">
@@ -96,6 +125,15 @@ export function LeadCallScreen({ lead }: { lead: PortalLead }) {
               <div className="flex flex-wrap items-center gap-2">
                 <Badge tone={priorityTone(lead.priority)}>{lead.priority}</Badge>
                 <Badge tone="neutral">{currentStatus}</Badge>
+                {canReassign ? (
+                  <button
+                    type="button"
+                    onClick={() => setReassigning(true)}
+                    className="inline-flex h-9 items-center justify-center rounded-xl border border-[var(--border)] px-3 text-sm font-semibold text-[var(--foreground)] transition-colors hover:bg-[var(--background)]"
+                  >
+                    Reassign
+                  </button>
+                ) : null}
                 {converted ? (
                   <Badge tone="green">Converted → {converted}</Badge>
                 ) : (
@@ -187,7 +225,7 @@ export function LeadCallScreen({ lead }: { lead: PortalLead }) {
           <CardContent className="grid grid-cols-2 gap-4">
             <Detail label="Country" value={lead.country} />
             <Detail label="Reseller" value={lead.reseller} />
-            <Detail label="Assigned user" value={lead.assignedTo} />
+            <Detail label="Assigned user" value={assignedTo} />
             <Detail label="Source" value={lead.source} />
             <Detail label="Phone" value={lead.phone} />
             <Detail label="Email" value={lead.email} />
@@ -296,6 +334,98 @@ function ConvertModal({
               className="inline-flex h-11 flex-1 items-center justify-center rounded-xl bg-[var(--brand)] px-4 text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition-colors hover:bg-[var(--brand-hover)] disabled:opacity-60"
             >
               {busy ? "Converting…" : "Create customer"}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-11 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--foreground)] transition-colors hover:bg-[var(--background)]"
+            >
+              Cancel
+            </button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function ReassignModal({
+  lead,
+  actingUser,
+  candidates,
+  onClose,
+  onReassigned,
+}: {
+  lead: PortalLead;
+  actingUser: PortalUser;
+  candidates: PortalUser[];
+  onClose: () => void;
+  onReassigned: (assignedName: string) => void;
+}) {
+  const [targetId, setTargetId] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function submit() {
+    setError(null);
+    const validation = validateReassignment(lead, targetId, actingUser, candidates);
+    if (validation) {
+      setError(validation);
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await fetch("/api/frappe/leads", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: lead.id, assignedUser: targetId }),
+      });
+      const body = (await res.json().catch(() => ({}))) as { error?: { message?: string } | string };
+      if (!res.ok) {
+        setError(typeof body.error === "string" ? body.error : body.error?.message ?? "Reassignment failed.");
+        return;
+      }
+      onReassigned(candidates.find((u) => u.id === targetId)?.name ?? targetId);
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" role="dialog" aria-modal="true">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Reassign lead</CardTitle>
+          <CardDescription>Hand {lead.company} to another user. Only users within this lead&apos;s country &amp; reseller scope are listed.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <Field label="Assign to">
+            <Select value={targetId} onChange={(e) => setTargetId(e.target.value)}>
+              <option value="">Select a user…</option>
+              {candidates.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name} · {u.role}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <p className="text-xs text-[var(--muted)]">Country & reseller stay the same — only the assigned user changes.</p>
+
+          {error ? (
+            <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">
+              {error}
+            </p>
+          ) : null}
+
+          <div className="flex gap-2">
+            <button
+              onClick={submit}
+              disabled={busy || !targetId}
+              className="inline-flex h-11 flex-1 items-center justify-center rounded-xl bg-[var(--brand)] px-4 text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition-colors hover:bg-[var(--brand-hover)] disabled:opacity-60"
+            >
+              {busy ? "Reassigning…" : "Reassign"}
             </button>
             <button
               type="button"
