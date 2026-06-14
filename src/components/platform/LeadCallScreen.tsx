@@ -9,6 +9,7 @@ import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { validateLeadTransition } from "@/lib/business/lead-workflow";
 import { buildCustomerFromLead, validateConversion, type ConversionOverrides } from "@/lib/business/lead-conversion";
 import { eligibleAssignees, validateReassignment } from "@/lib/business/lead-reassignment";
+import { quickOutcomes, type QuickOutcome } from "@/lib/business/quick-outcomes";
 import { leadStatuses } from "@/lib/sample-data";
 import type { PortalRole, PortalUser } from "@/lib/portal-security";
 import type { PortalLead } from "@/lib/ui-data";
@@ -26,10 +27,16 @@ export function LeadCallScreen({
   lead,
   users = [],
   actingUser,
+  importantDetails,
+  enableQuickOutcomes = false,
 }: {
   lead: PortalLead;
   users?: PortalUser[];
   actingUser?: { id: string; role: PortalRole; countries: string[]; reseller?: string };
+  /** Spec §8 — sales instructions shown above the status/notes (sales persona). */
+  importantDetails?: string[];
+  /** Spec §10 — one-tap outcome buttons (sales persona). */
+  enableQuickOutcomes?: boolean;
 }) {
   const router = useRouter();
   const [currentStatus, setCurrentStatus] = useState<string>(lead.status);
@@ -43,6 +50,7 @@ export function LeadCallScreen({
   const [converted, setConverted] = useState<string | null>(null);
   const [reassigning, setReassigning] = useState(false);
   const [assignedTo, setAssignedTo] = useState(lead.assignedTo);
+  const [copied, setCopied] = useState(false);
 
   const actingFull = actingUser ? users.find((u) => u.id === actingUser.id) : undefined;
   const candidates = actingFull ? eligibleAssignees(lead, actingFull, users) : [];
@@ -56,10 +64,10 @@ export function LeadCallScreen({
   const actionBase =
     "inline-flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl px-4 text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition-transform active:scale-[0.98]";
 
-  async function save() {
+  async function save(targetStatus: string = nextStatus, targetDate: string = followUpDate) {
     setError(null);
     setSuccess(null);
-    const validation = validateLeadTransition(currentStatus, nextStatus, followUpDate);
+    const validation = validateLeadTransition(currentStatus, targetStatus, targetDate);
     if (validation) {
       setError(validation);
       return;
@@ -69,14 +77,15 @@ export function LeadCallScreen({
       const res = await fetch("/api/frappe/leads", {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ id: lead.id, status: nextStatus, followUpDate: followUpDate || undefined }),
+        body: JSON.stringify({ id: lead.id, status: targetStatus, followUpDate: targetDate || undefined }),
       });
       const body = (await res.json().catch(() => ({}))) as { error?: { message?: string } | string };
       if (!res.ok) {
         setError(typeof body.error === "string" ? body.error : body.error?.message ?? "Could not update the lead.");
         return;
       }
-      setCurrentStatus(nextStatus);
+      setCurrentStatus(targetStatus);
+      setNextStatus(targetStatus);
       setFollowUpDate("");
       setSuccess("Lead updated.");
       router.refresh();
@@ -84,6 +93,41 @@ export function LeadCallScreen({
       setError("Network error. Please try again.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function copyNumber() {
+    try {
+      await navigator.clipboard.writeText(lead.phone);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  /** Spec §10: one-tap outcome → status save / schedule / convert / flag. */
+  function handleQuickOutcome(outcome: QuickOutcome) {
+    const def = quickOutcomes.find((d) => d.outcome === outcome);
+    if (!def) return;
+    if (def.kind === "convert") {
+      setConverting(true);
+      return;
+    }
+    if (def.kind === "flag") {
+      setError(null);
+      setSuccess("Flagged as a wrong number — update the contact details before saving a status.");
+      return;
+    }
+    if (def.kind === "schedule" && def.status) {
+      // Reveal the follow-up date field; the user picks a date then taps Save.
+      setNextStatus(def.status);
+      setSuccess("Pick a follow-up date, then Save.");
+      return;
+    }
+    if (def.kind === "status" && def.status) {
+      setNextStatus(def.status);
+      void save(def.status);
     }
   }
 
@@ -160,6 +204,16 @@ export function LeadCallScreen({
                 Email
               </a>
             </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={copyNumber}
+                className="inline-flex h-9 items-center justify-center rounded-xl border border-[var(--border)] px-3 text-sm font-semibold text-[var(--foreground)] transition-colors hover:bg-[var(--background)]"
+              >
+                {copied ? "Copied!" : "Copy number"}
+              </button>
+              <span className="text-sm text-[var(--muted)]">{lead.phone}</span>
+            </div>
             {callLogged ? (
               <p className="text-sm text-emerald-700 dark:text-emerald-400">Call started — remember to log the outcome below.</p>
             ) : (
@@ -167,6 +221,46 @@ export function LeadCallScreen({
             )}
           </CardContent>
         </Card>
+
+        {importantDetails && importantDetails.length > 0 ? (
+          <Card className="border-amber-300 bg-amber-50 dark:border-amber-900/60 dark:bg-amber-950/30">
+            <CardHeader>
+              <CardTitle className="text-amber-900 dark:text-amber-200">Important details</CardTitle>
+              <CardDescription className="text-amber-800/80 dark:text-amber-200/70">Sales guidance from your admin — read before the call.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="grid gap-1.5 text-sm text-amber-900 dark:text-amber-100">
+                {importantDetails.map((line, i) => (
+                  <li key={i} className="flex gap-2"><span aria-hidden>•</span><span>{line}</span></li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {enableQuickOutcomes ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick outcome</CardTitle>
+              <CardDescription>One tap to log the result of this contact.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {quickOutcomes.map((o) => (
+                  <button
+                    key={o.outcome}
+                    type="button"
+                    onClick={() => handleQuickOutcome(o.outcome)}
+                    disabled={busy}
+                    className="inline-flex h-11 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-semibold text-[var(--foreground)] transition-colors hover:bg-[var(--background)] disabled:opacity-60"
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
 
         <Card>
           <CardHeader>
@@ -205,7 +299,7 @@ export function LeadCallScreen({
 
             <div className="sm:col-span-2">
               <button
-                onClick={save}
+                onClick={() => save()}
                 disabled={busy || !dirty}
                 className="inline-flex h-11 items-center justify-center rounded-xl bg-[var(--brand)] px-4 text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition-colors hover:bg-[var(--brand-hover)] disabled:opacity-60"
               >

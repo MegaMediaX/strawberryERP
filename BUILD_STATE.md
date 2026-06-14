@@ -96,6 +96,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 14 (cont. 63) — 2026-06-14 — SALES UI slice 3: lead call screen [§6,7,8,9,10] (most important screen)
+- **PM ruling (recorded):** slice 3 = sales call screen at /sales/leads/:id, reuse LeadCallScreen + add: quick-outcome buttons (§10 pure mapping lib + tests), Important Details card (§8, read-only from per-reseller seed — admin editing deferred), Copy Number (§7). Notes/timeline polish (§11/§12) → slice 4. Extend LeadCallScreen via OPT-IN props so admin /leads/[id] is unaffected. (WIP — evidence next entry.)
+
+
 ### Fire 13 (cont. 62) — 2026-06-14 — SALES UI slice 2: /sales/leads list + filters + add-lead [§14,15,16,24]
 - **PM ruling (recorded):** slice 2 = My Leads list (mobile cards / desktop table) + filter bar (status/priority/source/country/search + reset) + Add-Lead route reusing NewLeadForm (default assigned = self). Saved views deferred. Native tel:/wa.me + Open per row. Verify sales scoping + both widths. Slice 3 = lead call screen at /sales/leads/:id.
 - **Built:** pure `src/lib/sales/lead-filters.ts` (`filterLeads`/`sortLeads`/`distinctValues`/`priorityRank`) + 8 tests; `SalesLeadsView` (desktop table + mobile cards, filter bar search/status/priority/source/country + reset, native tel:/wa.me + Open, empty state, mobile FAB); `/sales/leads/new` reuses `NewLeadForm` via `SalesNewLead` (default assigned = self, redirect on success) — added `defaultAssignedUser` prop to NewLeadForm.
