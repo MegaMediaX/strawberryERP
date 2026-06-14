@@ -97,7 +97,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ## Resume journal (newest first)
 
 ### Fire 15 (cont. 64) — 2026-06-14 — SALES UI slice 4: notes compose + activity timeline [§11,§12]
-- **PM ruling (recorded):** slice 4 = fast notes compose (textarea + 5 quick templates, timestamp+author, latest-first, PATCH lead.notes optimistic) + activity timeline derived from lead facts (most-recent-first, icons, collapsed on mobile). Pure `notes-formatter.ts` + `timeline-builder.ts` + tests. Add to LeadCallScreen via OPT-IN props (`enableNotesCompose`, `timeline`) so admin /leads/[id] stays read-only. Zero backend coupling (dev-store echo, optimistic UI). (WIP — evidence next entry.)
+- **PM ruling (recorded):** slice 4 = fast notes compose (textarea + 5 quick templates, timestamp+author, latest-first, PATCH lead.notes optimistic) + activity timeline derived from lead facts (most-recent-first, icons, collapsed on mobile). Pure `notes-formatter.ts` + `timeline-builder.ts` + tests. Add to LeadCallScreen via OPT-IN props (`enableNotesCompose`, `timeline`) so admin /leads/[id] stays read-only. Zero backend coupling (dev-store echo, optimistic UI).
+- **Built:** pure `notes-formatter.ts` (formatNoteLine/prependNote/parseNotes + 5 templates) + `timeline-builder.ts` (ordered timeline from lead facts; follow-up conditional) + 7 tests. Extended LeadCallScreen via opt-in `enableNotesCompose` (textarea + template chips + Save note → optimistic prepend + PATCH lead.notes, latest-first list) and `timeline` (collapsible card, collapsed on mobile, emoji icons). Admin /leads/[id] unchanged (opt-out).
+- **Verified:** 407 tests pass (was 400, +7), typecheck + lint clean, build green. Browser (dev-store): desktop → 5 templates + Save note + timeline (5 items); live note save → **200**, shows latest-first w/ timestamp+author ("…· You: Called, asked for proposal…"); **380px** → timeline collapsed by default (Show toggle), note compose present, no overflow. HEAD `9e8766a`. **DONE.**
+- Next: slice 5 — /sales/follow-ups queue with tabs (Today/Overdue/Tomorrow/This Week/All) + urgency ordering [§13] (pure bucketing lib + tests).
 
 
 ### Fire 14 (cont. 63) — 2026-06-14 — SALES UI slice 3: lead call screen [§6,7,8,9,10] (most important screen)
