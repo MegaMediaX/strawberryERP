@@ -97,7 +97,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ## Resume journal (newest first)
 
 ### Fire 20 (cont. 69) — 2026-06-14 — SALES UI slice 9: sales profile [§22]
-- **PM ruling (recorded):** slice 9 = /sales/profile. Sections: Account (read-only name/email/role/timezone), Appearance (functional dark-mode toggle — class strategy confirmed), Calendar (Not connected, disabled "coming soon"), Notification Preferences (REUSE NotificationPreferencesForm), Security (link to /account/security). Pure `profile-data.ts` (formatRole, getTimezoneLabel by country) + tests. No admin surfaces. (WIP — evidence next entry.)
+- **PM ruling (recorded):** slice 9 = /sales/profile. Sections: Account (read-only name/email/role/timezone), Appearance (functional dark-mode toggle — class strategy confirmed), Calendar (Not connected, disabled "coming soon"), Notification Preferences (REUSE NotificationPreferencesForm), Security (link to /account/security). Pure `profile-data.ts` (formatRole, getTimezoneLabel by country) + tests. No admin surfaces.
+- **Built:** pure `profile-data.ts` (`formatRole` + `getTimezoneLabel` by country) + 3 tests; `ThemeToggle` (class-strategy dark toggle + localStorage); `/sales/profile` page with 5 sections, reusing `NotificationPreferencesForm` + linking to `/account/security`.
+- **Verified:** 432 tests pass (was 429, +3), typecheck + lint clean, build green. Browser (dev-store): all 5 sections; role "Sales Team User" + "Asia/Beirut" tz; 2FA link → /account/security; calendar disabled "coming soon"; notif form (4 channels) reused; **no admin leak**; theme toggle flips `.dark` on `<html>` + persists; **380px** + desktop no overflow. HEAD `b4f13f7`. **DONE.**
+- Next: slice 10 — §20 notifications (top-bar bell, in-app list, hooks-only) OR §21 calendar agenda (scoped follow-ups) OR §25-27 polish. PM to sequence.
 
 
 ### Fire 19 (cont. 68) — 2026-06-14 — SALES UI slice 8: scoped global search [§23]
