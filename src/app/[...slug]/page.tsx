@@ -15,6 +15,7 @@ import { LeadsWorkspace } from "@/components/platform/LeadsWorkspace";
 import { LeadCallScreen } from "@/components/platform/LeadCallScreen";
 import { CommissionApprovalConsole } from "@/components/platform/CommissionApprovalConsole";
 import { FollowUpReminderConsole } from "@/components/platform/FollowUpReminderConsole";
+import { ReportsView } from "@/components/platform/ReportsView";
 import { ActionLink, DataTable, PlatformShell, StatGrid } from "@/components/platform/PlatformShell";
 import { ProtectedRoute } from "@/components/security/ProtectedRoute";
 import { getDevStore } from "@/lib/dev-store";
@@ -711,6 +712,14 @@ export default async function PlatformRoute({ params }: PageProps) {
     return (
       <PlatformShell activeHref="/import" description="Validate lead/customer CSV imports and export invoices, receipts, commissions, and reports." title="Import and export">
         <ImportExportConsole />
+      </PlatformShell>
+    );
+  }
+
+  if (path === "/reports/insights") {
+    return (
+      <PlatformShell activeHref="/reports" description="Filtered revenue-by-country and lead-conversion analytics, scoped to your role." title="Advanced reports">
+        <ReportsView />
       </PlatformShell>
     );
   }

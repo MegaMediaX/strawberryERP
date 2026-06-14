@@ -30,6 +30,7 @@ const navigationGroups: Array<{ label: string; items: NavigationItem[] }> = [
       { label: "Resellers", href: "/resellers", roles: operations },
       { label: "Contracts", href: "/contracts", roles: operations },
       { label: "Reports", href: "/reports", roles: operations },
+      { label: "Insights", href: "/reports/insights", roles: operations },
     ],
   },
   {

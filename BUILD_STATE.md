@@ -96,6 +96,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 6 (cont. 55) — 2026-06-14 — PHASE 2 slice 3: advanced reports
+- **PM ruling (recorded):** slice 3 = advanced reports, scoped to the two highest-value: **revenue by country** + **lead-conversion funnel**. Pure `reports.ts` (`revenueByCountry`, `leadConversionFunnel`) role-scoped (Super=all, Regional=their countries, ResellerAdmin=their reseller, Sales=none); date-range + country/reseller/source filters; UI report pages; `/reports/*` rejects Sales; Regional Director country-scoped (Cyprus request outside scope → blocked). (WIP — evidence next entry.)
+
+
 ### Fire 5 (cont. 54) — 2026-06-14 — PHASE 2 slice 2: follow-up reminder rules (hooks-only)
 - **PM ruling (recorded):** calendar-sync reframed to dev-verifiable **follow-up reminder rules** (no live Google/OAuth). Pure `followup-reminder-rules.ts` (type + `validateFollowUpReminderRule` fail-closed + allowlist template tokens) and `followup-reminder-engine.ts` (`calculateReminderEvents(lead, rules, now)` → ISO triggersAt, UTC, multi-rule stacking, role/channel filter). UI console (list + Super-Admin create/toggle). API `settings/reminder-rules` GET (scoped) / POST+PATCH (Super-Admin-only → 403). Security: only Super Admin writes; template tokens restricted to lead.{id,company,contact,followUp}; all timestamps ISO-8601 UTC.
 - **Built:** `followup-reminder-rules.ts` (validate + allowlist-token render) + `followup-reminder-engine.ts` (`calculateReminderEvents` → UTC ISO triggersAt, stacking/sort, country filter) + 10 unit tests; dev-store `reminderRules` + helpers; API `settings/reminder-rules` (GET / Super-Admin POST+PATCH / no DELETE); `FollowUpReminderConsole` at `/settings/reminder-rules` (+ route-access + nav link).
