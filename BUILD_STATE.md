@@ -97,7 +97,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ## Resume journal (newest first)
 
 ### Fire 8 (cont. 57) — 2026-06-14 — PHASE 2 slice 4b: currencies CRUD
-- **PM ruling (recorded):** continue settings CRUD with **currencies** (same slice-4 pattern). Reuse `validateCurrencySetting`; mutable dev-store + `upsertCurrency` keyed by currencyCode; GET(store)/POST/PATCH (Super-Admin-gated, country-block on assignedCountries, audit); `CurrencyForm` (code locked on edit, inline country list) at `/settings/currencies/new` + `/{code}/edit` + list actions. NO delete (no-DELETE invariant). Remaining settings CRUD after: invoice-numbering config. (WIP — evidence next entry.)
+- **PM ruling (recorded):** continue settings CRUD with **currencies** (same slice-4 pattern). Reuse `validateCurrencySetting`; mutable dev-store + `upsertCurrency` keyed by currencyCode; GET(store)/POST/PATCH (Super-Admin-gated, country-block on assignedCountries, audit); `CurrencyForm` (code locked on edit, inline country list) at `/settings/currencies/new` + `/{code}/edit` + list actions. NO delete (no-DELETE invariant). Remaining settings CRUD after: invoice-numbering config.
+- **Built:** dev-store `currencySettings` + `upsertCurrency`; GET(store)/POST(persist)/new PATCH branch on `settings/currencies` (Super-Admin-gated, ISO-code + country-block validated, audit); `CurrencyForm` (code locked on edit, inline country list) at `/settings/currencies/new` + `/{code}/edit` + list actions.
+- **Verified:** 364 tests pass (reused validateCurrencySetting's existing tests), typecheck + lint clean, build green. Browser (dev-store): create EUR → **201**, Israel → **400 BLOCKED_COUNTRY**, bad ISO code → **400**, PATCH USD→inactive → **200** & reflects in table, sales write → **403**, edit form prefilled + code locked. HEAD `b2e5bdf`. **DONE.**
+- Settings CRUD remaining: invoice-numbering config. Phase 2 remaining: invoice-numbering (finishes 4), (5) notification prefs, (6) reseller management.
 
 
 ### Fire 7 (cont. 56) — 2026-06-14 — PHASE 2 slice 4: payment methods CRUD
