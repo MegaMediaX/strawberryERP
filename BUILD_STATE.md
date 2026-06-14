@@ -97,7 +97,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ## Resume journal (newest first)
 
 ### Fire 13 (cont. 62) — 2026-06-14 — SALES UI slice 2: /sales/leads list + filters + add-lead [§14,15,16,24]
-- **PM ruling (recorded):** slice 2 = My Leads list (mobile cards / desktop table) + filter bar (status/priority/source/country/search + reset) + Add-Lead route reusing NewLeadForm (default assigned = self). Saved views deferred. Native tel:/wa.me + Open per row. Verify sales scoping + both widths. Slice 3 = lead call screen at /sales/leads/:id. (WIP — evidence next entry.)
+- **PM ruling (recorded):** slice 2 = My Leads list (mobile cards / desktop table) + filter bar (status/priority/source/country/search + reset) + Add-Lead route reusing NewLeadForm (default assigned = self). Saved views deferred. Native tel:/wa.me + Open per row. Verify sales scoping + both widths. Slice 3 = lead call screen at /sales/leads/:id.
+- **Built:** pure `src/lib/sales/lead-filters.ts` (`filterLeads`/`sortLeads`/`distinctValues`/`priorityRank`) + 8 tests; `SalesLeadsView` (desktop table + mobile cards, filter bar search/status/priority/source/country + reset, native tel:/wa.me + Open, empty state, mobile FAB); `/sales/leads/new` reuses `NewLeadForm` via `SalesNewLead` (default assigned = self, redirect on success) — added `defaultAssignedUser` prop to NewLeadForm.
+- **Verified:** 393 tests pass (was 385, +8), typecheck + lint clean, build green. Browser (dev-store): scoped leads API returns only Rami's assigned lead(s); desktop → table + native links + New-lead; **380px** → cards (table hidden) + FAB; add-lead route prefills assigned user "Rami K.". HEAD `527369b`. **DONE.**
+- Next: slice 3 — lead call screen at /sales/leads/:id (reuse/extend LeadCallScreen) with big call/WhatsApp, status, quick-outcome buttons, notes, timeline, important details [§6,7,8,9,10,11,12].
 
 
 ### Fire 12 (cont. 61) — 2026-06-14 — SALES UI slice 1: /sales persona shell + nav + guard [§24,28,29]
