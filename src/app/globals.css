@@ -3,33 +3,66 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #f6f8fb;
-  --foreground: #0f172a;
-  --app-bg: #f6f8fb;
-  --chart-blue: #2563eb;
-  --chart-amber: #d97706;
-  --chart-emerald: #059669;
-  --chart-violet: #7c3aed;
-  --chart-rose: #e11d48;
-  --chart-grid: #e2e8f0;
+  /* Surfaces & text — warm, calm neutrals */
+  --background: #f5f6f8;
+  --app-bg: #f5f6f8;
+  --foreground: #1a1d23;
+  --muted: #6b7280;
+  --surface: #ffffff;
+  --border: #e8eaef;
+  --border-strong: #d8dbe2;
+
+  /* Brand — a single confident indigo */
+  --brand: #4f46e5;
+  --brand-hover: #4338ca;
+  --brand-soft: #eef0fe;
+  --brand-ring: rgba(79, 70, 229, 0.35);
+
+  /* Charts */
+  --chart-blue: #4f46e5;
+  --chart-amber: #f59e0b;
+  --chart-emerald: #10b981;
+  --chart-violet: #8b5cf6;
+  --chart-rose: #f43f5e;
+  --chart-grid: #eceef2;
   --tooltip-bg: #ffffff;
-  --tooltip-border: #e2e8f0;
-  --tooltip-text: #0f172a;
+  --tooltip-border: #e8eaef;
+  --tooltip-text: #1a1d23;
+
+  /* Elevation */
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
+  --shadow-md: 0 4px 12px rgba(16, 24, 40, 0.06), 0 2px 4px rgba(16, 24, 40, 0.04);
 }
 
 .dark {
-  --background: #020617;
-  --foreground: #f8fafc;
-  --app-bg: #020617;
-  --chart-grid: #1e293b;
-  --tooltip-bg: #0f172a;
-  --tooltip-border: #334155;
-  --tooltip-text: #f8fafc;
+  --background: #0b0d12;
+  --app-bg: #0b0d12;
+  --foreground: #f1f3f7;
+  --muted: #9aa1ad;
+  --surface: #14171d;
+  --border: #232730;
+  --border-strong: #2e333d;
+
+  --brand: #6366f1;
+  --brand-hover: #818cf8;
+  --brand-soft: #1b1d2e;
+  --brand-ring: rgba(129, 140, 248, 0.4);
+
+  --chart-grid: #232730;
+  --tooltip-bg: #14171d;
+  --tooltip-border: #2e333d;
+  --tooltip-text: #f1f3f7;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-brand: var(--brand);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -45,7 +78,15 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.02em;
 }
 
 button,
@@ -71,6 +112,22 @@ aside nav button svg,
 }
 
 ::selection {
-  background: #bfdbfe;
-  color: #0f172a;
+  background: var(--brand-soft);
+  color: var(--brand-hover);
+}
+
+/* Calmer scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
 }

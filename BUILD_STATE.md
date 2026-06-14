@@ -94,7 +94,11 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
-### Fire 1 (cont. 46) — 2026-06-14 — 🔒 LIVE PER-ROLE SCOPING (bug found+fixed)
+### Fire 1 (cont. 47) — 2026-06-14 — FRONTEND REDESIGN (simple/modern/friendly)
+- Audit: generic Geist font, slate/blue palette, dev-jargon header badges ("Phase 2 / ERPNext-backed boundary / No API delete access"), dense headers.
+- Redesign (design-system level → propagates everywhere): **Plus Jakarta Sans** + JetBrains Mono; token palette (warm neutral surfaces, single **indigo** brand `#4f46e5`, soft borders, larger radii, layered shadows) in `globals.css`; modernized Card (rounded-2xl, tokens), Button (brand primary, rounded-xl, ring focus), Badge (rounded-full pills). PlatformShell: clean app-bar (brand mark + user avatar/initials), dropped dev badges, smaller title. PortalNavigation: brand-active rounded-full pills. Dashboard sidebar: brand-indigo active + mark. Login + 2FA pages: brand inputs/buttons, soft glow.
+- Gates: typecheck/lint/build/test green (303). Live-verified in browser: login ("Welcome back", indigo) + dashboard (brand sidebar, friendly cards) both clean/modern.
+- **Next start:** optional deeper passes on dense surfaces (LeadsWorkspace/Phase2Forms hardcoded slate classes); dark-mode polish.
 - **Found:** the focused `/api/frappe/leads` GET proxied to Frappe with NO scope (`maybeRouteToFrappe("leads","get")`) — Frappe-backed path returned ALL leads to EVERY role (dev-store path was scoped; Frappe path was a live §4/§9 isolation bypass).
 - **Fixed:** `leadsScopeForFrappe(session)` forwards role scope (Regional→`countries` CSV; Reseller→`reseller`; Sales→`assigned_user`) + pagination to the proxy; Frappe `list_leads` gained a multi-country `countries` (IN) filter. 4 unit tests.
 - **LIVE-verified** (`npm run smoke:scoping`, 8/8): Sales sees only Rami-K-assigned (5, no Cyprus); Reseller only Beirut-Digital-Partners (5); Regional only Lebanon/Jordan (0 Cyprus/Syria); Super sees all incl. Cyprus. Seeded role-matched leads via `scale_seed.seed_scope_demo`.

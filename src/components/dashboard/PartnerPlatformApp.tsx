@@ -153,12 +153,12 @@ export function PartnerPlatformApp({ initialLeads, loadError, session, source }:
           <aside className="sticky top-0 z-20 shrink-0 border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 lg:h-screen lg:w-72 lg:border-b-0 lg:border-r lg:px-5 lg:py-6">
             <div className="flex items-center justify-between gap-4 lg:flex-col lg:items-stretch">
               <div className="flex items-center gap-3">
-                <div className="grid size-11 place-items-center rounded-lg bg-slate-950 text-white dark:bg-white dark:text-slate-950">
+                <div className="grid size-11 place-items-center rounded-xl bg-[var(--brand)] text-white shadow-[var(--shadow-sm)]">
                   <Building2 aria-hidden="true" />
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold">LebTech</p>
-                  <p className="truncate text-xs text-slate-500 dark:text-slate-400">Partner Platform</p>
+                  <p className="truncate text-sm font-bold tracking-tight">LebTech</p>
+                  <p className="truncate text-xs text-[var(--muted)]">Partner Platform</p>
                 </div>
               </div>
 
@@ -168,8 +168,8 @@ export function PartnerPlatformApp({ initialLeads, loadError, session, source }:
                   return (
                     <a
                       className={cn(
-                        "flex h-10 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white",
-                        index === 0 && "bg-slate-950 text-white hover:bg-slate-950 hover:text-white dark:bg-white dark:text-slate-950",
+                        "flex h-10 items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-[var(--muted)] transition-colors hover:bg-[var(--background)] hover:text-[var(--foreground)]",
+                        index === 0 && "bg-[var(--brand)] text-white shadow-[var(--shadow-sm)] hover:bg-[var(--brand-hover)] hover:text-white",
                       )}
                       href={item.href}
                       key={item.label}
