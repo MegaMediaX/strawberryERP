@@ -97,7 +97,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ## Resume journal (newest first)
 
 ### Fire 7 (cont. 56) — 2026-06-14 — PHASE 2 slice 4: payment methods CRUD
-- **PM ruling (recorded):** settings CRUD tightened to **payment methods** this fire (currencies + invoice-numbering deferred to later fires). Reuse existing tested `validatePaymentMethod`; add UI create/edit form calling POST + newly-wired PATCH `settings/payment-methods`; Super-Admin-only write; method name locked to enum; countries country-blocked; audit-logged. (WIP — evidence next entry.)
+- **PM ruling (recorded):** settings CRUD tightened to **payment methods** this fire (currencies + invoice-numbering deferred to later fires). Reuse existing tested `validatePaymentMethod`; add UI create/edit form calling POST + newly-wired PATCH `settings/payment-methods`; Super-Admin-only write; method name locked to enum; countries country-blocked; audit-logged.
+- **Built:** mutable dev-store `paymentMethods` + `upsertPaymentMethod`; wired GET(store)/POST(persist)/new PATCH branch on `settings/payment-methods` (Super-Admin-gated, validated, audit); `PaymentMethodForm` (create/edit, name locked on edit) at `/settings/payment-methods/new` + `/{name}/edit`; New/Edit actions on the list. Build gotcha fixed: client form must NOT import from `@/lib/business/payment-methods` (drags node:fs) — inlined the method-name list.
+- **Verified:** 364 tests pass (no new lib — reused validatePaymentMethod's existing tests), typecheck + lint clean, build green. Browser (dev-store): create → **201**, Israel country → **400 BLOCKED_COUNTRY**, PATCH edit (Cash→inactive) → **200** & reflects in table, sales write → **403**, edit form prefilled + name locked. HEAD `a9c94ae`. **DONE.**
+- Settings CRUD remaining (per PM): currencies CRUD, then invoice-numbering config. Phase 2 remaining: rest of (4), (5) notification prefs, (6) reseller management.
 
 
 ### Fire 6 (cont. 55) — 2026-06-14 — PHASE 2 slice 3: advanced reports
