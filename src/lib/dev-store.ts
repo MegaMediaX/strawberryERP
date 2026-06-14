@@ -23,6 +23,11 @@ import { defaultReminderRules, type FollowUpReminderRule } from "@/lib/business/
 import type { InvoiceNumberingConfig } from "@/lib/business/billing-settings";
 import type { UserNotificationPreference } from "@/lib/business/notification-preferences";
 import { defaultResellers, type Reseller } from "@/lib/business/reseller-defaults";
+import {
+  seedImportantDetailLocks,
+  seedImportantDetails,
+  type ImportantDetailEntry,
+} from "@/lib/business/important-details-mgmt";
 
 type DevStore = {
   invoices: Invoice[];
@@ -39,6 +44,8 @@ type DevStore = {
   invoiceNumbering: InvoiceNumberingConfig;
   userPreferences: UserNotificationPreference[];
   resellerRecords: Reseller[];
+  importantDetails: ImportantDetailEntry[];
+  importantDetailLocks: Record<string, boolean>;
 };
 
 const globalStore = globalThis as typeof globalThis & {
@@ -73,10 +80,36 @@ export function getDevStore() {
       invoiceNumbering: { mode: "Global", nextSequence: 1 },
       userPreferences: [],
       resellerRecords: [...defaultResellers],
+      importantDetails: seedImportantDetails(),
+      importantDetailLocks: seedImportantDetailLocks(),
     };
   }
 
-  return globalStore.__lebtechDevStore;
+  // Backfill collections added after a long-lived dev process first cached the
+  // store, so new fields are never undefined on an already-running server.
+  const store = globalStore.__lebtechDevStore;
+  store.importantDetails ??= seedImportantDetails();
+  store.importantDetailLocks ??= seedImportantDetailLocks();
+  return store;
+}
+
+/** Important Details entries authored for a reseller (spec §14). */
+export function getImportantDetails(reseller: string): ImportantDetailEntry[] {
+  return getDevStore().importantDetails.filter((e) => e.reseller === reseller);
+}
+
+/** Replace ALL Important Details entries for a reseller (PATCH = full upsert; no per-entry DELETE). */
+export function setImportantDetails(reseller: string, entries: ImportantDetailEntry[]) {
+  const store = getDevStore();
+  store.importantDetails = [
+    ...store.importantDetails.filter((e) => e.reseller !== reseller),
+    ...entries,
+  ];
+  return getImportantDetails(reseller);
+}
+
+export function isImportantDetailsLocked(reseller: string): boolean {
+  return Boolean(getDevStore().importantDetailLocks[reseller]);
 }
 
 /** Create or replace a structured reseller record (keyed by name). */

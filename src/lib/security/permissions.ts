@@ -181,6 +181,12 @@ function canRead(session: PortalSession, resource: string) {
     return true;
   }
 
+  // Reseller Admin manages their own reseller's Important Details (§14); the
+  // route scopes reads to the caller's reseller.
+  if (resource === "settings/important-details") {
+    return true;
+  }
+
   if (settingsReadRoutes.has(resource) || resource.startsWith("settings/")) {
     return resource === "settings/session";
   }
@@ -215,6 +221,12 @@ function canWrite(session: PortalSession, resource: string, payload?: Record<str
   // a non-Super-Admin can only write their OWN record.
   if (resource === "settings/notification-preferences") {
     return true;
+  }
+
+  // Important Details (§14): Reseller Admin may write; the route enforces the
+  // Super-Admin lock and that the entries stay within the caller's reseller.
+  if (resource === "settings/important-details") {
+    return session.effectiveUser.role === "Reseller Admin";
   }
 
   if (

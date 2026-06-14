@@ -3,9 +3,10 @@ import Link from "next/link";
 import { ResellerLeadDetail } from "@/components/reseller/ResellerLeadDetail";
 import { Card, CardContent } from "@/components/ui/card";
 import { relatedRecordsFor } from "@/lib/business/related-records";
+import { resolveImportantDetails } from "@/lib/business/important-details-mgmt";
+import { getImportantDetails } from "@/lib/dev-store";
 import { invoices as seedInvoices, receipts as seedReceipts } from "@/lib/phase2-data";
 import { portalUsers } from "@/lib/portal-security";
-import { importantDetailsFor } from "@/lib/sales/important-details";
 import { buildTimeline } from "@/lib/sales/timeline-builder";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 import { getUiLeads } from "@/lib/ui-data";
@@ -41,7 +42,7 @@ export default async function ResellerLeadDetailPage({ params }: { params: Promi
         lead={lead}
         users={teamUsers}
         actingUser={{ id: actingUser.id, role: actingUser.role, countries: actingUser.countries, reseller: actingUser.reseller }}
-        importantDetails={importantDetailsFor(lead.reseller)}
+        importantDetails={resolveImportantDetails(lead, getImportantDetails(lead.reseller))}
         timeline={buildTimeline(lead)}
         related={related}
       />
