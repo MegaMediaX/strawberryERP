@@ -6,9 +6,10 @@ import { POST as disable } from "@/app/api/auth/2fa/disable/route";
 import { POST as login } from "@/app/api/auth/login/route";
 import { totp } from "@/lib/auth/totp";
 import { loginTwoFactorState } from "@/lib/auth/two-factor-store";
+import { SEED_ADMIN_PW, SEED_SUPER_EMAIL } from "@/test/seed-credentials";
 
-const SUPER = "super.admin@lebtech.example";
-const PW = "LebTech!Admin#2026";
+const SUPER = SEED_SUPER_EMAIL;
+const PW = SEED_ADMIN_PW;
 
 function authed(handler: (r: Request) => Promise<Response>, userId: string, body?: unknown) {
   return handler(

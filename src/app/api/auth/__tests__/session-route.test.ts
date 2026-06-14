@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { POST as login } from "@/app/api/auth/login/route";
 import { GET as session } from "@/app/api/auth/session/route";
 import { SESSION_COOKIE } from "@/lib/auth/session-token";
+import { SEED_ADMIN_PW } from "@/test/seed-credentials";
 
 function getSession(headers: Record<string, string>) {
   return session(new Request("https://portal.local/api/auth/session", { headers }));
@@ -24,7 +25,7 @@ describe("GET /api/auth/session", () => {
       new Request("https://portal.local/api/auth/login", {
         method: "POST",
         headers: { "content-type": "application/json", "x-forwarded-for": "5.5.5.1" },
-        body: JSON.stringify({ email: "super.admin@lebtech.example", password: "LebTech!Admin#2026" }),
+        body: JSON.stringify({ email: "super.admin@lebtech.example", password: SEED_ADMIN_PW }),
       }),
     );
     const token = cookieFrom(loginRes.headers.get("set-cookie"));

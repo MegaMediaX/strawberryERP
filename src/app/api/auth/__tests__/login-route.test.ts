@@ -4,6 +4,7 @@ import { POST as login } from "@/app/api/auth/login/route";
 import { POST as logout } from "@/app/api/auth/logout/route";
 import { SESSION_COOKIE } from "@/lib/auth/session-token";
 import { resolveExplicitPortalSession } from "@/lib/portal-security";
+import { SEED_ADMIN_PW } from "@/test/seed-credentials";
 
 function loginReq(body: unknown) {
   return login(
@@ -23,7 +24,7 @@ function cookieValue(setCookie: string | null): string {
 
 describe("POST /api/auth/login", () => {
   it("authenticates the super admin and sets a session cookie", async () => {
-    const res = await loginReq({ email: "super.admin@lebtech.example", password: "LebTech!Admin#2026" });
+    const res = await loginReq({ email: "super.admin@lebtech.example", password: SEED_ADMIN_PW });
     expect(res.status).toBe(200);
     const body = (await res.json()) as { ok: boolean; data: { role: string } };
     expect(body.ok).toBe(true);
@@ -49,7 +50,7 @@ describe("POST /api/auth/login", () => {
 
 describe("login → session cookie resolves a verified identity", () => {
   it("a cookie from a successful login resolves to the Super Admin session", async () => {
-    const res = await loginReq({ email: "super.admin@lebtech.example", password: "LebTech!Admin#2026" });
+    const res = await loginReq({ email: "super.admin@lebtech.example", password: SEED_ADMIN_PW });
     const token = cookieValue(res.headers.get("set-cookie"));
     expect(token).not.toBe("");
 

@@ -3,13 +3,15 @@
 // Logs in as each seeded role and asserts the Frappe-backed /api/frappe/leads
 // returns only that role's scoped leads. Exits non-zero on any failure.
 
+import { requireEnv } from "./load-env.mjs";
+
 const BASE = process.argv[2] || process.env.BASE_URL || "http://localhost:8080";
 
 const ROLES = [
-  { name: "Super Admin", email: "super.admin@lebtech.example", password: "LebTech!Admin#2026" },
-  { name: "Regional Director", email: "maya.regional@lebtech.example", password: "LebTech!Regional#2026" },
-  { name: "Reseller Admin", email: "admin@beirutdigital.example", password: "LebTech!Reseller#2026" },
-  { name: "Sales Team User", email: "rami@beirutdigital.example", password: "LebTech!Sales#2026" },
+  { name: "Super Admin", email: "super.admin@lebtech.example", password: requireEnv("SEED_ADMIN_PW") },
+  { name: "Regional Director", email: "maya.regional@lebtech.example", password: requireEnv("SEED_REGIONAL_PW") },
+  { name: "Reseller Admin", email: "admin@beirutdigital.example", password: requireEnv("SEED_RESELLER_PW") },
+  { name: "Sales Team User", email: "rami@beirutdigital.example", password: requireEnv("SEED_SALES_PW") },
 ];
 
 let pass = 0, fail = 0;

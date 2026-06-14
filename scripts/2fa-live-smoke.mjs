@@ -3,10 +3,11 @@
 // Verifies: setup -> activate -> login-requires-2FA -> login-with-code -> disable -> login-without-code.
 // Exits non-zero on any failed assertion. Computes TOTP locally (RFC 6238).
 import crypto from "node:crypto";
+import { requireEnv } from "./load-env.mjs";
 
 const BASE = process.argv[2] || process.env.BASE_URL || "http://localhost:8080";
 const EMAIL = process.argv[3] || "super.admin@lebtech.example";
-const PASSWORD = process.argv[4] || "LebTech!Admin#2026";
+const PASSWORD = process.argv[4] || requireEnv("SEED_ADMIN_PW");
 
 const B32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 function b32dec(s) {

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { authenticate } from "@/lib/auth/credentials";
 import { hashPassword, verifyPassword } from "@/lib/auth/passwords";
 import { createSessionToken, verifySessionToken } from "@/lib/auth/session-token";
+import { SEED_ADMIN_PW } from "@/test/seed-credentials";
 
 describe("passwords (scrypt)", () => {
   it("verifies a correct password and rejects a wrong one", () => {
@@ -48,11 +49,11 @@ describe("session token (HMAC)", () => {
 
 describe("authenticate (seed credentials)", () => {
   it("accepts the super admin credentials", () => {
-    expect(authenticate("super.admin@lebtech.example", "LebTech!Admin#2026")).toBe("USR-SUPER");
+    expect(authenticate("super.admin@lebtech.example", SEED_ADMIN_PW)).toBe("USR-SUPER");
   });
 
   it("is case-insensitive on email and trims whitespace", () => {
-    expect(authenticate("  SUPER.ADMIN@LEBTECH.EXAMPLE ", "LebTech!Admin#2026")).toBe("USR-SUPER");
+    expect(authenticate("  SUPER.ADMIN@LEBTECH.EXAMPLE ", SEED_ADMIN_PW)).toBe("USR-SUPER");
   });
 
   it("rejects a wrong password", () => {
