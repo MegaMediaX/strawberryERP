@@ -97,7 +97,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ## Resume journal (newest first)
 
 ### Fire 22 (cont. 71) — 2026-06-14 — SALES UI slice 11: calendar agenda [§21]
-- **PM ruling (recorded):** slice 11 = /sales/calendar AGENDA derived from follow-up dates (hooks-only; no meeting/invoice records exist). Pure `build-agenda.ts` (group scoped leads by bucket via bucketFollowUp, sort each by priorityRank) + tests. Sections Overdue/Today/Tomorrow/This Week/Later, each item Call/WhatsApp/Open → lead. "Synced from your follow-ups" + Google "Not connected" note (→ profile). Keep bottom nav at 5; reach via a cross-link. (WIP — evidence next entry.)
+- **PM ruling (recorded):** slice 11 = /sales/calendar AGENDA derived from follow-up dates (hooks-only; no meeting/invoice records exist). Pure `build-agenda.ts` (group scoped leads by bucket via bucketFollowUp, sort each by priorityRank) + tests. Sections Overdue/Today/Tomorrow/This Week/Later, each item Call/WhatsApp/Open → lead. "Synced from your follow-ups" + Google "Not connected" note (→ profile). Keep bottom nav at 5; reach via a cross-link.
+- **Built:** pure `build-agenda.ts` (`buildAgenda` → 5 ordered sections via bucketFollowUp + priorityRank sort) + 3 tests; `SalesCalendarAgenda` ("synced from follow-ups" + Google not-connected note→profile, sections w/ counts, item cards w/ native Call/WhatsApp/Open, overdue red, empty states); `/sales/calendar` page; "Calendar view →" cross-link on follow-ups.
+- **Verified:** 438 tests pass (was 435, +3), typecheck + lint clean, build green. Browser (dev-store): 5 sections (Overdue/Today/Tomorrow/This week/Later); Today holds LEAD-2408; Google note; native tel + Open → lead (scoped); **380px** + desktop no overflow. HEAD `cf2cd83`. **DONE.**
+- Next: slice 12 — likely §25-27 polish (empty/error states + microinteractions) and/or §18 customer view; after that PM evaluates the spec for completion.
 
 
 ### Fire 21 (cont. 70) — 2026-06-14 — SALES UI slice 10: notifications [§20]
