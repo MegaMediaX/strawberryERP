@@ -96,6 +96,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 22 (cont. 71) — 2026-06-14 — SALES UI slice 11: calendar agenda [§21]
+- **PM ruling (recorded):** slice 11 = /sales/calendar AGENDA derived from follow-up dates (hooks-only; no meeting/invoice records exist). Pure `build-agenda.ts` (group scoped leads by bucket via bucketFollowUp, sort each by priorityRank) + tests. Sections Overdue/Today/Tomorrow/This Week/Later, each item Call/WhatsApp/Open → lead. "Synced from your follow-ups" + Google "Not connected" note (→ profile). Keep bottom nav at 5; reach via a cross-link. (WIP — evidence next entry.)
+
+
 ### Fire 21 (cont. 70) — 2026-06-14 — SALES UI slice 10: notifications [§20]
 - **PM ruling (recorded):** slice 10 = §20 notifications derived client-side from the user's scoped leads (hooks-only). Pragmatic types: Follow-up Overdue, Follow-up Due (today), Lead Assigned (new leads). Pure `derive-notifications.ts(leads, now)` + tests; top-bar bell with count badge + in-app list drawer; each item opens /sales/leads/:id. §21 calendar / §18 customer / §25-27 polish deferred.
 - **Built:** pure `derive-notifications.ts` (`deriveNotifications` → Overdue/Due/Assigned, sorted, reuse bucketFollowUp) + 3 tests; `SalesNotificationsBell` (top-bar bell + count badge + in-app list panel, mobile full-width / desktop dropdown, backdrop close, empty state); wired into sales layout top bar (fetches scoped leads + derives).

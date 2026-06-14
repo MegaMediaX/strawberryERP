@@ -57,9 +57,12 @@ export function SalesFollowUpsView({ leads }: { leads: PortalLead[] }) {
 
   return (
     <div className="grid gap-4">
-      <div>
-        <h1 className="text-xl font-bold tracking-tight">Follow-ups</h1>
-        <p className="text-sm text-[var(--muted)]">Your daily work queue, most urgent first.</p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight">Follow-ups</h1>
+          <p className="text-sm text-[var(--muted)]">Your daily work queue, most urgent first.</p>
+        </div>
+        <Link href="/sales/calendar" className="text-sm font-semibold text-[var(--brand)]">Calendar view →</Link>
       </div>
 
       {/* Tabs — horizontally scrollable on mobile */}
