@@ -489,10 +489,14 @@ export function PartnerPlatformApp({ initialLeads, loadError, session, source }:
                       </dl>
                     </div>
 
-                    <Button className="h-14 text-base" onClick={() => setCallLogged(true)}>
+                    <a
+                      href={`tel:${activeLead.phone.replace(/[^\d+]/g, "")}`}
+                      onClick={() => setCallLogged(true)}
+                      className="inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-[var(--brand)] text-base font-semibold text-white shadow-[var(--shadow-sm)] transition-colors hover:bg-[var(--brand-hover)]"
+                    >
                       <PhoneCall data-icon="inline-start" />
                       Call {activeLead.contact.split(" ")[0]}
-                    </Button>
+                    </a>
 
                     {callLogged ? (
                       <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300">
@@ -528,14 +532,22 @@ export function PartnerPlatformApp({ initialLeads, loadError, session, source }:
                     </Field>
 
                     <div className="grid gap-2 sm:grid-cols-2">
-                      <Button variant="secondary">
+                      <a
+                        href={`https://wa.me/${activeLead.phone.replace(/[^\d]/g, "")}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
+                      >
                         <MessageActionIcon />
                         WhatsApp
-                      </Button>
-                      <Button variant="secondary">
+                      </a>
+                      <a
+                        href={`mailto:${activeLead.email}`}
+                        className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm font-semibold text-[var(--foreground)] transition-colors hover:bg-[var(--background)]"
+                      >
                         <Send data-icon="inline-start" />
                         Email
-                      </Button>
+                      </a>
                     </div>
                     </>
                     ) : (
