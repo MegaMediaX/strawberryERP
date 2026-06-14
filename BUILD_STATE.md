@@ -97,7 +97,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ## Resume journal (newest first)
 
 ### Fire 21 (cont. 70) — 2026-06-14 — SALES UI slice 10: notifications [§20]
-- **PM ruling (recorded):** slice 10 = §20 notifications derived client-side from the user's scoped leads (hooks-only). Pragmatic types: Follow-up Overdue, Follow-up Due (today), Lead Assigned (new leads). Pure `derive-notifications.ts(leads, now)` + tests; top-bar bell with count badge + in-app list drawer; each item opens /sales/leads/:id. §21 calendar / §18 customer / §25-27 polish deferred. (WIP — evidence next entry.)
+- **PM ruling (recorded):** slice 10 = §20 notifications derived client-side from the user's scoped leads (hooks-only). Pragmatic types: Follow-up Overdue, Follow-up Due (today), Lead Assigned (new leads). Pure `derive-notifications.ts(leads, now)` + tests; top-bar bell with count badge + in-app list drawer; each item opens /sales/leads/:id. §21 calendar / §18 customer / §25-27 polish deferred.
+- **Built:** pure `derive-notifications.ts` (`deriveNotifications` → Overdue/Due/Assigned, sorted, reuse bucketFollowUp) + 3 tests; `SalesNotificationsBell` (top-bar bell + count badge + in-app list panel, mobile full-width / desktop dropdown, backdrop close, empty state); wired into sales layout top bar (fetches scoped leads + derives).
+- **Verified:** 435 tests pass (was 432, +3), typecheck + lint clean, build green. Browser (dev-store): badge "1"; panel shows **Due · Cedar Cloud Services → /sales/leads/LEAD-2408** (scoped to Rami); **380px** + desktop no overflow. HEAD `8439c5d`. **DONE.**
+- Next: slice 11 — §21 calendar agenda (/sales/calendar, derive from follow-up dates, agenda/views, items open leads). PM to sequence.
 
 
 ### Fire 20 (cont. 69) — 2026-06-14 — SALES UI slice 9: sales profile [§22]
