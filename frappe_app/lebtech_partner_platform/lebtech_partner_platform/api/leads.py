@@ -55,6 +55,7 @@ SORTABLE_FIELDS = {
 @frappe.whitelist(methods=["GET"])
 def list_leads(
     country: str | None = None,
+    countries: str | None = None,
     reseller: str | None = None,
     assigned_user: str | None = None,
     limit_start=None,
@@ -65,6 +66,13 @@ def list_leads(
     if country:
         validate_country_value(country)
         filters["country"] = country
+    elif countries:
+        # Multi-country scope (e.g. Regional Director across assigned countries).
+        allowed = [c.strip() for c in str(countries).split(",") if c.strip()]
+        for c in allowed:
+            validate_country_value(c)
+        if allowed:
+            filters["country"] = ["in", allowed]
     if reseller:
         filters["reseller"] = reseller
     if assigned_user:

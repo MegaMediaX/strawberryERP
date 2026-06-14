@@ -7,6 +7,8 @@ import { resolvePortalSession, roleHeadersFromSession } from "@/lib/portal-secur
 import { authorizeApiRequest, logSuccessfulApiRequest } from "@/lib/security/permissions";
 import { validateLeadTransition } from "@/lib/business/lead-workflow";
 import { paginate } from "@/lib/query/scoped-page";
+import { frappePaginationParams } from "@/lib/query/frappe-pagination";
+import { leadsScopeForFrappe } from "@/lib/security/leads-scope";
 
 type LeadPayload = {
   companyName?: string;
@@ -29,13 +31,21 @@ export async function GET(request: Request) {
     return denied;
   }
 
-  const proxied = await maybeRouteToFrappe("leads", "get");
+  const session = resolvePortalSession(request);
+  const url = new URL(request.url);
+  const frappeScope = leadsScopeForFrappe(session);
+  const frappePagination = frappePaginationParams({
+    page: url.searchParams.get("page"),
+    pageSize: url.searchParams.get("pageSize"),
+    sortBy: url.searchParams.get("sortBy"),
+    sortDir: url.searchParams.get("sortDir"),
+  });
+  const proxied = await maybeRouteToFrappe("leads", "get", { ...frappeScope, ...frappePagination });
   if (proxied) {
     logSuccessfulApiRequest(request, "leads", "GET", 200);
     return proxied;
   }
 
-  const session = resolvePortalSession(request);
   const scopedLeads = filterByPermission(
     leads.map((lead) => ({ ...lead, country: lead.country as Country })),
     {
@@ -44,7 +54,6 @@ export async function GET(request: Request) {
     },
   );
 
-  const url = new URL(request.url);
   const pageParam = url.searchParams.get("page");
   const pageSizeParam = url.searchParams.get("pageSize");
   if (pageParam || pageSizeParam) {

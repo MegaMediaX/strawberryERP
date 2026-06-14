@@ -94,6 +94,13 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 46) — 2026-06-14 — 🔒 LIVE PER-ROLE SCOPING (bug found+fixed)
+- **Found:** the focused `/api/frappe/leads` GET proxied to Frappe with NO scope (`maybeRouteToFrappe("leads","get")`) — Frappe-backed path returned ALL leads to EVERY role (dev-store path was scoped; Frappe path was a live §4/§9 isolation bypass).
+- **Fixed:** `leadsScopeForFrappe(session)` forwards role scope (Regional→`countries` CSV; Reseller→`reseller`; Sales→`assigned_user`) + pagination to the proxy; Frappe `list_leads` gained a multi-country `countries` (IN) filter. 4 unit tests.
+- **LIVE-verified** (`npm run smoke:scoping`, 8/8): Sales sees only Rami-K-assigned (5, no Cyprus); Reseller only Beirut-Digital-Partners (5); Regional only Lebanon/Jordan (0 Cyprus/Syria); Super sees all incl. Cyprus. Seeded role-matched leads via `scale_seed.seed_scope_demo`.
+- Gates: typecheck/lint/build/test green (303); py_compile clean; backend migrated/restarted.
+- **This closes live per-role data isolation (§4/§9/§17 scoping).** Next start: scope the other Frappe-backed lists (customers/invoices/receipts) the same way; OIDC optional.
+
 ### Fire 1 (cont. 45) — 2026-06-14 — 2FA→FRAPPE BRIDGE COMPLETE (live-proven)
 - Wired the Next 2FA to Frappe: `frappe-two-factor.ts` (async calls to enroll/verify/status/remove) + `two-factor-store.ts` refactored async with a `loginTwoFactorState` gate that delegates to Frappe when `isFrappeConfigured()`, else in-memory. Login + 2fa routes await. `getTotpSecretForUser`/`loginTotpCheck` replaced (secret never read at login — Frappe verifies).
 - `Portal Two Factor.user` Link→Data (portal IDs aren't Frappe users); migrated clean live.

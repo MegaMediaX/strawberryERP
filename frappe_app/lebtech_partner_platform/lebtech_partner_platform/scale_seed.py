@@ -69,6 +69,34 @@ def seed_scale(leads: int = 10000, customers: int = 5000):
     print(f"[scale_seed] Partner Lead={lead_count} Partner Customer={cust_count}")
 
 
+def seed_scope_demo():
+    """A handful of leads matched to portal user scopes, for live role-isolation QA.
+    bulk_insert bypasses Link validation (portal identities are not Frappe users)."""
+    fields = [
+        "name", "owner", "creation", "modified", "modified_by", "docstatus",
+        "company_name", "country", "assigned_user", "reseller",
+        "contact_first_name", "contact_last_name", "gender", "phone", "email", "status", "priority",
+    ]
+    rows = []
+    # Sales (Rami K.) + Reseller (Beirut Digital Partners) + Lebanon
+    for i in range(1, 6):
+        rows.append((
+            f"RAMI-{i:03d}", "Administrator", NOW, NOW, "Administrator", 0,
+            f"Rami Co {i}", "Lebanon", "Rami K.", "Beirut Digital Partners",
+            "R", f"K{i}", "Male", f"+9619{i}", f"rami{i}@example.test", "New Lead (Uncontacted)", "High",
+        ))
+    # A couple outside the Regional (Lebanon/Jordan) scope — Cyprus.
+    for i in range(1, 3):
+        rows.append((
+            f"CYP-{i:03d}", "Administrator", NOW, NOW, "Administrator", 0,
+            f"Cyprus Co {i}", "Cyprus", "someone@else.test", "Other Reseller",
+            "C", f"Y{i}", "Female", f"+3579{i}", f"cyp{i}@example.test", "New Lead (Uncontacted)", "Low",
+        ))
+    frappe.db.bulk_insert("Partner Lead", fields=fields, values=rows, ignore_duplicates=True)
+    frappe.db.commit()
+    print(f"[scope_demo] seeded {len(rows)} role-matched leads")
+
+
 def _percentile(samples, p):
     s = sorted(samples)
     idx = min(len(s) - 1, max(0, int((p / 100.0) * len(s)) - 1))
