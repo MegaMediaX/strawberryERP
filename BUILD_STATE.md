@@ -96,6 +96,11 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 3 (cont. 52) — 2026-06-14 — PHASE 1/B2: mobile shell (bottom-nav + FAB) [FINAL]
+- **PM ruling (recorded):** B2 = mobile shell. Bottom-nav on ≤md screens (hidden on desktop where header pills stay), ≤5 role-scoped destinations, active-route highlight, safe-area inset; FAB = "New lead" (role-aware, hidden for read-only Regional Director), hidden on desktop. Shipping B2 = **Phase 1 UX COMPLETE → stop loop.**
+- Approach: pure `src/lib/navigation/mobile-nav.ts` (`mobileNavItems(role)` ≤5, `isActiveMobile`, `fabForRole`) + unit tests; `MobileNav.tsx` client component rendered by `PlatformShell` (has session role); content gets `pb` so fixed bar doesn't overlap. (WIP — evidence in next entry.)
+
+
 ### Fire 2 (cont. 51) — 2026-06-14 — PHASE 1/B1 slice 4: lead transfer/reassignment
 - **PM ruling (recorded):** next slice = B1 slice 4, role-scoped reassignment modal on the call screen; PATCH assignedUser; must NOT move the lead across reseller/country (only assigned user changes); Sales cannot reassign.
 - **Built:** pure `src/lib/business/lead-reassignment.ts` — `eligibleAssignees` + `validateReassignment` (Sales→none; candidate must be active + cover lead country + match lead reseller when reseller-scoped (no cross-reseller); acting user's own scope narrows pool: Super=all, Regional=country-intersect, ResellerAdmin=same-reseller). 8 unit tests. "Reassign" button + modal on `LeadCallScreen`; PATCHes `{id, assignedUser}` via `/api/frappe/leads`; updates assigned-user display.

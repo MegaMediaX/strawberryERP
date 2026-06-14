@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { PortalNavigation } from "@/components/platform/PortalNavigation";
+import { MobileNav } from "@/components/platform/MobileNav";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -27,7 +28,7 @@ export async function PlatformShell({
     .join("")
     .toUpperCase();
   return (
-    <main className="min-h-screen bg-[var(--app-bg)] px-4 py-5 text-[var(--foreground)] sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[var(--app-bg)] px-4 py-5 pb-24 text-[var(--foreground)] sm:px-6 md:pb-5 lg:px-8">
       <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-6">
         <header className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow-sm)]">
           {/* Brand + identity bar */}
@@ -65,6 +66,7 @@ export async function PlatformShell({
 
         {children}
       </div>
+      {session ? <MobileNav role={session.effectiveUser.role} /> : null}
     </main>
   );
 }
