@@ -97,7 +97,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ## Resume journal (newest first)
 
 ### Fire 18 (cont. 67) — 2026-06-14 — SALES UI slice 7: Start-Calling focused mode [§5,§6]
-- **PM ruling (recorded):** slice 7 = /sales/calling. Pure `order-calling-queue.ts` (`orderLeadsForCalling(leads, now)` — §4 priority: VIP-overdue > overdue > today > interested > new > rest, reuse bucketFollowUp + priorityRank, now injected) + tests with synthetic multi-lead cases. Page: order scoped leads, "Lead Queue Progress: i of n", render EXISTING LeadCallScreen for current lead, "Save & Next" advances index. Dashboard "Start Calling" already links here. Reuse call screen as-is. (WIP — evidence next entry.)
+- **PM ruling (recorded):** slice 7 = /sales/calling. Pure `order-calling-queue.ts` (`orderLeadsForCalling(leads, now)` — §4 priority: VIP-overdue > overdue > today > interested > new > rest, reuse bucketFollowUp + priorityRank, now injected) + tests with synthetic multi-lead cases. Page: order scoped leads, "Lead Queue Progress: i of n", render EXISTING LeadCallScreen for current lead, "Save & Next" advances index. Dashboard "Start Calling" already links here. Reuse call screen as-is.
+- **Built:** pure `order-calling-queue.ts` (`orderLeadsForCalling` + `callPrimaryRank`, §4 next-best order, reuse bucketFollowUp + priorityRank) + 5 tests (synthetic multi-lead, proving VIP-overdue-first + tie-break); `SalesCallingQueue` (progress "i of n", renders EXISTING LeadCallScreen for current lead, Skip + Save & Next/Finish advance index, Queue-complete + empty states); `/sales/calling` page orders scoped leads.
+- **Verified:** 422 tests pass (was 418, +4), typecheck + lint clean, build green. Browser (dev-store): scoped (1 of 1 for Rami), call screen renders with quick outcomes; Save & Next → "Queue complete" + Start over; **380px** + desktop no overflow. HEAD `1407ce3`. **DONE.**
+- Next: slice 8 — sales customer view §18 (/sales/customers + /sales/customers/:id) OR profile §22 / search §23. PM to sequence.
 
 
 ### Fire 17 (cont. 66) — 2026-06-14 — SALES UI slice 6: dashboard priority widgets [§3]
