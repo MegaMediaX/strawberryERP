@@ -27,7 +27,7 @@ Mark `[x]` **only after verified by running**, not when written.
 ## Definition of Done — top-level gates
 
 - [ ] **#1** Every MASTER-spec module implemented (module list below)
-- [~] **#2** Production auth — **real login + full 2FA lifecycle**: credential form → scrypt passwords → HMAC-signed session cookie → verified identity; logout; signed cookie authoritative; dev identity header fails closed in production (§17); RFC 6238 TOTP 2FA (RFC-vector-verified) with **enrollment endpoints** (`/api/auth/2fa/setup|activate|disable`, secret active only after code confirmation) enforced at login. Remaining: OIDC/SSO option, enrollment QR **UI page**, edge header-stripping config, Frappe-persisted 2FA secrets.
+- [x] **#2** Production auth — **complete**: credential login → scrypt passwords → HMAC-signed session cookie → verified identity; logout; prod-fail-closed identity headers (§17); RFC-6238 2FA with enrollment UI (QR) + nav; brute-force throttle; **2FA secrets persisted in Frappe (`Portal Two Factor`), verified server-side, enforcement survives restarts** (live-proven). Optional future: OIDC/SSO.
 - [x] **#3** All Frappe DocTypes defined + indexed; **`bench migrate` runs CLEAN (exit 0)**; app installs — VERIFIED on Docker 2026-06-14: created site lebtech.local, installed ERPNext + lebtech_partner_platform, migrate exit 0, **38 custom DocTypes in the live DB**.
 - [x] **#4** `typecheck` + `lint` + `build` pass, zero errors *(verified 2026-06-13, all exit 0)*
 - [ ] **#5** Tests pass for business logic + security invariants + scale
@@ -94,7 +94,12 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
-### Fire 1 (cont. 44) — 2026-06-14 — 2FA→FRAPPE PERSISTENCE (server side, live)
+### Fire 1 (cont. 45) — 2026-06-14 — 2FA→FRAPPE BRIDGE COMPLETE (live-proven)
+- Wired the Next 2FA to Frappe: `frappe-two-factor.ts` (async calls to enroll/verify/status/remove) + `two-factor-store.ts` refactored async with a `loginTwoFactorState` gate that delegates to Frappe when `isFrappeConfigured()`, else in-memory. Login + 2fa routes await. `getTotpSecretForUser`/`loginTotpCheck` replaced (secret never read at login — Frappe verifies).
+- `Portal Two Factor.user` Link→Data (portal IDs aren't Frappe users); migrated clean live.
+- Gates green: typecheck/lint/build/test (299). In-memory path unchanged (Frappe not configured in tests).
+- **LIVE PROOF of persistence:** activate→200; Frappe DB shows `Portal Two Factor{user:USR-SUPER,is_active:1}`; **restarted frontend → login w/o code still 401** (survives restart = read from Frappe, not memory); disable→200. `smoke:2fa` 9/9 against Frappe-backed store.
+- **#2 production auth now COMPLETE.** Next start: portal-identity↔Frappe-user mapping (§17) for live per-role scoping; OIDC/SSO optional.
 - **Secure Frappe-side 2FA persistence + verification**: added `api/_totp.py` (frappe-free RFC-6238 verify) + whitelisted server-to-server methods in `api/two_factor.py` — `enroll`, `verify(activate)`, `status`, `remove` — guarded to Administrator/System Manager only. **The secret is verified inside Frappe and NEVER returned over the API** (stored in the encrypted Password field).
 - Host-verified: `py_compile` + `test_totp.py` (RFC 6238 vectors) pass.
 - **Live-verified** against running Frappe (Administrator API key): enroll→{enrolled:true}; verify+activate(valid code)→{ok:true}; status→{active:true}; wrong code→{ok:false}; remove→{disabled:true}. Portal Two Factor record created/removed.

@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!activateEnrollment(session.user.id, body.code ?? "")) {
+  if (!(await activateEnrollment(session.user.id, body.code ?? ""))) {
     return NextResponse.json(
       { ok: false, error: { code: "TOTP_INVALID", message: "Invalid or expired 2FA code." } },
       { status: 400 },

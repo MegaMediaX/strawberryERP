@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const secret = beginEnrollment(session.user.id);
+  const secret = await beginEnrollment(session.user.id);
   return NextResponse.json({
     ok: true,
     data: { secret, otpauthUrl: otpauthUrl(secret, session.user.email) },

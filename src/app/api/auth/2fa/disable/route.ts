@@ -13,6 +13,6 @@ export async function POST(request: Request) {
     );
   }
 
-  disableTwoFactor(session.user.id);
+  await disableTwoFactor(session.user.id);
   return NextResponse.json({ ok: true, data: { twoFactorEnabled: false } });
 }

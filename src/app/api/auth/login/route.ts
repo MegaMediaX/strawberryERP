@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { authenticate, getTotpSecretForUser } from "@/lib/auth/credentials";
+import { authenticate } from "@/lib/auth/credentials";
 import { checkRateLimit, resetRateLimit } from "@/lib/auth/rate-limit";
 import { createSessionToken, SESSION_COOKIE } from "@/lib/auth/session-token";
-import { loginTotpCheck } from "@/lib/auth/totp";
+import { loginTwoFactorState } from "@/lib/auth/two-factor-store";
 import { portalUsers } from "@/lib/portal-security";
 
 const TTL_MS = 12 * 60 * 60 * 1000;
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
   }
 
   // Second factor (only enforced when the user has 2FA enabled).
-  const totpState = loginTotpCheck(getTotpSecretForUser(userId), body.totp);
+  const totpState = await loginTwoFactorState(userId, body.totp);
   if (totpState !== "ok") {
     return NextResponse.json(
       {

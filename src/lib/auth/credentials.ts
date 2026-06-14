@@ -1,5 +1,4 @@
 import { verifyPassword } from "@/lib/auth/passwords";
-import { getActiveTotpSecret } from "@/lib/auth/two-factor-store";
 import { portalUsers } from "@/lib/portal-security";
 
 /**
@@ -65,10 +64,3 @@ export function authenticate(email: string, password: string): string | null {
   return user ? user.id : null;
 }
 
-/**
- * Returns the TOTP secret for a user if 2FA is enabled, else undefined.
- * A user-activated enrollment takes precedence over any seeded secret.
- */
-export function getTotpSecretForUser(userId: string): string | undefined {
-  return getActiveTotpSecret(userId) ?? SEED_CREDENTIALS.find((c) => c.userId === userId)?.totpSecret;
-}

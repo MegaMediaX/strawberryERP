@@ -4,8 +4,8 @@ import { POST as setup } from "@/app/api/auth/2fa/setup/route";
 import { POST as activate } from "@/app/api/auth/2fa/activate/route";
 import { POST as disable } from "@/app/api/auth/2fa/disable/route";
 import { POST as login } from "@/app/api/auth/login/route";
-import { getTotpSecretForUser } from "@/lib/auth/credentials";
 import { totp } from "@/lib/auth/totp";
+import { loginTwoFactorState } from "@/lib/auth/two-factor-store";
 
 const SUPER = "super.admin@lebtech.example";
 const PW = "LebTech!Admin#2026";
@@ -40,7 +40,7 @@ describe("2FA enrollment endpoints require a session", () => {
 describe("2FA enrollment → enforced login → disable (full flow)", () => {
   it("walks the whole lifecycle for the Super Admin", async () => {
     // Pre-condition: no 2FA, password-only login works.
-    expect(getTotpSecretForUser("USR-SUPER")).toBeUndefined();
+    expect(await loginTwoFactorState("USR-SUPER", undefined)).toBe("ok");
     expect((await loginReq({ email: SUPER, password: PW })).status).toBe(200);
 
     // 1. setup -> get a secret + otpauth URL.
@@ -52,12 +52,12 @@ describe("2FA enrollment → enforced login → disable (full flow)", () => {
 
     // 2. activate with a wrong code -> 400, still not enabled.
     expect((await authed(activate, "USR-SUPER", { code: "000000" })).status).toBe(400);
-    expect(getTotpSecretForUser("USR-SUPER")).toBeUndefined();
+    expect(await loginTwoFactorState("USR-SUPER", undefined)).toBe("ok");
 
     // 3. activate with a valid code -> enabled.
     const code = totp(data.secret);
     expect((await authed(activate, "USR-SUPER", { code })).status).toBe(200);
-    expect(getTotpSecretForUser("USR-SUPER")).toBe(data.secret);
+    expect(await loginTwoFactorState("USR-SUPER", undefined)).toBe("required");
 
     // 4. login now requires the second factor.
     expect((await loginReq({ email: SUPER, password: PW })).status).toBe(401); // TOTP_REQUIRED
@@ -66,7 +66,7 @@ describe("2FA enrollment → enforced login → disable (full flow)", () => {
 
     // 5. disable -> back to password-only.
     expect((await authed(disable, "USR-SUPER")).status).toBe(200);
-    expect(getTotpSecretForUser("USR-SUPER")).toBeUndefined();
+    expect(await loginTwoFactorState("USR-SUPER", undefined)).toBe("ok");
     expect((await loginReq({ email: SUPER, password: PW })).status).toBe(200);
   });
 });
