@@ -18,8 +18,10 @@ const btnPrimary =
 const btnGhost =
   "inline-flex h-11 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--foreground)] transition-colors hover:bg-[var(--background)]";
 
-export function NewLeadForm({ onCreated }: { onCreated?: () => void }) {
-  const [form, setForm] = useState<NewLeadInput>(emptyNewLead);
+export function NewLeadForm({ onCreated, defaultAssignedUser }: { onCreated?: () => void; defaultAssignedUser?: string }) {
+  const [form, setForm] = useState<NewLeadInput>(
+    defaultAssignedUser ? { ...emptyNewLead, assignedUser: defaultAssignedUser } : emptyNewLead,
+  );
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);

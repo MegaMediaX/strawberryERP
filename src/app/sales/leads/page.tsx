@@ -1,5 +1,10 @@
-import { SalesPlaceholder } from "@/components/sales/SalesPlaceholder";
+import { SalesLeadsView } from "@/components/sales/SalesLeadsView";
+import { getPortalUiSession } from "@/lib/security/ui-session";
+import { getUiLeads } from "@/lib/ui-data";
 
-export default function SalesLeadsPage() {
-  return <SalesPlaceholder title="My leads" detail="Your assigned leads, filters, and saved views (spec §14/§15)." />;
+export default async function SalesLeadsPage() {
+  const session = await getPortalUiSession();
+  if (!session) return null;
+  const result = await getUiLeads(session);
+  return <SalesLeadsView leads={result.data} />;
 }
