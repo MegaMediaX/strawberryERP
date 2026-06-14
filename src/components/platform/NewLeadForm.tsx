@@ -18,7 +18,20 @@ const btnPrimary =
 const btnGhost =
   "inline-flex h-11 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--foreground)] transition-colors hover:bg-[var(--background)]";
 
-export function NewLeadForm({ onCreated, defaultAssignedUser }: { onCreated?: () => void; defaultAssignedUser?: string }) {
+export function NewLeadForm({
+  onCreated,
+  defaultAssignedUser,
+  countries,
+  assignees,
+}: {
+  onCreated?: () => void;
+  defaultAssignedUser?: string;
+  /** Constrain the Country dropdown (e.g. a reseller's assigned countries). Defaults to all allowed. */
+  countries?: readonly string[];
+  /** When provided, the Assigned-user field becomes a dropdown of these team members (reseller team). */
+  assignees?: readonly { name: string }[];
+}) {
+  const countryOptions = countries ?? allowedCountries;
   const [form, setForm] = useState<NewLeadInput>(
     defaultAssignedUser ? { ...emptyNewLead, assignedUser: defaultAssignedUser } : emptyNewLead,
   );
@@ -77,7 +90,7 @@ export function NewLeadForm({ onCreated, defaultAssignedUser }: { onCreated?: ()
           <Field label="Country">
             <Select value={form.country} onChange={(e) => set("country", e.target.value)}>
               <option value="">Select country…</option>
-              {allowedCountries.map((c) => (
+              {countryOptions.map((c) => (
                 <option key={c}>{c}</option>
               ))}
             </Select>
@@ -96,7 +109,16 @@ export function NewLeadForm({ onCreated, defaultAssignedUser }: { onCreated?: ()
             </Select>
           </Field>
           <Field label="Assigned user">
-            <Input value={form.assignedUser} onChange={(e) => set("assignedUser", e.target.value)} placeholder="you@company.com" />
+            {assignees ? (
+              <Select value={form.assignedUser} onChange={(e) => set("assignedUser", e.target.value)}>
+                <option value="">Select team member…</option>
+                {assignees.map((a) => (
+                  <option key={a.name}>{a.name}</option>
+                ))}
+              </Select>
+            ) : (
+              <Input value={form.assignedUser} onChange={(e) => set("assignedUser", e.target.value)} placeholder="you@company.com" />
+            )}
           </Field>
           <Field label="Phone">
             <Input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+961 70 123 456" inputMode="tel" />

@@ -92,9 +92,18 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 - **2026-06-14 — Post-DoD work order (PM ruling).** Build pushed to PRIVATE repo `MegaMediaX/strawberryERP`. PM (multi-tenant SaaS/CRM expert) sequenced: **(1) SCRUB SECRETS first** — hardcoded seed passwords were in 6 tracked test/smoke files; moved to env-var lookups (`SEED_ADMIN_PW`/`SEED_REGIONAL_PW`/`SEED_RESELLER_PW`/`SEED_SALES_PW`), real values in untracked `.env`, placeholders in `.env.example`, hermetic vitest setup injects only `SEED_*`. Done — 303 tests pass, typecheck/lint clean, pushed (`fb3c0b3`). **(2) Then PHASE 1 UX ROADMAP (B1→B2):** New-Lead form, full call screen, lead→customer conversion, lead transfer/reassignment (B1); then mobile shell bottom-nav + FAB (B2); each a 1–2 cycle fire with spec-flow validation + live browser QA. Principle: close credential-hygiene debt before it compounds, then ship user-visible value on a hardened base. NOTE: scrub covers the working tree + future commits only — the 53 commits of pre-scrub history still contain the plaintext; acceptable while private, rewrite (or rotate) required before any public-ization.
 
+- **2026-06-14 — Reseller slice 4 split (PM ruling).** §9 add-lead is small + high-reuse; §10 CSV import is a large 7-step flow whose final "import" cannot persist in dev-store. PM ruled: **slice 4 = §9 add-lead ONLY** (reseller-scoped country + assignee dropdowns via extended NewLeadForm), and **defer §10 CSV import to slice 4b** as its own focused slice (pure parse/map/validate/dedup lib + preview UI + dev-store-simulated result summary). Smallest coherent shippable increment first.
+
 ---
 
 ## Resume journal (newest first)
+
+### Fire R4 (cont. 76) — 2026-06-14 — RESELLER ADMIN UI slice 4: add-lead (reseller-scoped) [§9] ✅ SHIPPED
+- **PM ruling:** slice 4 = §9 add-lead only; §10 CSV import → slice 4b (see Decisions).
+- **Shipped:** extended `src/components/platform/NewLeadForm.tsx` with optional `countries?: readonly string[]` + `assignees?: {name}[]` props (backward-compatible — sales add-lead unchanged: free country list + free assignee input) · `src/components/reseller/ResellerNewLead.tsx` (back-link + NewLeadForm wired to reseller countries/team, redirects to /reseller/leads on create) · `src/app/reseller/leads/new/page.tsx` (server: countries = actingUser.countries, assignees = active users in acting admin's reseller).
+- **Gate:** `npm test` 454 pass (no new lib needed — reuse only) · typecheck clean · lint clean · build green (/reseller/leads/new emitted).
+- **Browser (dev-store, BDP Reseller Admin):** desktop 1280 → Country dropdown = **only Lebanon** (BDP's assigned country, NOT the global Lebanon/Cyprus/Jordan/Syria list); Assigned-user = dropdown of **BDP team only** (Beirut Reseller Admin, Rami K.) — no free-text, no cross-reseller. Mobile 380 → single-column form. End-to-end submit (filled required fields) → POST ok → redirect to /reseller/leads, no error. **Scoping confirmed:** country + assignee constrained to reseller; no IL/ISR; no DELETE; hooks-only.
+- **HEAD:** see commit below. Slice 4b (next) = §10 CSV import (pure lib + preview UI + simulated summary).
 
 ### Fire R3 (cont. 75) — 2026-06-14 — RESELLER ADMIN UI slice 3: leads list + reassign [§8,11] ✅ SHIPPED
 - **PM ruling (recorded):** slice 3 = /reseller/leads — desktop table + mobile cards + filter bar (reuse lead-filters) + 7 saved-view pills (All Active/Unassigned/Follow-Ups Today/Overdue/Interested/No Activity/VIP) + per-row Open/Call/WhatsApp + **Reassign** (reuse eligibleAssignees/validateReassignment, PATCH assignedUser, reseller team only). DEFER Transfer (§12 — no per-reseller permission flag; show disabled "needs Super Admin permission") + tag/custom-field filters (no data).
