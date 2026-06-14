@@ -13,6 +13,7 @@ import {
 } from "@/components/platform/Phase2Forms";
 import { LeadsWorkspace } from "@/components/platform/LeadsWorkspace";
 import { LeadCallScreen } from "@/components/platform/LeadCallScreen";
+import { CommissionApprovalConsole } from "@/components/platform/CommissionApprovalConsole";
 import { ActionLink, DataTable, PlatformShell, StatGrid } from "@/components/platform/PlatformShell";
 import { ProtectedRoute } from "@/components/security/ProtectedRoute";
 import { getDevStore } from "@/lib/dev-store";
@@ -38,6 +39,7 @@ import {
   reportCatalog,
   resellers,
   settingsSections,
+  type CommissionStatus,
 } from "@/lib/phase2-data";
 import { portalUsers } from "@/lib/portal-security";
 import { authorizeUiRoute } from "@/lib/security/route-access";
@@ -362,27 +364,23 @@ export default async function PlatformRoute({ params }: PageProps) {
   if (path === "/commissions/entries") {
     const result = await getUiRows<Record<string, unknown>>("commissions/entries", commissionEntries as unknown as Record<string, unknown>[], session);
     return (
-      <PlatformShell activeHref="/commissions" badge={`Source: ${result.source}`} description="Approve pending commissions and mark approved commissions paid." title="Commission entries">
-        <Card>
-          <CardHeader>
-            <CardTitle>Entries</CardTitle>
-            <CardDescription>PATCH /api/frappe/commissions/entries updates approval and payment status.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              columns={["Entry", "Invoice", "Receipt", "Reseller", "Base", "Commission", "Status"]}
-              rows={result.data.map((entry) => [
-                field(entry, "name", "id"),
-                field(entry, "invoice"),
-                field(entry, "receipt") || "-",
-                field(entry, "reseller"),
-                money(numberField(entry, "base_amount", "baseAmount")),
-                money(numberField(entry, "commission_amount", "commissionAmount")),
-                <Badge key={field(entry, "name", "id")} tone={field(entry, "status") === "Paid" ? "green" : "amber"}>{field(entry, "status")}</Badge>,
-              ])}
-            />
-          </CardContent>
-        </Card>
+      <PlatformShell activeHref="/commissions" badge={`Source: ${result.source}`} description="Approve pending commissions and mark approved commissions paid. Actions are scoped to your role, country, and reseller." title="Commission entries">
+        <CommissionApprovalConsole
+          approver={{
+            role: session.effectiveUser.role,
+            countries: session.effectiveUser.countries,
+            reseller: session.effectiveUser.reseller,
+          }}
+          entries={result.data.map((entry) => ({
+            id: field(entry, "name", "id"),
+            reseller: field(entry, "reseller"),
+            country: field(entry, "country"),
+            invoice: field(entry, "invoice"),
+            baseAmount: numberField(entry, "base_amount", "baseAmount"),
+            commissionAmount: numberField(entry, "commission_amount", "commissionAmount"),
+            status: (field(entry, "status") || "Pending") as CommissionStatus,
+          }))}
+        />
       </PlatformShell>
     );
   }

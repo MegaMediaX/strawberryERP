@@ -24,6 +24,7 @@ import type { CurrencySetting, NotificationRule, PaymentMethod } from "@/lib/pha
 import { validateNotificationRule } from "@/lib/business/notifications";
 import { validatePaymentMethod } from "@/lib/business/payment-methods";
 import { validateCommissionRule } from "@/lib/business/commission-rules";
+import { evaluateCommissionApproval } from "@/lib/business/commission-approval";
 import type { CommissionRule } from "@/lib/phase2-data";
 import {
   apiAuditEvent,
@@ -614,6 +615,23 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
 
     const target = store.commissionEntries.find((entry) => entry.id === objectPayload.id) ?? store.commissionEntries[0];
+
+    // Approval flow: authorize + validate the status transition (Phase 2 slice 1).
+    if (status) {
+      const evaluation = evaluateCommissionApproval(
+        {
+          role: session.effectiveUser.role,
+          countries: session.effectiveUser.countries,
+          reseller: session.effectiveUser.reseller,
+        },
+        target,
+        status,
+      );
+      if (!evaluation.ok) {
+        return jsonError(evaluation.error, evaluation.status);
+      }
+    }
+
     const updated = { ...target, ...objectPayload, updatedAt: new Date().toISOString() };
     store.commissionEntries = store.commissionEntries.map((entry) => (entry.id === target.id ? (updated as CommissionEntry) : entry));
     appendAudit({
