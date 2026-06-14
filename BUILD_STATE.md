@@ -96,6 +96,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 12 (cont. 61) — 2026-06-14 — SALES UI slice 1: /sales persona shell + nav + guard [§24,28,29]
+- **PM ruling (recorded):** slice 1 = the /sales persona shell — sales-only layout (top bar + sales bottom nav), route guard (only Sales Team User lands in /sales; other roles redirected to /), placeholder /sales/dashboard hero (greeting + counts) + stub pages for nav targets so no 404s. Slice 2 = /sales/leads list + FAB + new-lead. Spec authority docs/SALES_UI_SPEC.md. (WIP — evidence next entry.)
+
+
 ### Fire 11 (cont. 60) — 2026-06-14 — PHASE 2 slice 6: reseller management (FINAL roadmap item)
 - **PM ruling (recorded):** slice 6 = reseller management CRUD (structured `Reseller`: name, countries[], defaultCurrency, defaultCommissionPercentage, defaultCommissionTrigger, visibility, isActive). Pure `reseller-defaults.ts` validator + tests; mutable dev-store + `upsertReseller`; Super-Admin GET/POST/PATCH `settings/resellers` (country-block + commission 0–100 + valid currency/trigger; audit); `ResellerForm` + list/new/edit pages + nav. Performance view + 5B dry-run DEFERRED (Phase 3, non-blocking). **After this ships → Phase 2 COMPLETE.** Implementation note: add a NEW structured surface (`settings/resellers`) + new store array; leave the existing `resellers: string[]` (used by invoice/receipt/commission dropdowns) untouched to avoid a broad refactor.
 - **Built:** `reseller-defaults.ts` (`Reseller` model + `validateReseller` + seed) + 7 unit tests; dev-store `resellerRecords` + `upsertReseller`; GET/POST/PATCH `settings/resellers` (Super-Admin-gated, country-block + commission 0–100 + active-currency + trigger/visibility validated, audit, no DELETE); `ResellerForm` (name locked on edit, currencies as prop, inline enums) at `/settings/resellers/new` + `/{name}/edit` + list + route-access + nav.
