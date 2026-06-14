@@ -96,6 +96,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 10 (cont. 59) — 2026-06-14 — PHASE 2 slice 5A: per-user notification preferences
+- **PM ruling (recorded):** slice 5A = per-user notification preferences (channel opt-in), self-edit only unless Super Admin. Rule-testing dry-run (5B) deferred. Pure `notification-preferences.ts` (`validateUserNotificationPreferences` + `mergePreferencesWithDefaults`) + tests; dev-store `userPreferences` + upsert; dedicated API `settings/notification-preferences` (GET own/all-if-super, POST/PATCH self-only → 403 otherwise); UI toggle form. Deviation: user-facing form lives at `/account/notifications` (all roles) since `/settings/notifications` is Super-Admin-only. (WIP — evidence next entry.)
+
+
 ### Fire 9 (cont. 58) — 2026-06-14 — PHASE 2 slice 4c: invoice-numbering config (completes settings CRUD)
 - **PM ruling (recorded):** invoice-numbering **singleton** config form (not a list). Reuse `validateInvoiceNumbering`; dev-store singleton + get/upsert; GET + PATCH on `settings/invoice-numbering` (Super-Admin-only, audit); single `InvoiceNumberingForm` at `/settings/invoice-numbering` (load→edit→save) + nav link. After this, settings CRUD COMPLETE → next fire = (5) notification prefs.
 - **Built:** dev-store singleton `invoiceNumbering` + `setInvoiceNumbering`; GET + persisted POST + new PATCH branch on `settings/invoice-numbering` (Super-Admin-gated, impersonation-blocked, audit); `InvoiceNumberingForm` (load→edit→save, conditional prefix for Country Prefix, inline mode list) at `/settings/invoice-numbering` + route-access + nav link; 4 new route tests.

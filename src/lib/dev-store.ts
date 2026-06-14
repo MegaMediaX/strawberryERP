@@ -21,6 +21,7 @@ import {
 import type { DeleteQueueRecord } from "@/lib/portal-security";
 import { defaultReminderRules, type FollowUpReminderRule } from "@/lib/business/followup-reminder-rules";
 import type { InvoiceNumberingConfig } from "@/lib/business/billing-settings";
+import type { UserNotificationPreference } from "@/lib/business/notification-preferences";
 
 type DevStore = {
   invoices: Invoice[];
@@ -35,6 +36,7 @@ type DevStore = {
   paymentMethods: PaymentMethod[];
   currencySettings: CurrencySetting[];
   invoiceNumbering: InvoiceNumberingConfig;
+  userPreferences: UserNotificationPreference[];
 };
 
 const globalStore = globalThis as typeof globalThis & {
@@ -67,6 +69,7 @@ export function getDevStore() {
       paymentMethods: [...paymentMethods],
       currencySettings: [...currencySettings],
       invoiceNumbering: { mode: "Global", nextSequence: 1 },
+      userPreferences: [],
     };
   }
 
@@ -77,6 +80,20 @@ export function getDevStore() {
 export function setInvoiceNumbering(config: InvoiceNumberingConfig) {
   getDevStore().invoiceNumbering = config;
   return config;
+}
+
+/** Create or replace a user's notification preferences (keyed by userId). */
+export function upsertUserPreference(pref: UserNotificationPreference) {
+  const store = getDevStore();
+  const exists = store.userPreferences.some((p) => p.userId === pref.userId);
+  store.userPreferences = exists
+    ? store.userPreferences.map((p) => (p.userId === pref.userId ? pref : p))
+    : [...store.userPreferences, pref];
+  return pref;
+}
+
+export function getUserPreference(userId: string) {
+  return getDevStore().userPreferences.find((p) => p.userId === userId);
 }
 
 /** Create or replace a payment method (keyed by its enum methodName). */

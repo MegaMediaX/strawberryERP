@@ -72,7 +72,10 @@ const navigationGroups: Array<{ label: string; items: NavigationItem[] }> = [
   },
   {
     label: "Account",
-    items: [{ label: "Security (2FA)", href: "/account/security", roles: all }],
+    items: [
+      { label: "Security (2FA)", href: "/account/security", roles: all },
+      { label: "Notifications", href: "/account/notifications", roles: all },
+    ],
   },
 ];
 

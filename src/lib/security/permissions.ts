@@ -175,6 +175,12 @@ function canRead(session: PortalSession, resource: string) {
     return true;
   }
 
+  // Per-user notification preferences are self-service: any authenticated role
+  // may read their own (the route returns only the caller's record).
+  if (resource === "settings/notification-preferences") {
+    return true;
+  }
+
   if (settingsReadRoutes.has(resource) || resource.startsWith("settings/")) {
     return resource === "settings/session";
   }
@@ -202,6 +208,12 @@ function canRead(session: PortalSession, resource: string) {
 
 function canWrite(session: PortalSession, resource: string, payload?: Record<string, unknown>) {
   if (session.effectiveUser.role === "Super Admin") {
+    return true;
+  }
+
+  // Per-user notification preferences are self-service; the route enforces that
+  // a non-Super-Admin can only write their OWN record.
+  if (resource === "settings/notification-preferences") {
     return true;
   }
 
