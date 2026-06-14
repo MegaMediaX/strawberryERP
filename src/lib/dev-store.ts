@@ -22,6 +22,7 @@ import type { DeleteQueueRecord } from "@/lib/portal-security";
 import { defaultReminderRules, type FollowUpReminderRule } from "@/lib/business/followup-reminder-rules";
 import type { InvoiceNumberingConfig } from "@/lib/business/billing-settings";
 import type { UserNotificationPreference } from "@/lib/business/notification-preferences";
+import { defaultResellers, type Reseller } from "@/lib/business/reseller-defaults";
 
 type DevStore = {
   invoices: Invoice[];
@@ -37,6 +38,7 @@ type DevStore = {
   currencySettings: CurrencySetting[];
   invoiceNumbering: InvoiceNumberingConfig;
   userPreferences: UserNotificationPreference[];
+  resellerRecords: Reseller[];
 };
 
 const globalStore = globalThis as typeof globalThis & {
@@ -70,10 +72,21 @@ export function getDevStore() {
       currencySettings: [...currencySettings],
       invoiceNumbering: { mode: "Global", nextSequence: 1 },
       userPreferences: [],
+      resellerRecords: [...defaultResellers],
     };
   }
 
   return globalStore.__lebtechDevStore;
+}
+
+/** Create or replace a structured reseller record (keyed by name). */
+export function upsertReseller(reseller: Reseller) {
+  const store = getDevStore();
+  const exists = store.resellerRecords.some((r) => r.name === reseller.name);
+  store.resellerRecords = exists
+    ? store.resellerRecords.map((r) => (r.name === reseller.name ? reseller : r))
+    : [...store.resellerRecords, reseller];
+  return reseller;
 }
 
 /** Replace the singleton invoice-numbering config. */

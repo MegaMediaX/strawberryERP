@@ -96,6 +96,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 11 (cont. 60) — 2026-06-14 — PHASE 2 slice 6: reseller management (FINAL roadmap item)
+- **PM ruling (recorded):** slice 6 = reseller management CRUD (structured `Reseller`: name, countries[], defaultCurrency, defaultCommissionPercentage, defaultCommissionTrigger, visibility, isActive). Pure `reseller-defaults.ts` validator + tests; mutable dev-store + `upsertReseller`; Super-Admin GET/POST/PATCH `settings/resellers` (country-block + commission 0–100 + valid currency/trigger; audit); `ResellerForm` + list/new/edit pages + nav. Performance view + 5B dry-run DEFERRED (Phase 3, non-blocking). **After this ships → Phase 2 COMPLETE.** Implementation note: add a NEW structured surface (`settings/resellers`) + new store array; leave the existing `resellers: string[]` (used by invoice/receipt/commission dropdowns) untouched to avoid a broad refactor. (WIP — evidence next entry.)
+
+
 ### Fire 10 (cont. 59) — 2026-06-14 — PHASE 2 slice 5A: per-user notification preferences
 - **PM ruling (recorded):** slice 5A = per-user notification preferences (channel opt-in), self-edit only unless Super Admin. Rule-testing dry-run (5B) deferred. Pure `notification-preferences.ts` (`validateUserNotificationPreferences` + `mergePreferencesWithDefaults`) + tests; dev-store `userPreferences` + upsert; dedicated API `settings/notification-preferences` (GET own/all-if-super, POST/PATCH self-only → 403 otherwise); UI toggle form. Deviation: user-facing form lives at `/account/notifications` (all roles) since `/settings/notifications` is Super-Admin-only.
 - **Built:** `notification-preferences.ts` (validate + merge-defaults) + 7 unit tests; dev-store `userPreferences` + `upsertUserPreference`/`getUserPreference`; dedicated API `settings/notification-preferences` (GET own/any-if-super, POST/PATCH self-only, no DELETE, audit); **added self-service allowance in `permissions.ts` canRead/canWrite** for this resource (route enforces self-only); `NotificationPreferencesForm` at `/account/notifications` (all roles) + nav link.

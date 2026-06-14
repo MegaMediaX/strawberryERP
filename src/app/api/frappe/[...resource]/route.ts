@@ -13,6 +13,7 @@ import {
   setInvoiceNumbering,
   upsertCurrency,
   upsertPaymentMethod,
+  upsertReseller,
 } from "@/lib/dev-store";
 import { devStoreResponse, maybeRouteToFrappe } from "@/lib/backend/backend-router";
 import { paginate } from "@/lib/query/scoped-page";
@@ -28,6 +29,7 @@ import { validateNotificationRule } from "@/lib/business/notifications";
 import { validatePaymentMethod } from "@/lib/business/payment-methods";
 import { validateCommissionRule } from "@/lib/business/commission-rules";
 import { evaluateCommissionApproval } from "@/lib/business/commission-approval";
+import { validateReseller, type Reseller } from "@/lib/business/reseller-defaults";
 import type { CommissionRule } from "@/lib/phase2-data";
 import {
   apiAuditEvent,
@@ -172,6 +174,10 @@ export async function GET(request: Request, context: RouteContext) {
     return sampleResponse(getDevStore().invoiceNumbering);
   }
 
+  if (contextKey === "settings/resellers") {
+    return sampleResponse(getDevStore().resellerRecords);
+  }
+
   if (contextKey === "settings/notifications") {
     return sampleResponse(notificationRules);
   }
@@ -309,6 +315,24 @@ export async function POST(request: Request, context: RouteContext) {
       performedBy: session.auditLabel,
     });
     return sampleResponse(method, { status: 201, audit });
+  }
+
+  if (contextKey === "settings/resellers") {
+    const resellerError = validateReseller(objectPayload as Partial<Reseller>, activeCurrencyCodes());
+    if (resellerError) {
+      return jsonError(resellerError);
+    }
+    const reseller = normalizeReseller(objectPayload);
+    upsertReseller(reseller);
+    const audit = appendAudit({
+      entityType: "Reseller Setting",
+      entityId: reseller.name,
+      action: "create",
+      oldValue: "",
+      newValue: reseller.name,
+      performedBy: session.auditLabel,
+    });
+    return sampleResponse(reseller, { status: 201, audit });
   }
 
   if (contextKey === "settings/notifications") {
@@ -707,6 +731,29 @@ export async function PATCH(request: Request, context: RouteContext) {
     return sampleResponse(setting, { audit });
   }
 
+  if (contextKey === "settings/resellers") {
+    const current = getDevStore().resellerRecords.find((r) => r.name === objectPayload.name);
+    if (!current) {
+      return jsonError("Reseller was not found.", 404);
+    }
+    const merged = { ...current, ...objectPayload, name: current.name };
+    const resellerError = validateReseller(merged as Partial<Reseller>, activeCurrencyCodes());
+    if (resellerError) {
+      return jsonError(resellerError);
+    }
+    const reseller = normalizeReseller(merged);
+    upsertReseller(reseller);
+    const audit = appendAudit({
+      entityType: "Reseller Setting",
+      entityId: reseller.name,
+      action: "update",
+      oldValue: String(current.isActive),
+      newValue: String(reseller.isActive),
+      performedBy: session.auditLabel,
+    });
+    return sampleResponse(reseller, { audit });
+  }
+
   if (contextKey === "settings/payment-methods") {
     const current = getDevStore().paymentMethods.find((m) => m.methodName === objectPayload.methodName);
     if (!current) {
@@ -820,6 +867,25 @@ async function readJson(request: Request) {
 
 function asObject(payload: unknown): Record<string, unknown> {
   return payload && typeof payload === "object" && !Array.isArray(payload) ? (payload as Record<string, unknown>) : {};
+}
+
+function activeCurrencyCodes(): string[] {
+  return getDevStore()
+    .currencySettings.filter((c) => c.isActive)
+    .map((c) => c.currencyCode);
+}
+
+function normalizeReseller(payload: Record<string, unknown>): Reseller {
+  return {
+    name: String(payload.name ?? "").trim(),
+    countries: Array.isArray(payload.countries) ? (payload.countries as Reseller["countries"]) : [],
+    defaultCurrency: String(payload.defaultCurrency ?? ""),
+    defaultCommissionPercentage:
+      typeof payload.defaultCommissionPercentage === "number" ? payload.defaultCommissionPercentage : 0,
+    defaultCommissionTrigger: (payload.defaultCommissionTrigger as Reseller["defaultCommissionTrigger"]) ?? "Fully Paid",
+    visibility: (payload.visibility as Reseller["visibility"]) ?? "Assigned Countries",
+    isActive: payload.isActive === undefined ? true : Boolean(payload.isActive),
+  };
 }
 
 function normalizeInvoiceNumbering(payload: Record<string, unknown>): InvoiceNumberingConfig {

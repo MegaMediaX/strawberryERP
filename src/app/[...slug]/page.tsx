@@ -19,6 +19,7 @@ import { ReportsView } from "@/components/platform/ReportsView";
 import { PaymentMethodForm } from "@/components/platform/PaymentMethodForm";
 import { CurrencyForm } from "@/components/platform/CurrencyForm";
 import { InvoiceNumberingForm } from "@/components/platform/InvoiceNumberingForm";
+import { ResellerForm } from "@/components/platform/ResellerForm";
 import { ActionLink, DataTable, PlatformShell, StatGrid } from "@/components/platform/PlatformShell";
 import { ProtectedRoute } from "@/components/security/ProtectedRoute";
 import { getDevStore } from "@/lib/dev-store";
@@ -584,6 +585,61 @@ export default async function PlatformRoute({ params }: PageProps) {
             />
           </CardContent>
         </Card>
+      </PlatformShell>
+    );
+  }
+
+  if (path === "/settings/resellers") {
+    const records = getDevStore().resellerRecords;
+    const canManage = session.effectiveUser.role === "Super Admin";
+    return (
+      <PlatformShell
+        activeHref="/settings"
+        actions={canManage ? <ActionLink href="/settings/resellers/new">New reseller</ActionLink> : undefined}
+        description="Structured reseller records with country scope, default currency, and commission defaults."
+        title="Reseller management"
+      >
+        <Card>
+          <CardContent className="pt-5">
+            <DataTable
+              columns={["Reseller", "Countries", "Currency", "Commission", "Trigger", "Visibility", "Active", ...(canManage ? ["Edit"] : [])]}
+              rows={records.map((r) => [
+                r.name,
+                r.countries.join(", "),
+                r.defaultCurrency,
+                `${r.defaultCommissionPercentage}%`,
+                r.defaultCommissionTrigger,
+                r.visibility,
+                r.isActive ? "Yes" : "No",
+                ...(canManage
+                  ? [<ActionLink href={`/settings/resellers/${encodeURIComponent(r.name)}/edit`} key={r.name} variant="secondary">Edit</ActionLink>]
+                  : []),
+              ])}
+            />
+          </CardContent>
+        </Card>
+      </PlatformShell>
+    );
+  }
+
+  if (path === "/settings/resellers/new") {
+    const currencies = getDevStore().currencySettings.filter((c) => c.isActive).map((c) => c.currencyCode);
+    return (
+      <PlatformShell activeHref="/settings" description="Create a reseller. Assigned countries are validated; defaults seed commission rules." title="New reseller">
+        <ResellerForm currencies={currencies} mode="create" />
+      </PlatformShell>
+    );
+  }
+
+  if (slug[0] === "settings" && slug[1] === "resellers" && slug[2] && slug[3] === "edit") {
+    const reseller = getDevStore().resellerRecords.find((r) => r.name === decodeURIComponent(slug[2]));
+    if (!reseller) {
+      return <MissingRecord entity="Reseller" href="/settings/resellers" />;
+    }
+    const currencies = getDevStore().currencySettings.filter((c) => c.isActive).map((c) => c.currencyCode);
+    return (
+      <PlatformShell activeHref="/settings" description="Edit a reseller's countries, currency, commission defaults, visibility, and active state." title="Edit reseller">
+        <ResellerForm currencies={currencies} initial={reseller} mode="edit" />
       </PlatformShell>
     );
   }
