@@ -97,7 +97,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ## Resume journal (newest first)
 
 ### Fire 19 (cont. 68) — 2026-06-14 — SALES UI slice 8: scoped global search [§23]
-- **PM ruling (recorded):** slice 8 = /sales/search scoped global search across the user's leads + reseller customers. Pure `global-search.ts` (`searchLeadsAndCustomers` grouped results + `saveRecentSearch` dedupe/trim-5) + tests. UI: input (autofocus) + grouped results (Leads w/ Open+Call, Customers display) + recent searches (localStorage). Both widths. §18 customer-detail / §20 notifications / §22 profile deferred. (WIP — evidence next entry.)
+- **PM ruling (recorded):** slice 8 = /sales/search scoped global search across the user's leads + reseller customers. Pure `global-search.ts` (`searchLeadsAndCustomers` grouped results + `saveRecentSearch` dedupe/trim-5) + tests. UI: input (autofocus) + grouped results (Leads w/ Open+Call, Customers display) + recent searches (localStorage). Both widths. §18 customer-detail / §20 notifications / §22 profile deferred.
+- **Built:** pure `global-search.ts` (`searchLeadsAndCustomers` grouped/scoped + `saveRecentSearch` dedupe/trim-5) + 7 tests; `SalesGlobalSearch` (autofocus input, grouped Leads(Call+Open)/Customers, recent searches via localStorage, empty + no-match states); `/sales/search` page (scoped getUiLeads + permission-filtered getUiRows customers).
+- **Verified:** 429 tests pass (was 422, +7), typecheck + lint clean (fixed react-hooks/set-state-in-effect via scoped disable), build green. Browser (dev-store): "cedar" → Leads(1)+Customers(1) w/ native tel + Open; **"nicosia" (another reseller's customer) → scoped out / No matches** (customer scoping holds); **380px** + desktop no overflow. HEAD `76f6e94`. **DONE.**
+- Next: slice 9 — sales profile §22 (account, appearance, notification-preferences wire-up, 2FA link, role/timezone). PM to sequence.
 
 
 ### Fire 18 (cont. 67) — 2026-06-14 — SALES UI slice 7: Start-Calling focused mode [§5,§6]
