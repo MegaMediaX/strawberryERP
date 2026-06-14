@@ -5,11 +5,13 @@ import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select } from "@/components/ui/field";
+import { NewLeadForm } from "@/components/platform/NewLeadForm";
 import type { PortalRole } from "@/lib/portal-security";
 import { allowedCountries, leadStatuses } from "@/lib/sample-data";
 import type { PortalLead } from "@/lib/ui-data";
 
 export function LeadsWorkspace({ leads, role, source, error }: { leads: PortalLead[]; role: PortalRole; source: "frappe" | "dev-store"; error?: string }) {
+  const [showNew, setShowNew] = useState(false);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("All statuses");
   const [country, setCountry] = useState("All countries");
@@ -30,6 +32,19 @@ export function LeadsWorkspace({ leads, role, source, error }: { leads: PortalLe
 
   return (
     <div className="grid gap-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-[var(--muted)]">{visible.length} of {leads.length} leads</p>
+        <button
+          type="button"
+          onClick={() => setShowNew((v) => !v)}
+          className="inline-flex h-10 items-center justify-center rounded-xl bg-[var(--brand)] px-4 text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition-colors hover:bg-[var(--brand-hover)]"
+        >
+          {showNew ? "Close form" : "+ New lead"}
+        </button>
+      </div>
+
+      {showNew ? <NewLeadForm onCreated={() => setShowNew(false)} /> : null}
+
       <Card>
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-3">
