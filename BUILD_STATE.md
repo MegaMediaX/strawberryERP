@@ -96,6 +96,14 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire R3 (cont. 75) — 2026-06-14 — RESELLER ADMIN UI slice 3: leads list + reassign [§8,11] ✅ SHIPPED
+- **PM ruling (recorded):** slice 3 = /reseller/leads — desktop table + mobile cards + filter bar (reuse lead-filters) + 7 saved-view pills (All Active/Unassigned/Follow-Ups Today/Overdue/Interested/No Activity/VIP) + per-row Open/Call/WhatsApp + **Reassign** (reuse eligibleAssignees/validateReassignment, PATCH assignedUser, reseller team only). DEFER Transfer (§12 — no per-reseller permission flag; show disabled "needs Super Admin permission") + tag/custom-field filters (no data).
+- **Shipped:** `src/lib/reseller/saved-views.ts` (pure `applySavedView`+`savedViews`, 3 tests) · `src/components/reseller/ResellerLeadsView.tsx` (saved-view pills + 6-field filter bar + desktop 9-col table + mobile cards + Reassign modal reusing eligibleAssignees/validateReassignment with per-candidate workload counts + disabled Transfer w/ "Needs Super Admin permission per reseller" + toast) · `src/app/reseller/leads/page.tsx` (server, getUiLeads scoped, teamUsers = active users in acting admin's reseller).
+- **Gate:** `npm test` 454 pass (64 files, +3) · typecheck clean · lint clean · build green.
+- **Browser (dev-store, logged in as Reseller Admin BDP):** desktop 1280 → table visible w/ 9 cols, 1 BDP lead (Cedar Cloud Services / Rami K.); Reassign modal candidates = ONLY BDP team (Beirut Reseller Admin 0 leads, Rami K. 1 lead), Transfer disabled w/ tooltip; full reassign flow worked (PATCH→optimistic→toast). Mobile 380 → cards visible, desktop table display:none, bottom nav present, Unassigned saved-view → empty state. **Scoping confirmed:** only BDP's reseller lead + team appear; no cross-reseller leak; no DELETE action; Transfer locked.
+- **HEAD:** see commit below. Slice 4 (PM next) = reseller add-lead + CSV import [§9,10] or lead detail [§13].
+
+
 ### Fire R2 (cont. 74) — 2026-06-14 — RESELLER ADMIN UI slice 2: dashboard [§4,5,6]
 - **PM ruling (recorded):** slice 2 = reseller dashboard. Pure `dashboard-metrics.ts` derives action-center tallies + 8 priority widgets + 6-stage pipeline from reseller-scoped leads/invoices/commissions (reuse bucketFollowUp; now injected). Contracts-not-signed → 0 (no per-customer contract data); recent-activity deferred. UI: action center (clickable) + pipeline (→/reseller/leads) + widgets grid. Slice 3 = reseller leads list.
 - **Built:** `dashboard-metrics.ts` + 4 tests; `ResellerDashboardView` (Today Action Center 6 tallies, pipeline 6 stages, widgets 2-col mobile/4-col desktop); dashboard page (scoped getUiLeads + getUiRows invoices/commissions).
