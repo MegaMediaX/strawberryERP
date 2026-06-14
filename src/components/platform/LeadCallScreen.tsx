@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, Select, Textarea } from "@/components/ui/field";
+import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { validateLeadTransition } from "@/lib/business/lead-workflow";
+import { buildCustomerFromLead, validateConversion, type ConversionOverrides } from "@/lib/business/lead-conversion";
 import { leadStatuses } from "@/lib/sample-data";
 import type { PortalLead } from "@/lib/ui-data";
 
@@ -28,6 +29,8 @@ export function LeadCallScreen({ lead }: { lead: PortalLead }) {
   const [success, setSuccess] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [callLogged, setCallLogged] = useState(false);
+  const [converting, setConverting] = useState(false);
+  const [converted, setConverted] = useState<string | null>(null);
 
   const tel = lead.phone.replace(/[^\d+]/g, "");
   const wa = lead.phone.replace(/[^\d]/g, "");
@@ -69,6 +72,17 @@ export function LeadCallScreen({ lead }: { lead: PortalLead }) {
   }
 
   return (
+    <>
+    {converting ? (
+      <ConvertModal
+        lead={lead}
+        onClose={() => setConverting(false)}
+        onConverted={(id) => {
+          setConverted(id);
+          setConverting(false);
+        }}
+      />
+    ) : null}
     <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
       {/* Left: identity + contact actions + status */}
       <div className="grid gap-5">
@@ -79,9 +93,20 @@ export function LeadCallScreen({ lead }: { lead: PortalLead }) {
                 <CardTitle>{lead.contact}</CardTitle>
                 <CardDescription>{lead.company} · {lead.id}</CardDescription>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Badge tone={priorityTone(lead.priority)}>{lead.priority}</Badge>
                 <Badge tone="neutral">{currentStatus}</Badge>
+                {converted ? (
+                  <Badge tone="green">Converted → {converted}</Badge>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setConverting(true)}
+                    className="inline-flex h-9 items-center justify-center rounded-xl border border-[var(--brand)] px-3 text-sm font-semibold text-[var(--brand)] transition-colors hover:bg-[var(--brand-soft)]"
+                  >
+                    Convert to Customer
+                  </button>
+                )}
               </div>
             </div>
           </CardHeader>
@@ -179,6 +204,109 @@ export function LeadCallScreen({ lead }: { lead: PortalLead }) {
           </CardContent>
         </Card>
       </div>
+    </div>
+    </>
+  );
+}
+
+function ConvertModal({
+  lead,
+  onClose,
+  onConverted,
+}: {
+  lead: PortalLead;
+  onClose: () => void;
+  onConverted: (customerId: string) => void;
+}) {
+  const [overrides, setOverrides] = useState<ConversionOverrides>({
+    customerName: lead.company,
+    contact: lead.contact,
+    email: lead.email,
+    phone: lead.phone,
+  });
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  function set<K extends keyof ConversionOverrides>(key: K, value: ConversionOverrides[K]) {
+    setOverrides((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function submit() {
+    setError(null);
+    const draft = buildCustomerFromLead(lead, overrides);
+    const validation = validateConversion(draft);
+    if (validation) {
+      setError(validation);
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await fetch("/api/frappe/customers", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(draft),
+      });
+      const body = (await res.json().catch(() => ({}))) as { data?: { id?: string }; error?: { message?: string } | string };
+      if (!res.ok) {
+        setError(typeof body.error === "string" ? body.error : body.error?.message ?? "Conversion failed.");
+        return;
+      }
+      onConverted(body.data?.id ?? "customer");
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" role="dialog" aria-modal="true">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Convert to customer</CardTitle>
+          <CardDescription>Create a customer record from {lead.company}. Country & reseller carry over from the lead.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <Field label="Customer name">
+            <Input value={overrides.customerName ?? ""} onChange={(e) => set("customerName", e.target.value)} />
+          </Field>
+          <Field label="Primary contact">
+            <Input value={overrides.contact ?? ""} onChange={(e) => set("contact", e.target.value)} />
+          </Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Email">
+              <Input type="email" value={overrides.email ?? ""} onChange={(e) => set("email", e.target.value)} />
+            </Field>
+            <Field label="Phone">
+              <Input value={overrides.phone ?? ""} onChange={(e) => set("phone", e.target.value)} inputMode="tel" />
+            </Field>
+          </div>
+          <p className="text-xs text-[var(--muted)]">Country: {lead.country} · Reseller: {lead.reseller}</p>
+
+          {error ? (
+            <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">
+              {error}
+            </p>
+          ) : null}
+
+          <div className="flex gap-2">
+            <button
+              onClick={submit}
+              disabled={busy}
+              className="inline-flex h-11 flex-1 items-center justify-center rounded-xl bg-[var(--brand)] px-4 text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition-colors hover:bg-[var(--brand-hover)] disabled:opacity-60"
+            >
+              {busy ? "Converting…" : "Create customer"}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-11 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--foreground)] transition-colors hover:bg-[var(--background)]"
+            >
+              Cancel
+            </button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -96,6 +96,11 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 1 (cont. 50) — 2026-06-14 — PHASE 1/B1 slice 3: lead→customer conversion
+- **PM ruling (recorded):** next slice = B1 slice 3, lead→customer conversion via a "Convert to Customer" action on the call screen. Acceptance: pure mapper + tests; modal on call screen; POST creates customer (201) with country/scoping enforced; invalid (bad country / missing name) → 400; all gates green + browser-verified.
+- Approach: reuse existing POST `/api/frappe/customers` (validates country, returns CUST-…); add pure `src/lib/business/lead-conversion.ts` (`buildCustomerFromLead` + `validateConversion`) with unit tests; "Convert to Customer" modal on `LeadCallScreen`. (Work in progress — see next journal entry for evidence.)
+
+
 ### Fire 1 (cont. 49) — 2026-06-14 — PHASE 1/B1 slice 2: interactive call screen
 - **B1 slice 2 — Lead call screen** (`/leads/[id]`): replaced the static read-only detail with `LeadCallScreen.tsx` — Call/WhatsApp/Email contact actions (tel:/wa.me/mailto, number-sanitized), inline status-update form guarded client-side by `validateLeadTransition` + PATCH `/api/frappe/leads`, lead-facts + notes panel, back link. Reuses the already-tested transition guard (no new lib needed); PATCH route tests already cover valid 200 / invalid 400 / missing-id.
 - **Browser-verified** (dev-store): `/leads/LEAD-2408` (Cedar Cloud Services) renders, tel `+96170144221` / `wa.me/96170144221` / mailto correct, 6 status options; PATCH invalid (Scheduled→New) → **400 "Cannot move a lead…"**, valid (→Contacted Interested) → **200**.
