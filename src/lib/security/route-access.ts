@@ -32,6 +32,7 @@ const superAdminRoutes = [
   "/settings/currencies",
   "/settings/payment-methods",
   "/settings/notifications",
+  "/settings/reminder-rules",
   "/audit-logs",
 ];
 

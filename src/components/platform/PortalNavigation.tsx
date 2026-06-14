@@ -64,6 +64,7 @@ const navigationGroups: Array<{ label: string; items: NavigationItem[] }> = [
       { label: "Audit Logs", href: "/audit-logs", roles: superAdmin },
       { label: "System Health", href: "/settings/system-health", roles: superAdmin, blockedWhenImpersonating: true },
       { label: "Notifications", href: "/settings/notifications", roles: superAdmin },
+      { label: "Reminder Rules", href: "/settings/reminder-rules", roles: superAdmin },
       { label: "Custom Fields", href: "/settings/custom-fields", roles: superAdmin },
     ],
   },

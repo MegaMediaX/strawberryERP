@@ -96,6 +96,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 5 (cont. 54) — 2026-06-14 — PHASE 2 slice 2: follow-up reminder rules (hooks-only)
+- **PM ruling (recorded):** calendar-sync reframed to dev-verifiable **follow-up reminder rules** (no live Google/OAuth). Pure `followup-reminder-rules.ts` (type + `validateFollowUpReminderRule` fail-closed + allowlist template tokens) and `followup-reminder-engine.ts` (`calculateReminderEvents(lead, rules, now)` → ISO triggersAt, UTC, multi-rule stacking, role/channel filter). UI console (list + Super-Admin create/toggle). API `settings/reminder-rules` GET (scoped) / POST+PATCH (Super-Admin-only → 403). Security: only Super Admin writes; template tokens restricted to lead.{id,company,contact,followUp}; all timestamps ISO-8601 UTC. (WIP — evidence next entry.)
+
+
 ### Fire 4 (cont. 53) — 2026-06-14 — PHASE 2 slice 1: commission entry approval flow
 - **User said "proceed" → Phase 2 authorized.** PM roadmap: (1) commission approval flow, (2) calendar sync UI, (3) advanced reports, (4) settings CRUD, (5) notification prefs, (6) reseller management.
 - **PM ruling (recorded):** first slice = commission entry approval. Pure `commission-approval.ts` (`validateCommissionStatusTransition` Pending→Approved→Paid / any→Cancelled; `canApproveCommission(actingUser, entry)` — Super=any, Regional=country match, ResellerAdmin=reseller match, Sales=no). Enforce on PATCH `commissions/entries` (transition→400, perms→403, ok→200 + audit). UI approve/pay/cancel actions. Confirm reseller/country scoping + no-DELETE.

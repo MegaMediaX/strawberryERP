@@ -14,6 +14,7 @@ import {
 import { LeadsWorkspace } from "@/components/platform/LeadsWorkspace";
 import { LeadCallScreen } from "@/components/platform/LeadCallScreen";
 import { CommissionApprovalConsole } from "@/components/platform/CommissionApprovalConsole";
+import { FollowUpReminderConsole } from "@/components/platform/FollowUpReminderConsole";
 import { ActionLink, DataTable, PlatformShell, StatGrid } from "@/components/platform/PlatformShell";
 import { ProtectedRoute } from "@/components/security/ProtectedRoute";
 import { getDevStore } from "@/lib/dev-store";
@@ -801,6 +802,15 @@ export default async function PlatformRoute({ params }: PageProps) {
             </Card>
           ))}
         </section>
+      </PlatformShell>
+    );
+  }
+
+  if (path === "/settings/reminder-rules") {
+    const rules = getDevStore().reminderRules;
+    return (
+      <PlatformShell activeHref="/settings" description="Configure when follow-up reminders fire for leads and through which channels. Hooks-only — no live calendar send." title="Reminder rules">
+        <FollowUpReminderConsole canManage={session.effectiveUser.role === "Super Admin"} rules={rules} />
       </PlatformShell>
     );
   }

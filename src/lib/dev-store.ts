@@ -15,6 +15,7 @@ import {
   type Receipt,
 } from "@/lib/phase2-data";
 import type { DeleteQueueRecord } from "@/lib/portal-security";
+import { defaultReminderRules, type FollowUpReminderRule } from "@/lib/business/followup-reminder-rules";
 
 type DevStore = {
   invoices: Invoice[];
@@ -25,6 +26,7 @@ type DevStore = {
   integrationSettings: IntegrationSetting[];
   activityTimeline: ActivityTimelineEvent[];
   deleteQueue: DeleteQueueRecord[];
+  reminderRules: FollowUpReminderRule[];
 };
 
 const globalStore = globalThis as typeof globalThis & {
@@ -53,10 +55,25 @@ export function getDevStore() {
           requestedAt: "2026-06-08T10:10:00Z",
         },
       ],
+      reminderRules: [...defaultReminderRules],
     };
   }
 
   return globalStore.__lebtechDevStore;
+}
+
+export function appendReminderRule(rule: FollowUpReminderRule) {
+  getDevStore().reminderRules.unshift(rule);
+  return rule;
+}
+
+export function updateReminderRule(id: string, patch: Partial<FollowUpReminderRule>) {
+  const store = getDevStore();
+  const target = store.reminderRules.find((rule) => rule.id === id);
+  if (!target) return undefined;
+  const updated = { ...target, ...patch, id: target.id };
+  store.reminderRules = store.reminderRules.map((rule) => (rule.id === id ? updated : rule));
+  return updated;
 }
 
 export function appendAudit(event: Omit<ActivityTimelineEvent, "id" | "timestamp"> & { timestamp?: string }) {
