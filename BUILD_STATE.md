@@ -96,6 +96,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 16 (cont. 65) — 2026-06-14 — SALES UI slice 5: follow-up queue tabs + urgency [§13]
+- **PM ruling (recorded):** slice 5 = /sales/follow-ups daily queue. Pure `bucket-followups.ts` (`bucketFollowUp(followUp, now)` → Today/Overdue/Tomorrow/This Week/Unscheduled; "today…"→Today, "tomorrow…"→Tomorrow, "Mon D" date diff<0→Overdue, 0→Today, 1→Tomorrow, ≤7→This Week, else/empty/unparseable→Unscheduled; now injected, no Date.now() in lib) + tests. Tabbed cards-only UI, urgency order via priorityRank (VIP float), overdue red treatment, native Call/WhatsApp/Open. Reuse priorityRank. Verify scoping + both widths. (WIP — evidence next entry.)
+
+
 ### Fire 15 (cont. 64) — 2026-06-14 — SALES UI slice 4: notes compose + activity timeline [§11,§12]
 - **PM ruling (recorded):** slice 4 = fast notes compose (textarea + 5 quick templates, timestamp+author, latest-first, PATCH lead.notes optimistic) + activity timeline derived from lead facts (most-recent-first, icons, collapsed on mobile). Pure `notes-formatter.ts` + `timeline-builder.ts` + tests. Add to LeadCallScreen via OPT-IN props (`enableNotesCompose`, `timeline`) so admin /leads/[id] stays read-only. Zero backend coupling (dev-store echo, optimistic UI).
 - **Built:** pure `notes-formatter.ts` (formatNoteLine/prependNote/parseNotes + 5 templates) + `timeline-builder.ts` (ordered timeline from lead facts; follow-up conditional) + 7 tests. Extended LeadCallScreen via opt-in `enableNotesCompose` (textarea + template chips + Save note → optimistic prepend + PATCH lead.notes, latest-first list) and `timeline` (collapsible card, collapsed on mobile, emoji icons). Admin /leads/[id] unchanged (opt-out).

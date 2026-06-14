@@ -1,5 +1,10 @@
-import { SalesPlaceholder } from "@/components/sales/SalesPlaceholder";
+import { SalesFollowUpsView } from "@/components/sales/SalesFollowUpsView";
+import { getPortalUiSession } from "@/lib/security/ui-session";
+import { getUiLeads } from "@/lib/ui-data";
 
-export default function SalesFollowUpsPage() {
-  return <SalesPlaceholder title="Follow-ups" detail="Your daily work queue: today, overdue, tomorrow, this week (spec §13)." />;
+export default async function SalesFollowUpsPage() {
+  const session = await getPortalUiSession();
+  if (!session) return null;
+  const result = await getUiLeads(session);
+  return <SalesFollowUpsView leads={result.data} />;
 }
