@@ -96,6 +96,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 8 (cont. 57) — 2026-06-14 — PHASE 2 slice 4b: currencies CRUD
+- **PM ruling (recorded):** continue settings CRUD with **currencies** (same slice-4 pattern). Reuse `validateCurrencySetting`; mutable dev-store + `upsertCurrency` keyed by currencyCode; GET(store)/POST/PATCH (Super-Admin-gated, country-block on assignedCountries, audit); `CurrencyForm` (code locked on edit, inline country list) at `/settings/currencies/new` + `/{code}/edit` + list actions. NO delete (no-DELETE invariant). Remaining settings CRUD after: invoice-numbering config. (WIP — evidence next entry.)
+
+
 ### Fire 7 (cont. 56) — 2026-06-14 — PHASE 2 slice 4: payment methods CRUD
 - **PM ruling (recorded):** settings CRUD tightened to **payment methods** this fire (currencies + invoice-numbering deferred to later fires). Reuse existing tested `validatePaymentMethod`; add UI create/edit form calling POST + newly-wired PATCH `settings/payment-methods`; Super-Admin-only write; method name locked to enum; countries country-blocked; audit-logged.
 - **Built:** mutable dev-store `paymentMethods` + `upsertPaymentMethod`; wired GET(store)/POST(persist)/new PATCH branch on `settings/payment-methods` (Super-Admin-gated, validated, audit); `PaymentMethodForm` (create/edit, name locked on edit) at `/settings/payment-methods/new` + `/{name}/edit`; New/Edit actions on the list. Build gotcha fixed: client form must NOT import from `@/lib/business/payment-methods` (drags node:fs) — inlined the method-name list.

@@ -10,6 +10,7 @@ import {
   getDevStore,
   resolveDeleteQueue,
   upsertIntegrationSetting,
+  upsertCurrency,
   upsertPaymentMethod,
 } from "@/lib/dev-store";
 import { devStoreResponse, maybeRouteToFrappe } from "@/lib/backend/backend-router";
@@ -34,7 +35,6 @@ import {
   createInvoiceFromPayload,
   createReceiptFromPayload,
   customers,
-  currencySettings,
   dashboardWidgets,
   filterByPermission,
   generateApiKeyRecord,
@@ -164,7 +164,7 @@ export async function GET(request: Request, context: RouteContext) {
   }
 
   if (contextKey === "settings/currencies") {
-    return sampleResponse(currencySettings);
+    return sampleResponse(getDevStore().currencySettings);
   }
 
   if (contextKey === "settings/notifications") {
@@ -274,15 +274,17 @@ export async function POST(request: Request, context: RouteContext) {
       return jsonError(settingError);
     }
 
+    const setting = normalizeCurrency(objectPayload);
+    upsertCurrency(setting);
     const audit = appendAudit({
       entityType: "Currency Setting",
-      entityId: String(objectPayload.currencyCode ?? ""),
+      entityId: setting.currencyCode,
       action: "create",
       oldValue: "",
-      newValue: String(objectPayload.currencyName ?? ""),
+      newValue: setting.currencyName,
       performedBy: session.auditLabel,
     });
-    return sampleResponse({ ...objectPayload }, { status: 201, audit });
+    return sampleResponse(setting, { status: 201, audit });
   }
 
   if (contextKey === "settings/payment-methods") {
@@ -656,6 +658,29 @@ export async function PATCH(request: Request, context: RouteContext) {
     return sampleResponse({ ...customers[0], ...objectPayload, updatedAt: new Date().toISOString() });
   }
 
+  if (contextKey === "settings/currencies") {
+    const current = getDevStore().currencySettings.find((c) => c.currencyCode === objectPayload.currencyCode);
+    if (!current) {
+      return jsonError("Currency was not found.", 404);
+    }
+    const merged = { ...current, ...objectPayload, currencyCode: current.currencyCode };
+    const settingError = validateCurrencySetting(merged as Partial<CurrencySetting>);
+    if (settingError) {
+      return jsonError(settingError);
+    }
+    const setting = normalizeCurrency(merged);
+    upsertCurrency(setting);
+    const audit = appendAudit({
+      entityType: "Currency Setting",
+      entityId: setting.currencyCode,
+      action: "update",
+      oldValue: String(current.isActive),
+      newValue: String(setting.isActive),
+      performedBy: session.auditLabel,
+    });
+    return sampleResponse(setting, { audit });
+  }
+
   if (contextKey === "settings/payment-methods") {
     const current = getDevStore().paymentMethods.find((m) => m.methodName === objectPayload.methodName);
     if (!current) {
@@ -769,6 +794,20 @@ async function readJson(request: Request) {
 
 function asObject(payload: unknown): Record<string, unknown> {
   return payload && typeof payload === "object" && !Array.isArray(payload) ? (payload as Record<string, unknown>) : {};
+}
+
+function normalizeCurrency(payload: Record<string, unknown>): CurrencySetting {
+  return {
+    currencyCode: String(payload.currencyCode ?? "").toUpperCase(),
+    currencyName: String(payload.currencyName ?? ""),
+    symbol: String(payload.symbol ?? ""),
+    decimalPrecision: typeof payload.decimalPrecision === "number" ? payload.decimalPrecision : 2,
+    isActive: payload.isActive === undefined ? true : Boolean(payload.isActive),
+    isDefault: Boolean(payload.isDefault),
+    assignedCountries: Array.isArray(payload.assignedCountries) ? (payload.assignedCountries as CurrencySetting["assignedCountries"]) : [],
+    assignedResellers: Array.isArray(payload.assignedResellers) ? (payload.assignedResellers as string[]) : [],
+    manualExchangeRate: typeof payload.manualExchangeRate === "number" ? payload.manualExchangeRate : 1,
+  };
 }
 
 function normalizePaymentMethod(payload: Record<string, unknown>): PaymentMethod {

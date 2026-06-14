@@ -17,6 +17,7 @@ import { CommissionApprovalConsole } from "@/components/platform/CommissionAppro
 import { FollowUpReminderConsole } from "@/components/platform/FollowUpReminderConsole";
 import { ReportsView } from "@/components/platform/ReportsView";
 import { PaymentMethodForm } from "@/components/platform/PaymentMethodForm";
+import { CurrencyForm } from "@/components/platform/CurrencyForm";
 import { ActionLink, DataTable, PlatformShell, StatGrid } from "@/components/platform/PlatformShell";
 import { ProtectedRoute } from "@/components/security/ProtectedRoute";
 import { getDevStore } from "@/lib/dev-store";
@@ -555,23 +556,53 @@ export default async function PlatformRoute({ params }: PageProps) {
   }
 
   if (path === "/settings/currencies") {
+    const currencies = getDevStore().currencySettings;
+    const canManage = session.effectiveUser.role === "Super Admin";
     return (
-      <PlatformShell activeHref="/settings" description="Currency settings are assigned by country and reseller with manual exchange rate support." title="Currencies">
+      <PlatformShell
+        activeHref="/settings"
+        actions={canManage ? <ActionLink href="/settings/currencies/new">New currency</ActionLink> : undefined}
+        description="Currency settings are assigned by country and reseller with manual exchange rate support."
+        title="Currencies"
+      >
         <Card>
           <CardContent className="pt-5">
             <DataTable
-              columns={["Currency", "Symbol", "Precision", "Countries", "Default", "Rate"]}
-              rows={currencySettings.map((currency) => [
+              columns={["Currency", "Symbol", "Precision", "Countries", "Default", "Rate", ...(canManage ? ["Edit"] : [])]}
+              rows={currencies.map((currency) => [
                 `${currency.currencyCode} - ${currency.currencyName}`,
                 currency.symbol,
                 currency.decimalPrecision,
                 currency.assignedCountries.join(", "),
                 currency.isDefault ? "Yes" : "No",
                 currency.manualExchangeRate,
+                ...(canManage
+                  ? [<ActionLink href={`/settings/currencies/${encodeURIComponent(currency.currencyCode)}/edit`} key={currency.currencyCode} variant="secondary">Edit</ActionLink>]
+                  : []),
               ])}
             />
           </CardContent>
         </Card>
+      </PlatformShell>
+    );
+  }
+
+  if (path === "/settings/currencies/new") {
+    return (
+      <PlatformShell activeHref="/settings" description="Create a currency. Assigned countries are validated; blocked countries are rejected." title="New currency">
+        <CurrencyForm mode="create" />
+      </PlatformShell>
+    );
+  }
+
+  if (slug[0] === "settings" && slug[1] === "currencies" && slug[2] && slug[3] === "edit") {
+    const currency = getDevStore().currencySettings.find((c) => c.currencyCode === decodeURIComponent(slug[2]));
+    if (!currency) {
+      return <MissingRecord entity="Currency" href="/settings/currencies" />;
+    }
+    return (
+      <PlatformShell activeHref="/settings" description="Edit a currency's name, symbol, precision, rate, countries, and active/default state." title="Edit currency">
+        <CurrencyForm initial={currency} mode="edit" />
       </PlatformShell>
     );
   }

@@ -3,6 +3,7 @@ import {
   apiKeys,
   apiLogs,
   commissionEntries,
+  currencySettings,
   invoices,
   integrationSettings,
   paymentMethods,
@@ -11,6 +12,7 @@ import {
   type ApiKeyRecord,
   type ApiLog,
   type CommissionEntry,
+  type CurrencySetting,
   type IntegrationSetting,
   type Invoice,
   type PaymentMethod,
@@ -30,6 +32,7 @@ type DevStore = {
   deleteQueue: DeleteQueueRecord[];
   reminderRules: FollowUpReminderRule[];
   paymentMethods: PaymentMethod[];
+  currencySettings: CurrencySetting[];
 };
 
 const globalStore = globalThis as typeof globalThis & {
@@ -60,6 +63,7 @@ export function getDevStore() {
       ],
       reminderRules: [...defaultReminderRules],
       paymentMethods: [...paymentMethods],
+      currencySettings: [...currencySettings],
     };
   }
 
@@ -74,6 +78,17 @@ export function upsertPaymentMethod(method: PaymentMethod) {
     ? store.paymentMethods.map((m) => (m.methodName === method.methodName ? method : m))
     : [...store.paymentMethods, method];
   return method;
+}
+
+/** Create or replace a currency setting (keyed by currencyCode). */
+export function upsertCurrency(setting: CurrencySetting) {
+  const store = getDevStore();
+  const code = setting.currencyCode;
+  const exists = store.currencySettings.some((c) => c.currencyCode === code);
+  store.currencySettings = exists
+    ? store.currencySettings.map((c) => (c.currencyCode === code ? setting : c))
+    : [...store.currencySettings, setting];
+  return setting;
 }
 
 export function appendReminderRule(rule: FollowUpReminderRule) {
