@@ -96,6 +96,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 17 (cont. 66) — 2026-06-14 — SALES UI slice 6: dashboard priority widgets [§3]
+- **PM ruling (recorded):** slice 6 = the 8 priority widgets on /sales/dashboard (Today's Follow-Ups, Overdue, Interested, New, Attempted/No-Response, Recently Updated, Converted-This-Month, My Performance) — each a count + link into the relevant queue. Pure `dashboard-widgets.ts` (counts from scoped leads + injected now, reuse bucketFollowUp) + tests. Grid 2-col mobile / 4-col desktop. Slice 7 = Start-Calling focused mode §5/§6. (WIP — evidence next entry.)
+
+
 ### Fire 16 (cont. 65) — 2026-06-14 — SALES UI slice 5: follow-up queue tabs + urgency [§13]
 - **PM ruling (recorded):** slice 5 = /sales/follow-ups daily queue. Pure `bucket-followups.ts` (`bucketFollowUp(followUp, now)` → Today/Overdue/Tomorrow/This Week/Unscheduled; "today…"→Today, "tomorrow…"→Tomorrow, "Mon D" date diff<0→Overdue, 0→Today, 1→Tomorrow, ≤7→This Week, else/empty/unparseable→Unscheduled; now injected, no Date.now() in lib) + tests. Tabbed cards-only UI, urgency order via priorityRank (VIP float), overdue red treatment, native Call/WhatsApp/Open. Reuse priorityRank. Verify scoping + both widths.
 - **Built:** pure `bucket-followups.ts` (`bucketFollowUp` + `inTab` + 5 tabs) + 9 tests; `SalesFollowUpsView` (scrollable tab bar + counts, cards-only, urgency order via priorityRank, overdue red border+badge, last-note snippet, native Call/WhatsApp/Open, per-tab empty states); `/sales/follow-ups` page (scoped getUiLeads).

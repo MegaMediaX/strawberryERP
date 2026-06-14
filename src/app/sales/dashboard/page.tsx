@@ -1,7 +1,9 @@
 import Link from "next/link";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { SalesDashboardWidgets } from "@/components/sales/SalesDashboardWidgets";
 import { greetingForHour, salesDashboardSummary } from "@/lib/sales/dashboard-summary";
+import { salesDashboardWidgets } from "@/lib/sales/dashboard-widgets";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 import { getUiLeads } from "@/lib/ui-data";
 
@@ -12,6 +14,7 @@ export default async function SalesDashboardPage() {
 
   const result = await getUiLeads(session);
   const summary = salesDashboardSummary(result.data);
+  const widgets = salesDashboardWidgets(result.data, new Date());
   const firstName = session.effectiveUser.name.split(" ")[0];
   const greeting = greetingForHour(new Date().getHours());
 
@@ -54,9 +57,7 @@ export default async function SalesDashboardPage() {
         </CardContent>
       </Card>
 
-      <p className="px-1 text-sm text-[var(--muted)]">
-        Your daily focus panel and priority widgets land here next. The numbers above are scoped to leads assigned to you.
-      </p>
+      <SalesDashboardWidgets widgets={widgets} />
     </div>
   );
 }
