@@ -96,6 +96,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 18 (cont. 67) — 2026-06-14 — SALES UI slice 7: Start-Calling focused mode [§5,§6]
+- **PM ruling (recorded):** slice 7 = /sales/calling. Pure `order-calling-queue.ts` (`orderLeadsForCalling(leads, now)` — §4 priority: VIP-overdue > overdue > today > interested > new > rest, reuse bucketFollowUp + priorityRank, now injected) + tests with synthetic multi-lead cases. Page: order scoped leads, "Lead Queue Progress: i of n", render EXISTING LeadCallScreen for current lead, "Save & Next" advances index. Dashboard "Start Calling" already links here. Reuse call screen as-is. (WIP — evidence next entry.)
+
+
 ### Fire 17 (cont. 66) — 2026-06-14 — SALES UI slice 6: dashboard priority widgets [§3]
 - **PM ruling (recorded):** slice 6 = the 8 priority widgets on /sales/dashboard (Today's Follow-Ups, Overdue, Interested, New, Attempted/No-Response, Recently Updated, Converted-This-Month, My Performance) — each a count + link into the relevant queue. Pure `dashboard-widgets.ts` (counts from scoped leads + injected now, reuse bucketFollowUp) + tests. Grid 2-col mobile / 4-col desktop. Slice 7 = Start-Calling focused mode §5/§6.
 - **Built:** pure `dashboard-widgets.ts` (`salesDashboardWidgets` → 8 widgets from scoped leads + injected now, reuses bucketFollowUp) + 5 tests; `SalesDashboardWidgets` (clickable tone-accented cards, Today/Overdue→follow-ups, rest→leads, 2-col mobile/4-col desktop); dashboard page wires it + removed placeholder note.
