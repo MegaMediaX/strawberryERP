@@ -96,6 +96,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 15 (cont. 64) — 2026-06-14 — SALES UI slice 4: notes compose + activity timeline [§11,§12]
+- **PM ruling (recorded):** slice 4 = fast notes compose (textarea + 5 quick templates, timestamp+author, latest-first, PATCH lead.notes optimistic) + activity timeline derived from lead facts (most-recent-first, icons, collapsed on mobile). Pure `notes-formatter.ts` + `timeline-builder.ts` + tests. Add to LeadCallScreen via OPT-IN props (`enableNotesCompose`, `timeline`) so admin /leads/[id] stays read-only. Zero backend coupling (dev-store echo, optimistic UI). (WIP — evidence next entry.)
+
+
 ### Fire 14 (cont. 63) — 2026-06-14 — SALES UI slice 3: lead call screen [§6,7,8,9,10] (most important screen)
 - **PM ruling (recorded):** slice 3 = sales call screen at /sales/leads/:id, reuse LeadCallScreen + add: quick-outcome buttons (§10 pure mapping lib + tests), Important Details card (§8, read-only from per-reseller seed — admin editing deferred), Copy Number (§7). Notes/timeline polish (§11/§12) → slice 4. Extend LeadCallScreen via OPT-IN props so admin /leads/[id] is unaffected.
 - **Built:** pure `business/quick-outcomes.ts` (6 outcomes → status/schedule/convert/flag mapping) + `sales/important-details.ts` (per-reseller instructions, global fallback) + 7 tests. Extended `LeadCallScreen` with opt-in `importantDetails[]` (§8 amber card) + `enableQuickOutcomes` (§10 6-button grid) + Copy Number (§7); refactored `save()` to accept a target status so one-tap outcomes save immediately (admin screen unchanged — doesn't pass the new props). `/sales/leads/[id]` route: role-scoped (unassigned → scoped-out message), Reassign hidden (no users[] passed), Convert kept.

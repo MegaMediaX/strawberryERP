@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { LeadCallScreen } from "@/components/platform/LeadCallScreen";
 import { importantDetailsFor } from "@/lib/sales/important-details";
+import { buildTimeline } from "@/lib/sales/timeline-builder";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 import { getUiLeads } from "@/lib/ui-data";
 
@@ -32,6 +33,8 @@ export default async function SalesLeadDetailPage({ params }: { params: Promise<
       <LeadCallScreen
         lead={lead}
         enableQuickOutcomes
+        enableNotesCompose
+        timeline={buildTimeline(lead)}
         importantDetails={importantDetailsFor(lead.reseller)}
         actingUser={{
           id: session.effectiveUser.id,

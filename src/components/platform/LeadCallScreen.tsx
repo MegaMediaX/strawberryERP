@@ -10,11 +10,21 @@ import { validateLeadTransition } from "@/lib/business/lead-workflow";
 import { buildCustomerFromLead, validateConversion, type ConversionOverrides } from "@/lib/business/lead-conversion";
 import { eligibleAssignees, validateReassignment } from "@/lib/business/lead-reassignment";
 import { quickOutcomes, type QuickOutcome } from "@/lib/business/quick-outcomes";
+import { formatNoteLine, noteTemplates, parseNotes, prependNote } from "@/lib/sales/notes-formatter";
+import type { TimelineEntry } from "@/lib/sales/timeline-builder";
 import { leadStatuses } from "@/lib/sample-data";
 import type { PortalRole, PortalUser } from "@/lib/portal-security";
 import type { PortalLead } from "@/lib/ui-data";
 
 const SCHEDULED = "Scheduled Follow-Up";
+
+const TIMELINE_ICON: Record<TimelineEntry["icon"], string> = {
+  status: "◆",
+  calendar: "📅",
+  user: "👤",
+  inbox: "📥",
+  plus: "✚",
+};
 
 function priorityTone(priority: string): "rose" | "amber" | "blue" | "neutral" {
   if (priority === "VIP" || priority === "High") return "rose";
@@ -29,6 +39,8 @@ export function LeadCallScreen({
   actingUser,
   importantDetails,
   enableQuickOutcomes = false,
+  enableNotesCompose = false,
+  timeline,
 }: {
   lead: PortalLead;
   users?: PortalUser[];
@@ -37,6 +49,10 @@ export function LeadCallScreen({
   importantDetails?: string[];
   /** Spec §10 — one-tap outcome buttons (sales persona). */
   enableQuickOutcomes?: boolean;
+  /** Spec §11 — fast notes compose with quick templates (sales persona). */
+  enableNotesCompose?: boolean;
+  /** Spec §12 — derived activity timeline (sales persona). */
+  timeline?: TimelineEntry[];
 }) {
   const router = useRouter();
   const [currentStatus, setCurrentStatus] = useState<string>(lead.status);
@@ -51,6 +67,13 @@ export function LeadCallScreen({
   const [reassigning, setReassigning] = useState(false);
   const [assignedTo, setAssignedTo] = useState(lead.assignedTo);
   const [copied, setCopied] = useState(false);
+  const [notesText, setNotesText] = useState(lead.notes);
+  const [noteDraft, setNoteDraft] = useState("");
+  const [noteBusy, setNoteBusy] = useState(false);
+  const [noteMsg, setNoteMsg] = useState<string | null>(null);
+  const [timelineOpen, setTimelineOpen] = useState(false);
+
+  const authorName = actingUser ? users.find((u) => u.id === actingUser.id)?.name ?? "You" : "You";
 
   const actingFull = actingUser ? users.find((u) => u.id === actingUser.id) : undefined;
   const candidates = actingFull ? eligibleAssignees(lead, actingFull, users) : [];
@@ -93,6 +116,34 @@ export function LeadCallScreen({
       setError("Network error. Please try again.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  /** Spec §11: append a timestamped note (optimistic + PATCH). */
+  async function saveNote(text: string) {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    setNoteMsg(null);
+    setNoteBusy(true);
+    const line = formatNoteLine(trimmed, authorName, new Date().toISOString());
+    const updated = prependNote(notesText, line);
+    try {
+      const res = await fetch("/api/frappe/leads", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: lead.id, notes: updated }),
+      });
+      if (!res.ok) {
+        setNoteMsg("Could not save the note.");
+        return;
+      }
+      setNotesText(updated); // optimistic, latest-first
+      setNoteDraft("");
+      setNoteMsg("Note saved.");
+    } catch {
+      setNoteMsg("Network error. Please try again.");
+    } finally {
+      setNoteBusy(false);
     }
   }
 
@@ -330,11 +381,66 @@ export function LeadCallScreen({
         <Card>
           <CardHeader>
             <CardTitle>Notes</CardTitle>
+            {enableNotesCompose ? <CardDescription>Quick note — latest first. Saved with your name and time.</CardDescription> : null}
           </CardHeader>
-          <CardContent>
-            <Textarea defaultValue={lead.notes} readOnly className="min-h-32 bg-[var(--background)]" />
+          <CardContent className="grid gap-3">
+            {enableNotesCompose ? (
+              <>
+                <Textarea value={noteDraft} onChange={(e) => setNoteDraft(e.target.value)} placeholder="Add a quick note…" className="min-h-20" />
+                <div className="flex flex-wrap gap-1.5">
+                  {noteTemplates.map((t) => (
+                    <button key={t} type="button" onClick={() => setNoteDraft((d) => (d ? `${d} ${t}` : t))} className="inline-flex h-8 items-center rounded-full border border-[var(--border)] px-3 text-xs font-medium text-[var(--muted)] hover:bg-[var(--background)]">
+                      {t}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => saveNote(noteDraft)} disabled={noteBusy || !noteDraft.trim()} className="inline-flex h-9 items-center rounded-lg bg-[var(--brand)] px-3 text-xs font-semibold text-white transition-colors hover:bg-[var(--brand-hover)] disabled:opacity-60">
+                    {noteBusy ? "Saving…" : "Save note"}
+                  </button>
+                  {noteMsg ? <span className="text-xs text-[var(--muted)]">{noteMsg}</span> : null}
+                </div>
+                <div className="grid gap-1.5 border-t border-[var(--border)] pt-3">
+                  {parseNotes(notesText).length === 0 ? (
+                    <p className="text-xs text-[var(--muted)]">No notes yet.</p>
+                  ) : (
+                    parseNotes(notesText).map((n, i) => (
+                      <p key={i} className="rounded-lg bg-[var(--background)] px-3 py-2 text-xs text-[var(--foreground)]">{n}</p>
+                    ))
+                  )}
+                </div>
+              </>
+            ) : (
+              <Textarea defaultValue={lead.notes} readOnly className="min-h-32 bg-[var(--background)]" />
+            )}
           </CardContent>
         </Card>
+
+        {timeline && timeline.length > 0 ? (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle>Activity timeline</CardTitle>
+                <button type="button" onClick={() => setTimelineOpen((v) => !v)} className="text-xs font-semibold text-[var(--brand)] md:hidden">
+                  {timelineOpen ? "Hide" : "Show"}
+                </button>
+              </div>
+            </CardHeader>
+            <CardContent className={timelineOpen ? "block" : "hidden md:block"}>
+              <ul className="grid gap-3">
+                {timeline.map((e, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <span aria-hidden className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-[var(--brand-soft)] text-[12px]">{TIMELINE_ICON[e.icon]}</span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{e.label}</p>
+                      {e.detail ? <p className="truncate text-xs text-[var(--muted)]">{e.detail}</p> : null}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        ) : null}
       </div>
     </div>
     </>
