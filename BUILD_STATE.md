@@ -96,6 +96,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 21 (cont. 70) — 2026-06-14 — SALES UI slice 10: notifications [§20]
+- **PM ruling (recorded):** slice 10 = §20 notifications derived client-side from the user's scoped leads (hooks-only). Pragmatic types: Follow-up Overdue, Follow-up Due (today), Lead Assigned (new leads). Pure `derive-notifications.ts(leads, now)` + tests; top-bar bell with count badge + in-app list drawer; each item opens /sales/leads/:id. §21 calendar / §18 customer / §25-27 polish deferred. (WIP — evidence next entry.)
+
+
 ### Fire 20 (cont. 69) — 2026-06-14 — SALES UI slice 9: sales profile [§22]
 - **PM ruling (recorded):** slice 9 = /sales/profile. Sections: Account (read-only name/email/role/timezone), Appearance (functional dark-mode toggle — class strategy confirmed), Calendar (Not connected, disabled "coming soon"), Notification Preferences (REUSE NotificationPreferencesForm), Security (link to /account/security). Pure `profile-data.ts` (formatRole, getTimezoneLabel by country) + tests. No admin surfaces.
 - **Built:** pure `profile-data.ts` (`formatRole` + `getTimezoneLabel` by country) + 3 tests; `ThemeToggle` (class-strategy dark toggle + localStorage); `/sales/profile` page with 5 sections, reusing `NotificationPreferencesForm` + linking to `/account/security`.

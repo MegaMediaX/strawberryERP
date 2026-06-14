@@ -2,7 +2,10 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 
 import { SalesBottomNav, SalesTopNav } from "@/components/sales/SalesNav";
+import { SalesNotificationsBell } from "@/components/sales/SalesNotificationsBell";
+import { deriveNotifications } from "@/lib/sales/derive-notifications";
 import { getPortalUiSession } from "@/lib/security/ui-session";
+import { getUiLeads } from "@/lib/ui-data";
 
 /**
  * Sales persona shell (spec §24/§28/§29). Guard: only a Sales Team User lives
@@ -17,6 +20,9 @@ export default async function SalesLayout({ children }: { children: ReactNode })
   if (session.effectiveUser.role !== "Sales Team User") {
     redirect("/");
   }
+
+  const leads = await getUiLeads(session);
+  const notifications = deriveNotifications(leads.data, new Date());
 
   const initials = session.effectiveUser.name
     .split(" ")
@@ -35,6 +41,7 @@ export default async function SalesLayout({ children }: { children: ReactNode })
           </div>
           <div className="flex items-center gap-3">
             <SalesTopNav />
+            <SalesNotificationsBell notifications={notifications} />
             <span className="grid size-9 place-items-center rounded-full bg-[var(--brand-soft)] text-[13px] font-bold text-[var(--brand-hover)]">
               {initials || "U"}
             </span>
