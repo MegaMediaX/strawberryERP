@@ -96,6 +96,13 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire 2 (cont. 51) — 2026-06-14 — PHASE 1/B1 slice 4: lead transfer/reassignment
+- **PM ruling (recorded):** next slice = B1 slice 4, role-scoped reassignment modal on the call screen; PATCH assignedUser; must NOT move the lead across reseller/country (only assigned user changes); Sales cannot reassign.
+- **Built:** pure `src/lib/business/lead-reassignment.ts` — `eligibleAssignees` + `validateReassignment` (Sales→none; candidate must be active + cover lead country + match lead reseller when reseller-scoped (no cross-reseller); acting user's own scope narrows pool: Super=all, Regional=country-intersect, ResellerAdmin=same-reseller). 8 unit tests. "Reassign" button + modal on `LeadCallScreen`; PATCHes `{id, assignedUser}` via `/api/frappe/leads`; updates assigned-user display.
+- **Verified:** 325 tests pass (was 317), typecheck + lint clean, build green. Browser (dev-store): PATCH reassign → **200**; modal picker for LEAD-2408 (Lebanon/Beirut Digital Partners) lists only in-scope users (Super, Regional, BDP Admin, Rami) — cross-reseller + Cyprus users correctly excluded. HEAD `4d52d2d`. **DONE.**
+- **B1 COMPLETE** (slices 1–4). Next: B2 — mobile shell (bottom-nav + FAB). After B2 verified+pushed → post "Phase 1 UX complete" and stop the loop.
+
+
 ### Fire 1 (cont. 50) — 2026-06-14 — PHASE 1/B1 slice 3: lead→customer conversion
 - **PM ruling (recorded):** next slice = B1 slice 3, lead→customer conversion via a "Convert to Customer" action on the call screen. Acceptance: pure mapper + tests; modal on call screen; POST creates customer (201) with country/scoping enforced; invalid (bad country / missing name) → 400; all gates green + browser-verified.
 - Approach: reuse existing POST `/api/frappe/customers` (validates country, returns CUST-…); added pure `src/lib/business/lead-conversion.ts` (`buildCustomerFromLead` + `validateConversion`, records `convertedFromLead`) with 5 unit tests; "Convert to Customer" button + modal on `LeadCallScreen` (prefills from lead, country/reseller carry over).
