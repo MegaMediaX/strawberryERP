@@ -64,6 +64,10 @@ export default async function PlatformRoute({ params }: PageProps) {
   if (session?.effectiveUser.role === "Sales Team User") {
     redirect("/sales/dashboard");
   }
+  // Reseller Admins are confined to the /reseller persona.
+  if (session?.effectiveUser.role === "Reseller Admin") {
+    redirect("/reseller/dashboard");
+  }
   const decision = authorizeUiRoute(path, session);
   if (!decision.allowed) {
     return <ProtectedRoute decision={decision} />;

@@ -12,6 +12,10 @@ export default async function Home() {
   if (session?.effectiveUser.role === "Sales Team User") {
     redirect("/sales/dashboard");
   }
+  // Reseller Admins live entirely in the /reseller persona.
+  if (session?.effectiveUser.role === "Reseller Admin") {
+    redirect("/reseller/dashboard");
+  }
   const decision = authorizeUiRoute("/", session);
   if (!decision.allowed) {
     return <ProtectedRoute decision={decision} />;

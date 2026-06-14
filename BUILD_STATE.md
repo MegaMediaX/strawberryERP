@@ -96,6 +96,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire R1 (cont. 73) — 2026-06-14 — RESELLER ADMIN UI slice 1: persona shell [§2,3,31]
+- **PM ruling (recorded):** slice 1 = /reseller shell — desktop SIDEBAR (10 items) + mobile bottom nav (Home/Leads/Customers/Invoices/More) with More sheet (Team/Calendar/Reports/Commissions/Settings/Profile), role guard (Reseller Admin + Super Admin oversight) + confinement (Reseller Admin redirected from admin shell + /sales → /reseller/dashboard; mirror sales confinement in app/page.tsx + [...slug] + role-aware login), placeholder dashboard + 11 stub pages (no 404s). Pure `reseller/nav.ts` + tests. Slice 2 = reseller leads list. (WIP — evidence next entry.)
+
+
 ### Fire 23 (cont. 72) — 2026-06-14 — SALES UI slice 12: customer list [§18] — FINAL slice
 - **PM ruling (recorded):** slice 12 = minimal §18 sales customer LIST at /sales/customers (data-limited: customers are {id,name,country,reseller} only → list, not detail). Pure `customer-list.ts` (filter + sort) + tests; scoped list (mobile cards/desktop table) + search; nav link. Customer DETAIL (§18 full), §19 invoice, §25-27 consolidation deferred to Phase 3 (data/permission-gated). **After this ships → Sales UI spec functionally COMPLETE → stop loop.**
 - **Built:** pure `customer-list.ts` (filter + sort) + 4 tests; `SalesCustomersView` (mobile cards / desktop table + search + empty state); `/sales/customers` page (permission-filtered getUiRows); added "Customers" as 6th nav item (dynamic bottom-nav grid).

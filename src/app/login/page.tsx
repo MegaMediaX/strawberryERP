@@ -25,8 +25,10 @@ export default function LoginPage() {
         setError(body.error?.message ?? "Login failed.");
         return;
       }
-      // Sales Team Users go straight to their persona; everyone else to the admin shell.
-      window.location.href = body.data?.role === "Sales Team User" ? "/sales/dashboard" : "/";
+      // Route each persona to its own home; everyone else to the admin shell.
+      const role = body.data?.role;
+      window.location.href =
+        role === "Sales Team User" ? "/sales/dashboard" : role === "Reseller Admin" ? "/reseller/dashboard" : "/";
     } catch {
       setError("Network error. Please try again.");
     } finally {
