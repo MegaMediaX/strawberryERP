@@ -97,7 +97,10 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ## Resume journal (newest first)
 
 ### Fire 16 (cont. 65) — 2026-06-14 — SALES UI slice 5: follow-up queue tabs + urgency [§13]
-- **PM ruling (recorded):** slice 5 = /sales/follow-ups daily queue. Pure `bucket-followups.ts` (`bucketFollowUp(followUp, now)` → Today/Overdue/Tomorrow/This Week/Unscheduled; "today…"→Today, "tomorrow…"→Tomorrow, "Mon D" date diff<0→Overdue, 0→Today, 1→Tomorrow, ≤7→This Week, else/empty/unparseable→Unscheduled; now injected, no Date.now() in lib) + tests. Tabbed cards-only UI, urgency order via priorityRank (VIP float), overdue red treatment, native Call/WhatsApp/Open. Reuse priorityRank. Verify scoping + both widths. (WIP — evidence next entry.)
+- **PM ruling (recorded):** slice 5 = /sales/follow-ups daily queue. Pure `bucket-followups.ts` (`bucketFollowUp(followUp, now)` → Today/Overdue/Tomorrow/This Week/Unscheduled; "today…"→Today, "tomorrow…"→Tomorrow, "Mon D" date diff<0→Overdue, 0→Today, 1→Tomorrow, ≤7→This Week, else/empty/unparseable→Unscheduled; now injected, no Date.now() in lib) + tests. Tabbed cards-only UI, urgency order via priorityRank (VIP float), overdue red treatment, native Call/WhatsApp/Open. Reuse priorityRank. Verify scoping + both widths.
+- **Built:** pure `bucket-followups.ts` (`bucketFollowUp` + `inTab` + 5 tabs) + 9 tests; `SalesFollowUpsView` (scrollable tab bar + counts, cards-only, urgency order via priorityRank, overdue red border+badge, last-note snippet, native Call/WhatsApp/Open, per-tab empty states); `/sales/follow-ups` page (scoped getUiLeads).
+- **Verified:** 413 tests pass (was 407, +6), typecheck + lint clean, build green. Browser (dev-store): sales-scoped (only Rami's lead); tab counts Today 1 / Overdue 0 / Tomorrow 0 / This Week 1 / All 1 (LEAD-2408 "Today, 16:30"); Overdue tab → "Nothing overdue" empty state; native tel + Open → /sales/leads/LEAD-2408; **380px** → 5 tabs + full-width cards (348px), no overflow. HEAD `f00463c`. **DONE.**
+- Next: slice 6 — sales dashboard priority widgets [§3] (replace placeholder hero note with the 8 priority widgets) and/or remaining sales routes (customer view §18, calendar §21, profile §22, search §23). PM to sequence.
 
 
 ### Fire 15 (cont. 64) — 2026-06-14 — SALES UI slice 4: notes compose + activity timeline [§11,§12]
