@@ -20,12 +20,13 @@ export default function LoginPage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const body = (await res.json()) as { ok: boolean; error?: { message: string } };
+      const body = (await res.json()) as { ok: boolean; data?: { role?: string }; error?: { message: string } };
       if (!res.ok || !body.ok) {
         setError(body.error?.message ?? "Login failed.");
         return;
       }
-      window.location.href = "/";
+      // Sales Team Users go straight to their persona; everyone else to the admin shell.
+      window.location.href = body.data?.role === "Sales Team User" ? "/sales/dashboard" : "/";
     } catch {
       setError("Network error. Please try again.");
     } finally {

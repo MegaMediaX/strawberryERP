@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -60,6 +60,10 @@ export default async function PlatformRoute({ params }: PageProps) {
   const { slug } = await params;
   const path = `/${slug.join("/")}`;
   const session = await getPortalUiSession();
+  // Sales Team Users are confined to the /sales persona — bounce any admin path.
+  if (session?.effectiveUser.role === "Sales Team User") {
+    redirect("/sales/dashboard");
+  }
   const decision = authorizeUiRoute(path, session);
   if (!decision.allowed) {
     return <ProtectedRoute decision={decision} />;

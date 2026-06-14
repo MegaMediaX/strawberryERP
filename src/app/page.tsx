@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 import { PartnerPlatformApp } from "@/components/dashboard/PartnerPlatformApp";
 import { ProtectedRoute } from "@/components/security/ProtectedRoute";
 import { authorizeUiRoute } from "@/lib/security/route-access";
@@ -6,6 +8,10 @@ import { getUiLeads } from "@/lib/ui-data";
 
 export default async function Home() {
   const session = await getPortalUiSession();
+  // Sales Team Users live entirely in the /sales persona — keep them out of the admin shell.
+  if (session?.effectiveUser.role === "Sales Team User") {
+    redirect("/sales/dashboard");
+  }
   const decision = authorizeUiRoute("/", session);
   if (!decision.allowed) {
     return <ProtectedRoute decision={decision} />;
