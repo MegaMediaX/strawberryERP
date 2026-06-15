@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 
 import { CountrySelector } from "@/components/regional/CountrySelector";
 import { RegionalBottomNav, RegionalSidebar } from "@/components/regional/RegionalNav";
+import { RegionalNotificationsBell } from "@/components/regional/RegionalNotificationsBell";
+import { regionalNotificationData } from "@/lib/regional/notification-data";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 
 /**
@@ -23,6 +25,7 @@ export default async function RegionalLayout({ children }: { children: ReactNode
 
   const assigned = [...session.effectiveUser.countries] as string[];
   const initials = session.effectiveUser.name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
+  const notifications = await regionalNotificationData(session);
   const selector = (
     <Suspense fallback={<span className="h-9" />}>
       <CountrySelector assigned={assigned} />
@@ -35,10 +38,11 @@ export default async function RegionalLayout({ children }: { children: ReactNode
       <aside className="sticky top-0 hidden h-screen flex-col border-r border-[var(--border)] bg-[var(--surface)] p-4 md:flex">
         <div className="mb-4 flex items-center gap-2.5">
           <span className="grid size-8 place-items-center rounded-lg bg-[var(--brand)] text-sm font-bold text-white">L</span>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="truncate text-[15px] font-bold tracking-tight">Regional</p>
             <p className="truncate text-[11px] text-[var(--muted)]">{assigned.join(" · ") || "Command center"}</p>
           </div>
+          <RegionalNotificationsBell notifications={notifications} />
         </div>
         <div className="mb-3">{selector}</div>
         <RegionalSidebar />
@@ -58,7 +62,10 @@ export default async function RegionalLayout({ children }: { children: ReactNode
             <span className="grid size-8 place-items-center rounded-lg bg-[var(--brand)] text-sm font-bold text-white">L</span>
             <span className="text-[15px] font-bold tracking-tight">Regional</span>
           </div>
-          {selector}
+          <div className="flex items-center gap-1">
+            <RegionalNotificationsBell notifications={notifications} />
+            {selector}
+          </div>
         </header>
 
         <main className="mx-auto w-full max-w-[1200px] px-4 py-5 pb-24 md:px-6 md:pb-8">{children}</main>
