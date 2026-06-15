@@ -208,13 +208,16 @@ export function InvoiceBuilder({
 export function ReceiptBuilder({
   invoices,
   paymentMethods,
+  defaultAmount,
 }: {
   invoices: Invoice[];
   paymentMethods: PaymentMethodName[];
+  /** Initial amount (e.g. an invoice's remaining balance). Defaults to the invoice total. */
+  defaultAmount?: number;
 }) {
   const [invoiceId, setInvoiceId] = useState(invoices[0]?.id ?? "");
   const invoice = invoices.find((item) => item.id === invoiceId) ?? invoices[0];
-  const [amount, setAmount] = useState(invoice?.total ?? 0);
+  const [amount, setAmount] = useState(defaultAmount ?? invoice?.total ?? 0);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodName>(paymentMethods[0] ?? "Cash");
   const [paymentReference, setPaymentReference] = useState("");
   const [attachmentUrl, setAttachmentUrl] = useState("");
