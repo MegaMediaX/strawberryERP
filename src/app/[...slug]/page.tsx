@@ -891,13 +891,13 @@ export default async function PlatformRoute({ params }: PageProps) {
     } : {};
     const result = await getUiObject<Record<string, unknown>>("reports/pnl", devSummary, session);
     return (
-      <PlatformShell activeHref="/accounting/pnl" badge={`Source: ${result.source}`} description="P&L visibility is global for Super Admin and country-scoped for Regional Directors." title="P&L summary">
+      <PlatformShell activeHref="/accounting/pnl" badge={`Source: ${result.source}`} description="P&L visibility is global for Super Admin. Regional Directors see country-scoped reports in their own /regional persona." title="P&L summary">
         <Card>
           <CardContent className="pt-5">
             <DataTable
               columns={["Scope", "Revenue", "Receipts", "Commissions", "Expenses", "Profit"]}
               rows={[[
-                session.effectiveUser.role === "Regional Director" ? session.effectiveUser.countries.join(", ") : "Global",
+                "Global",
                 money(numberField(result.data, "revenue")),
                 money(numberField(result.data, "receipts")),
                 money(numberField(result.data, "commissions")),
