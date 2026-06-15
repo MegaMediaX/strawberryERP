@@ -34,12 +34,15 @@ type Props = {
   teamUsers: PortalUser[];
   actingUser: PortalUser;
   resellerName: string;
+  initialAssignedUser?: string;
 };
 
-export function ResellerLeadsView({ leads: initialLeads, teamUsers, actingUser, resellerName }: Props) {
+export function ResellerLeadsView({ leads: initialLeads, teamUsers, actingUser, resellerName, initialAssignedUser }: Props) {
   const [leads, setLeads] = useState(initialLeads);
   const [view, setView] = useState<SavedViewKey>("active");
-  const [filters, setFilters] = useState<LeadFilters & { assignedUser?: string }>({});
+  const [filters, setFilters] = useState<LeadFilters & { assignedUser?: string }>(
+    initialAssignedUser ? { assignedUser: initialAssignedUser } : {},
+  );
   const [reassignTarget, setReassignTarget] = useState<PortalLead | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
