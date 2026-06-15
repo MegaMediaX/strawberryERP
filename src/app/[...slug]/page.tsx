@@ -68,6 +68,10 @@ export default async function PlatformRoute({ params }: PageProps) {
   if (session?.effectiveUser.role === "Reseller Admin") {
     redirect("/reseller/dashboard");
   }
+  // Regional Directors are confined to the /regional persona.
+  if (session?.effectiveUser.role === "Regional Director") {
+    redirect("/regional/dashboard");
+  }
   const decision = authorizeUiRoute(path, session);
   if (!decision.allowed) {
     return <ProtectedRoute decision={decision} />;

@@ -20,7 +20,7 @@ import {
   type PaymentMethod,
   type Receipt,
 } from "@/lib/phase2-data";
-import type { DeleteQueueRecord } from "@/lib/portal-security";
+import { portalUsers, type DeleteQueueRecord, type PortalUser } from "@/lib/portal-security";
 import { defaultReminderRules, type FollowUpReminderRule } from "@/lib/business/followup-reminder-rules";
 import type { InvoiceNumberingConfig } from "@/lib/business/billing-settings";
 import type { UserNotificationPreference } from "@/lib/business/notification-preferences";
@@ -49,6 +49,7 @@ type DevStore = {
   importantDetails: ImportantDetailEntry[];
   importantDetailLocks: Record<string, boolean>;
   contracts: Contract[];
+  users: PortalUser[];
 };
 
 const globalStore = globalThis as typeof globalThis & {
@@ -86,6 +87,7 @@ export function getDevStore() {
       importantDetails: seedImportantDetails(),
       importantDetailLocks: seedImportantDetailLocks(),
       contracts: [...contracts],
+      users: portalUsers.map((u) => ({ ...u, countries: [...u.countries] })),
     };
   }
 
@@ -95,7 +97,24 @@ export function getDevStore() {
   store.importantDetails ??= seedImportantDetails();
   store.importantDetailLocks ??= seedImportantDetailLocks();
   store.contracts ??= [...contracts];
+  store.users ??= portalUsers.map((u) => ({ ...u, countries: [...u.countries] }));
   return store;
+}
+
+/** All portal users (seed + any created this session). */
+export function getUsers(): PortalUser[] {
+  return getDevStore().users;
+}
+
+/** Sales team for a reseller (active Sales Team Users), reflecting created users. */
+export function getResellerTeam(reseller: string): PortalUser[] {
+  return getDevStore().users.filter((u) => u.active && u.reseller === reseller && u.role === "Sales Team User");
+}
+
+/** Append a created team member (spec §22). */
+export function appendUser(user: PortalUser): PortalUser {
+  getDevStore().users.push(user);
+  return user;
 }
 
 /** Contracts authored for a customer (same reseller). */

@@ -16,6 +16,10 @@ export default async function Home() {
   if (session?.effectiveUser.role === "Reseller Admin") {
     redirect("/reseller/dashboard");
   }
+  // Regional Directors live entirely in the /regional persona.
+  if (session?.effectiveUser.role === "Regional Director") {
+    redirect("/regional/dashboard");
+  }
   const decision = authorizeUiRoute("/", session);
   if (!decision.allowed) {
     return <ProtectedRoute decision={decision} />;

@@ -229,6 +229,12 @@ function canWrite(session: PortalSession, resource: string, payload?: Record<str
     return session.effectiveUser.role === "Reseller Admin";
   }
 
+  // Team-member creation (§22): only roles that can create someone below them.
+  // The route enforces the exact role-below rule + reseller scope.
+  if (resource === "users") {
+    return session.effectiveUser.role === "Reseller Admin" || session.effectiveUser.role === "Regional Director";
+  }
+
   if (
     resource.startsWith("settings") ||
     resource.includes("api/keys") ||

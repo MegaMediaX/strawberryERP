@@ -1,5 +1,5 @@
 import { ResellerNewLead } from "@/components/reseller/ResellerNewLead";
-import { portalUsers } from "@/lib/portal-security";
+import { getUsers } from "@/lib/dev-store";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 
 export default async function ResellerNewLeadPage() {
@@ -10,7 +10,7 @@ export default async function ResellerNewLeadPage() {
   // §9: country dropdown limited to the reseller's assigned countries; assignee
   // dropdown limited to the reseller's own active team.
   const countries = actingUser.countries as readonly string[];
-  const assignees = portalUsers
+  const assignees = getUsers()
     .filter((u) => u.active && u.reseller === actingUser.reseller)
     .map((u) => ({ name: u.name }));
 

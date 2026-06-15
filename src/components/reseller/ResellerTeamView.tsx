@@ -20,7 +20,7 @@ function Stat({ label, value, tone }: { label: string; value: number; tone?: "ro
   );
 }
 
-export function ResellerTeamView({ members, resellerName }: { members: TeamMemberStat[]; resellerName: string }) {
+export function ResellerTeamView({ members, resellerName, canCreate = false }: { members: TeamMemberStat[]; resellerName: string; canCreate?: boolean }) {
   return (
     <div className="grid gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -28,14 +28,18 @@ export function ResellerTeamView({ members, resellerName }: { members: TeamMembe
           <h1 className="text-xl font-bold tracking-tight">Team</h1>
           <p className="text-sm text-[var(--muted)]">{members.length} member{members.length === 1 ? "" : "s"} · {resellerName}</p>
         </div>
-        <span title="Adding sales users isn't available yet — managed by your Super Admin." className={disabledBtn + " h-10"}>Add team member</span>
+        {canCreate ? (
+          <Link href="/reseller/team/new" className="inline-flex h-10 items-center justify-center rounded-xl bg-[var(--brand)] px-4 text-sm font-semibold text-white shadow-[var(--shadow-sm)] hover:bg-[var(--brand-hover)]">Add team member</Link>
+        ) : (
+          <span title="Your role can't create team members." className={disabledBtn + " h-10"}>Add team member</span>
+        )}
       </div>
 
       {members.length === 0 ? (
         <EmptyState
           title="No team members yet"
           description="No sales users in your reseller yet. Create your first sales user to start assigning leads."
-          actions={[{ label: "Add team member", disabled: true, title: "Adding sales users isn't available yet — managed by your Super Admin." }]}
+          actions={canCreate ? [{ label: "Add team member", href: "/reseller/team/new", primary: true }] : undefined}
         />
       ) : (
         <>

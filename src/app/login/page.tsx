@@ -28,7 +28,10 @@ export default function LoginPage() {
       // Route each persona to its own home; everyone else to the admin shell.
       const role = body.data?.role;
       window.location.href =
-        role === "Sales Team User" ? "/sales/dashboard" : role === "Reseller Admin" ? "/reseller/dashboard" : "/";
+        role === "Sales Team User" ? "/sales/dashboard"
+          : role === "Reseller Admin" ? "/reseller/dashboard"
+          : role === "Regional Director" ? "/regional/dashboard"
+          : "/";
     } catch {
       setError("Network error. Please try again.");
     } finally {
