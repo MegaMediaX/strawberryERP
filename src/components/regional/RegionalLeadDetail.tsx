@@ -3,6 +3,7 @@ import { ArrowLeft, Clock, FileText, Receipt } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EscalationButton } from "@/components/regional/EscalationModal";
 import type { RelatedInvoice, RelatedReceipt } from "@/lib/business/related-records";
 import type { TimelineEntry } from "@/lib/sales/timeline-builder";
 import type { PortalLead } from "@/lib/ui-data";
@@ -44,11 +45,14 @@ export function RegionalLeadDetail({
         </div>
       </div>
 
-      {/* Contact + WhatsApp/Email (hooks-only) */}
+      {/* Contact + WhatsApp/Email (hooks-only) + Escalate (§16) */}
       <div className="flex flex-wrap gap-2">
         <a href={tel(lead.phone)} className={action}>Call</a>
         <a href={wa(lead.phone)} target="_blank" rel="noopener noreferrer" className={action}>WhatsApp</a>
         <a href={`mailto:${lead.email}`} className={action}>Email</a>
+        <EscalationButton
+          context={{ entityType: "Lead", entityId: lead.id, entityLabel: lead.company, country: lead.country, reseller: lead.reseller }}
+        />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">

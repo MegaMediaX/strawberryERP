@@ -12,7 +12,7 @@ import type { PortalLead } from "@/lib/ui-data";
 export type NotificationCategory = "leads" | "invoices" | "team" | "system";
 export type NotificationType =
   | "followup_overdue" | "lead_assigned" | "invoice_created" | "receipt_created"
-  | "contract_uploaded" | "customer_paid" | "commission_generated";
+  | "contract_uploaded" | "customer_paid" | "commission_generated" | "escalation_received";
 
 export interface ResellerNotification {
   id: string;
@@ -30,6 +30,8 @@ export interface NotificationData {
   contracts: readonly { id: string; customer: string; uploadedBy: string; fileUrl: string }[];
   commissions: readonly { id: string; invoice: string; status: string; commissionAmount: number }[];
   customerIdByName: Record<string, string>;
+  /** Escalations the Regional Director flagged to this reseller (spec §16/§25). */
+  escalations?: readonly { id: string; entityType: string; entityId: string; entityLabel: string; reasonLabel: string; note: string; raisedBy: string }[];
 }
 
 const ORDER: Record<NotificationCategory, number> = { leads: 0, invoices: 1, team: 2, system: 3 };
@@ -65,6 +67,12 @@ export function resellerNotifications(data: NotificationData, now: Date): Resell
 
   for (const cm of data.commissions) {
     out.push({ id: `comm-${cm.id}`, type: "commission_generated", category: "system", title: `Commission $${cm.commissionAmount.toLocaleString()}`, detail: `${cm.status} · from ${cm.invoice}`, href: "/reseller/commissions" });
+  }
+
+  for (const e of data.escalations ?? []) {
+    const href = e.entityType === "Lead" ? `/reseller/leads/${e.entityId}` : "/reseller/leads";
+    const note = e.note ? ` · ${e.note}` : "";
+    out.push({ id: `esc-${e.id}`, type: "escalation_received", category: "leads", title: e.entityLabel, detail: `Escalated by ${e.raisedBy}: ${e.reasonLabel}${note}`, href });
   }
 
   return out.sort((a, b) => ORDER[a.category] - ORDER[b.category]);

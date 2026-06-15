@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Bell, CheckCheck, FileText, Receipt, TrendingUp, UserPlus, AlertCircle } from "lucide-react";
+import { Bell, CheckCheck, FileText, Receipt, TrendingUp, UserPlus, AlertCircle, AlertTriangle } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import type { NotificationType, ResellerNotification } from "@/lib/reseller/reseller-notifications";
@@ -19,6 +19,7 @@ function persist(ids: Set<string>) {
 const ICON: Record<NotificationType, typeof Bell> = {
   followup_overdue: AlertCircle, lead_assigned: UserPlus, invoice_created: FileText,
   receipt_created: Receipt, contract_uploaded: FileText, customer_paid: CheckCheck, commission_generated: TrendingUp,
+  escalation_received: AlertTriangle,
 };
 
 const FILTERS = [

@@ -3,6 +3,7 @@ import "server-only";
 import { getDevStore } from "@/lib/dev-store";
 import { customers as seedCustomers } from "@/lib/phase2-data";
 import type { PortalSession } from "@/lib/portal-security";
+import { escalationReasonLabel } from "@/lib/regional/escalation";
 import type { NotificationData } from "@/lib/reseller/reseller-notifications";
 import { getUiLeads, getUiRows } from "@/lib/ui-data";
 
@@ -28,5 +29,9 @@ export async function resellerNotificationData(session: PortalSession): Promise<
     contracts: store.contracts.filter((c) => c.reseller === reseller).map((c) => ({ id: c.id, customer: c.customer, uploadedBy: c.uploadedBy, fileUrl: c.fileUrl })),
     commissions: commissionsResult.data.map((c) => ({ id: String(c.id), invoice: String(c.invoice ?? ""), status: String(c.status ?? ""), commissionAmount: Number(c.commissionAmount ?? 0) })),
     customerIdByName,
+    // §16/§25: escalations a Regional Director flagged against THIS reseller, notified in-app.
+    escalations: store.escalations
+      .filter((e) => e.reseller === reseller && e.notify.includes("Reseller Admin"))
+      .map((e) => ({ id: e.id, entityType: e.entityType, entityId: e.entityId, entityLabel: e.entityLabel, reasonLabel: escalationReasonLabel(e.reason), note: e.note, raisedBy: e.raisedBy })),
   };
 }

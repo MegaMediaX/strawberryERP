@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Input, Select } from "@/components/ui/field";
+import { EscalationButton } from "@/components/regional/EscalationModal";
 import { applyRegionalLeadView, regionalLeadViews, type RegionalLeadView } from "@/lib/regional/regional-lead-views";
 import { distinctValues, filterLeads, sortLeads, type LeadFilters } from "@/lib/sales/lead-filters";
 import { leadStatuses } from "@/lib/sample-data";
@@ -21,7 +22,6 @@ function priorityTone(p: string): "rose" | "amber" | "blue" | "neutral" {
 }
 const waBtn = "inline-flex h-9 items-center justify-center rounded-lg bg-emerald-600 px-3 text-xs font-semibold text-white";
 const openBtn = "inline-flex h-9 items-center justify-center rounded-lg border border-[var(--border)] px-3 text-xs font-semibold text-[var(--foreground)]";
-const escBtn = "inline-flex h-9 cursor-not-allowed items-center justify-center rounded-lg border border-[var(--border)] px-3 text-xs font-semibold text-[var(--muted)] opacity-60";
 
 type Filters = LeadFilters & { reseller?: string };
 
@@ -50,9 +50,12 @@ export function RegionalLeadsView({
 
   return (
     <div className="grid gap-5">
-      <div>
-        <h1 className="text-xl font-bold tracking-tight">Leads</h1>
-        <p className="text-sm text-[var(--muted)]">{visible.length} of {leads.length} · {scopeLabel} · monitor view</p>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight">Leads</h1>
+          <p className="text-sm text-[var(--muted)]">{visible.length} of {leads.length} · {scopeLabel} · monitor view</p>
+        </div>
+        <Link href="/regional/escalations" className="inline-flex h-9 items-center rounded-lg border border-[var(--border)] px-3 text-xs font-semibold text-[var(--muted)] hover:bg-[var(--background)]">View escalations</Link>
       </div>
 
       <div className="flex flex-wrap gap-2" role="tablist" aria-label="Saved views">
@@ -126,7 +129,10 @@ export function RegionalLeadsView({
                         <div className="flex gap-2">
                           <Link href={`/regional/leads/${l.id}`} className={openBtn}>Open</Link>
                           <a href={wa(l.phone)} target="_blank" rel="noopener noreferrer" className={waBtn}>WhatsApp</a>
-                          <span title="Escalation flow ships in the next slice." className={escBtn}>Escalate</span>
+                          <EscalationButton
+                            compact
+                            context={{ entityType: "Lead", entityId: l.id, entityLabel: l.company, country: l.country, reseller: l.reseller }}
+                          />
                         </div>
                       </td>
                     </tr>
@@ -135,7 +141,7 @@ export function RegionalLeadsView({
               </table>
             </CardContent>
           </Card>
-          <p className="text-xs text-[var(--muted)]">Read-only monitor view — every lead shows its reseller + country. Escalate, export, and reassign are managed by the reseller/Super Admin (escalation ships next slice).</p>
+          <p className="text-xs text-[var(--muted)]">Read-only monitor view — every lead shows its reseller + country. Escalate flags risk to the reseller/Super Admin without taking ownership; reassign and transfer stay with the reseller.</p>
         </>
       )}
     </div>

@@ -30,6 +30,7 @@ import {
   seedImportantDetails,
   type ImportantDetailEntry,
 } from "@/lib/business/important-details-mgmt";
+import type { EscalationRecord } from "@/lib/regional/escalation";
 
 type DevStore = {
   invoices: Invoice[];
@@ -50,6 +51,7 @@ type DevStore = {
   importantDetailLocks: Record<string, boolean>;
   contracts: Contract[];
   users: PortalUser[];
+  escalations: EscalationRecord[];
 };
 
 const globalStore = globalThis as typeof globalThis & {
@@ -88,6 +90,7 @@ export function getDevStore() {
       importantDetailLocks: seedImportantDetailLocks(),
       contracts: [...contracts],
       users: portalUsers.map((u) => ({ ...u, countries: [...u.countries] })),
+      escalations: [],
     };
   }
 
@@ -98,7 +101,24 @@ export function getDevStore() {
   store.importantDetailLocks ??= seedImportantDetailLocks();
   store.contracts ??= [...contracts];
   store.users ??= portalUsers.map((u) => ({ ...u, countries: [...u.countries] }));
+  store.escalations ??= [];
   return store;
+}
+
+/** Regional escalations (spec §16). Newest-first; never deleted (no-DELETE). */
+export function getEscalations(): EscalationRecord[] {
+  return getDevStore().escalations;
+}
+
+/** Escalations raised against one entity (e.g. a lead), for its §15 timeline. */
+export function getEscalationsForEntity(entityType: string, entityId: string): EscalationRecord[] {
+  return getDevStore().escalations.filter((e) => e.entityType === entityType && e.entityId === entityId);
+}
+
+/** Append an escalation record (dev-store; audit + notification handled by caller). */
+export function appendEscalation(record: EscalationRecord): EscalationRecord {
+  getDevStore().escalations.unshift(record);
+  return record;
 }
 
 /** All portal users (seed + any created this session). */
