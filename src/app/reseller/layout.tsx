@@ -2,6 +2,9 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 
 import { ResellerBottomNav, ResellerSidebar } from "@/components/reseller/ResellerNav";
+import { ResellerNotificationsBell } from "@/components/reseller/ResellerNotificationsBell";
+import { resellerNotificationData } from "@/lib/reseller/notification-data";
+import { resellerNotifications } from "@/lib/reseller/reseller-notifications";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 
 /**
@@ -28,6 +31,9 @@ export default async function ResellerLayout({ children }: { children: ReactNode
     .join("")
     .toUpperCase();
 
+  // §26 — derive the reseller's notification ids for the header bell's unread badge.
+  const notificationIds = resellerNotifications(await resellerNotificationData(session), new Date()).map((n) => n.id);
+
   return (
     <div className="min-h-screen bg-[var(--app-bg)] text-[var(--foreground)] md:grid md:grid-cols-[230px_minmax(0,1fr)]">
       {/* Desktop sidebar */}
@@ -38,6 +44,10 @@ export default async function ResellerLayout({ children }: { children: ReactNode
             <p className="truncate text-[15px] font-bold tracking-tight">Reseller</p>
             <p className="truncate text-[11px] text-[var(--muted)]">{session.effectiveUser.reseller ?? "Control center"}</p>
           </div>
+        </div>
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">Menu</span>
+          <ResellerNotificationsBell ids={notificationIds} />
         </div>
         <ResellerSidebar />
         <div className="mt-auto flex items-center gap-2.5 border-t border-[var(--border)] pt-4">
@@ -56,7 +66,10 @@ export default async function ResellerLayout({ children }: { children: ReactNode
             <span className="grid size-8 place-items-center rounded-lg bg-[var(--brand)] text-sm font-bold text-white">L</span>
             <span className="text-[15px] font-bold tracking-tight">{session.effectiveUser.reseller ?? "Reseller"}</span>
           </div>
-          <span className="grid size-9 place-items-center rounded-full bg-[var(--brand-soft)] text-[13px] font-bold text-[var(--brand-hover)]">{initials || "U"}</span>
+          <div className="flex items-center gap-1">
+            <ResellerNotificationsBell ids={notificationIds} />
+            <span className="grid size-9 place-items-center rounded-full bg-[var(--brand-soft)] text-[13px] font-bold text-[var(--brand-hover)]">{initials || "U"}</span>
+          </div>
         </header>
 
         <main className="mx-auto w-full max-w-[1200px] px-4 py-5 pb-24 md:px-6 md:pb-8">{children}</main>
