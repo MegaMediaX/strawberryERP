@@ -5,7 +5,8 @@ import { useMemo, useState } from "react";
 import { Download, Mail, MessageCircle, Plus } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Input, Select } from "@/components/ui/field";
 import type { InvoiceRow, PlainStatus } from "@/lib/reseller/invoice-payment-state";
 
@@ -56,7 +57,11 @@ export function ResellerInvoicesView({ invoices, resellerName }: { invoices: Inv
       </Card>
 
       {visible.length === 0 ? (
-        <Card><CardHeader><CardTitle>No invoices found</CardTitle></CardHeader><CardContent><p className="text-sm text-[var(--muted)]">{invoices.length === 0 ? "No invoices under your reseller yet. Create one to get started." : "Adjust your filters to see more."}</p></CardContent></Card>
+        <EmptyState
+          title={invoices.length === 0 ? "No invoices yet" : "No invoices found"}
+          description={invoices.length === 0 ? "All payments are up to date. Create an invoice to get started." : "Adjust your filters to see more invoices."}
+          actions={invoices.length === 0 ? [{ label: "Create invoice", href: "/reseller/invoices/new", primary: true }] : undefined}
+        />
       ) : (
         <>
           {/* Mobile cards */}

@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Plus, Upload, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Input, Select } from "@/components/ui/field";
 import { eligibleAssignees, validateReassignment } from "@/lib/business/lead-reassignment";
 import type { PortalUser } from "@/lib/portal-security";
+import { getStoredLeadFilters, setStoredLeadFilters } from "@/lib/reseller/filter-persistence";
 import { applySavedView, savedViews, type SavedViewKey } from "@/lib/reseller/saved-views";
 import { distinctValues, filterLeads, sortLeads, type LeadFilters } from "@/lib/sales/lead-filters";
 import { leadStatuses } from "@/lib/sample-data";
@@ -45,6 +47,16 @@ export function ResellerLeadsView({ leads: initialLeads, teamUsers, actingUser, 
   );
   const [reassignTarget, setReassignTarget] = useState<PortalLead | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+
+  // §30 — restore session filters on mount (URL ?assignedUser= takes precedence),
+  // and persist any change so filters survive in-session navigation.
+  useEffect(() => {
+    if (initialAssignedUser) return;
+    const stored = getStoredLeadFilters();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (Object.keys(stored).length) setFilters(stored);
+  }, [initialAssignedUser]);
+  useEffect(() => { setStoredLeadFilters(filters); }, [filters]);
 
   const priorities = useMemo(() => distinctValues(leads, "priority"), [leads]);
   const sources = useMemo(() => distinctValues(leads, "source"), [leads]);
@@ -127,7 +139,14 @@ export function ResellerLeadsView({ leads: initialLeads, teamUsers, actingUser, 
       </Card>
 
       {visible.length === 0 ? (
-        <Card><CardHeader><CardTitle>No leads found</CardTitle></CardHeader><CardContent><p className="text-sm text-[var(--muted)]">{leads.length === 0 ? "No leads under your reseller yet. Add a lead or import a CSV to get started." : "Adjust your filters or saved view to see more leads."}</p></CardContent></Card>
+        <EmptyState
+          title="No leads found"
+          description={leads.length === 0 ? "No leads under your reseller yet. Add a lead manually or import a CSV to get started." : "Adjust your filters or saved view to see more leads."}
+          actions={leads.length === 0 ? [
+            { label: "Add lead", href: "/reseller/leads/new", primary: true },
+            { label: "Import CSV", href: "/reseller/leads/import" },
+          ] : undefined}
+        />
       ) : (
         <>
           {/* Mobile cards */}

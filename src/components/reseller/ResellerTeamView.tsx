@@ -1,7 +1,8 @@
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { TeamMemberStat } from "@/lib/reseller/team-performance";
 
 const leadsFor = (name: string) => `/reseller/leads?assignedUser=${encodeURIComponent(name)}`;
@@ -31,7 +32,11 @@ export function ResellerTeamView({ members, resellerName }: { members: TeamMembe
       </div>
 
       {members.length === 0 ? (
-        <Card><CardHeader><CardTitle>No team members</CardTitle></CardHeader><CardContent><p className="text-sm text-[var(--muted)]">No sales users in your reseller yet. Your Super Admin creates team users.</p></CardContent></Card>
+        <EmptyState
+          title="No team members yet"
+          description="No sales users in your reseller yet. Create your first sales user to start assigning leads."
+          actions={[{ label: "Add team member", disabled: true, title: "Adding sales users isn't available yet — managed by your Super Admin." }]}
+        />
       ) : (
         <>
           {/* Mobile cards */}

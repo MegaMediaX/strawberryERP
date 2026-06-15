@@ -84,7 +84,10 @@ export function ResellerTeamAgenda({
                         <p className="truncate text-sm text-[var(--muted)]">{lead.contact} · {lead.followUp || "Unscheduled"}</p>
                         <p className="truncate text-xs text-[var(--muted)]">{lead.country} · assigned to {lead.assignedTo}</p>
                       </div>
-                      <Badge tone={priorityTone(lead.priority)}>{lead.priority}</Badge>
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        <Badge tone={priorityTone(lead.priority)}>{lead.priority}</Badge>
+                        {section.bucket === "Overdue" ? <Badge tone="rose" className="animate-pulse">Urgent</Badge> : null}
+                      </div>
                     </div>
                     <div className="flex gap-2">
                       <a href={wa(lead.phone)} target="_blank" rel="noopener noreferrer" className={waBtn}>WhatsApp</a>
