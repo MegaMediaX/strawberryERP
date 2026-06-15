@@ -98,6 +98,13 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire R11 (cont. 86) — 2026-06-15 — RESELLER ADMIN UI slice 11: calendar team agenda [§23] ✅ SHIPPED
+- **PM ruling:** /reseller/calendar = team agenda (reuse `buildAgenda` over reseller TEAM leads) — 5 day-buckets, per-item assignee, click→lead. Filters Salesperson/Country/Priority. Lead-follow-up events only; month-grid + other event types deferred. Static GCal "not connected" badge.
+- **Shipped:** `src/lib/reseller/build-team-agenda.ts` (pure `buildTeamAgenda(leads, {salesperson,country,priority}, now)` → filters then delegates to tested `buildAgenda`; `agendaCount`; **3 unit tests**) · `ResellerTeamAgenda` (GCal "not connected" badge + 3 filter selects + 5 buckets [Overdue rose-bordered] + per-item company/contact/followUp/country/**assigned-to** + WhatsApp + Open-lead→/reseller/leads/[id]) · `/reseller/calendar` page (reseller-scoped getUiLeads = whole team; distinct assignees/countries for filters).
+- **Gate:** `npm test` **506 pass** (+3) · typecheck clean · lint clean · build green (/reseller/calendar emitted).
+- **Browser (dev-store, BDP Reseller Admin):** desktop 1280 → heading Calendar, "Google Calendar: not connected" badge, 5 sections (Overdue/Today/Tomorrow/This week/Later), 3 filters, item shows "assigned to", Open→/reseller/leads/LEAD-2408. Priority=Low → "No follow-ups in this view"; cleared → restored (filter works). Mobile 380 → 5 sections, **no horizontal overflow**, bottom nav. **Scoping:** team leads = reseller-scoped via getUiLeads; no DELETE; hooks-only (no live GCal).
+- **HEAD:** see commit below. Slice 12 (next) = reports [§24].
+
 ### Fire R10 (cont. 85) — 2026-06-15 — RESELLER ADMIN UI slice 10: commissions view [§21] ✅ SHIPPED
 - **PM ruling:** /reseller/commissions READ-ONLY — 4 summary cards + history table + status filter + client CSV export; Trigger = commissionRule id; reseller cannot edit rules; no mutations/DELETE.
 - **Shipped:** `src/lib/reseller/commission-summary.ts` (pure `commissionSummary(entries, now)` → {pending, approved, paid, thisMonth}; status sums + current-month total by calculatedAt; **3 unit tests**) · `ResellerCommissionsView` (4 summary cards + status filter + CSV export of visible rows; desktop 9-col table + mobile cards; invoice links) · `/reseller/commissions` page (reseller-scoped getUiRows("commissions"); customer+currency resolved from linked invoice).
