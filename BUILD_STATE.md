@@ -98,6 +98,13 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire R10 (cont. 85) — 2026-06-15 — RESELLER ADMIN UI slice 10: commissions view [§21] ✅ SHIPPED
+- **PM ruling:** /reseller/commissions READ-ONLY — 4 summary cards + history table + status filter + client CSV export; Trigger = commissionRule id; reseller cannot edit rules; no mutations/DELETE.
+- **Shipped:** `src/lib/reseller/commission-summary.ts` (pure `commissionSummary(entries, now)` → {pending, approved, paid, thisMonth}; status sums + current-month total by calculatedAt; **3 unit tests**) · `ResellerCommissionsView` (4 summary cards + status filter + CSV export of visible rows; desktop 9-col table + mobile cards; invoice links) · `/reseller/commissions` page (reseller-scoped getUiRows("commissions"); customer+currency resolved from linked invoice).
+- **Gate:** `npm test` **503 pass** (+3) · typecheck clean · lint clean · build green (/reseller/commissions emitted).
+- **Browser (dev-store, BDP Reseller Admin):** desktop 1280 → cards Pending **USD 300** / Approved 0 / Paid 0 / This-month **USD 300**; table row Jun 6 2026 · INV-2026-LB-0041 · **Cedar Cloud Services** (resolved from invoice) · Lebanon · CRULE-001 · USD 2,500 · 12% · USD 300 · Pending. Status filter Approved→0 (+empty msg), Pending→1. Export CSV button present. Mobile 380 → table hidden, summary cards (2-col) + commission card, **no horizontal overflow**, bottom nav. **Scoping:** only the BDP commission entry; read-only (no edit/approve/pay buttons); no DELETE.
+- **HEAD:** see commit below. Slice 11 (next) = calendar team agenda [§23].
+
 ### Fire R9b (cont. 84) — 2026-06-15 — RESELLER ADMIN UI slice 9b: invoice detail + receipts/payment [§20] ✅ SHIPPED (invoices group §18/19/20 COMPLETE)
 - **Shipped:** `/reseller/invoices/[id]` real detail page (header card [customer/country/amount/due/status/method] + balance card [invoiced/paid/remaining via `invoicePaymentState`] + receipts list + **ReceiptBuilder** when remaining>0, else "fully paid" card; reseller-scoped → 404 if out of reseller) · extended `ReceiptBuilder` with optional `defaultAmount` (backward-compatible) so the receipt amount pre-fills to the **remaining balance**; payment methods filtered to reseller+invoice-country. Receipts POST already persists + updates invoice paymentStatus + auto-commission server-side (reused).
 - **Gate:** `npm test` **500 pass** (reuse-only, no new lib — invoice-payment-state already tested) · typecheck clean · lint clean · build green (/reseller/invoices/[id] emitted).
