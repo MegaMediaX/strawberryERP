@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
 import { CountrySelector } from "@/components/regional/CountrySelector";
+import { RegionalCountryGuard } from "@/components/regional/RegionalCountryGuard";
 import { RegionalBottomNav, RegionalSidebar } from "@/components/regional/RegionalNav";
 import { RegionalNotificationsBell } from "@/components/regional/RegionalNotificationsBell";
 import { regionalNotificationData } from "@/lib/regional/notification-data";
@@ -68,7 +69,10 @@ export default async function RegionalLayout({ children }: { children: ReactNode
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-[1200px] px-4 py-5 pb-24 md:px-6 md:pb-8">{children}</main>
+        <main className="mx-auto w-full max-w-[1200px] px-4 py-5 pb-24 md:px-6 md:pb-8">
+          <Suspense fallback={null}><RegionalCountryGuard assigned={assigned} /></Suspense>
+          {children}
+        </main>
       </div>
 
       <RegionalBottomNav />

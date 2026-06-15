@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Input, Select } from "@/components/ui/field";
+import { useStickyFilters } from "@/components/regional/useStickyFilters";
 import { filterRegionalCustomers, stuckCustomerCount, type RegionalCustomerFilters } from "@/lib/regional/customer-list";
 import type { CustomerRollup } from "@/lib/reseller/customer-rollup";
 
@@ -37,7 +38,7 @@ export function RegionalCustomersView({
   scopeLabel: string;
   phoneByCompany: Record<string, string>;
 }) {
-  const [filters, setFilters] = useState<RegionalCustomerFilters>({});
+  const [filters, setFilters] = useStickyFilters<RegionalCustomerFilters>("lebtech.regional.customers.filters", {});
 
   const resellers = useMemo(() => [...new Set(rows.map((r) => r.reseller))].sort(), [rows]);
   const countries = useMemo(() => [...new Set(rows.map((r) => r.country))].sort(), [rows]);

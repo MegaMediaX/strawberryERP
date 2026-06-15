@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Trophy } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Select } from "@/components/ui/field";
+import { useStickyFilters } from "@/components/regional/useStickyFilters";
 import {
   filterCommissions,
   regionalCommissionSummary,
@@ -48,7 +49,7 @@ export function RegionalCommissionsView({
   canViewPercent: boolean;
   initialFilters?: RegionalCommissionFilters;
 }) {
-  const [filters, setFilters] = useState<RegionalCommissionFilters>(initialFilters);
+  const [filters, setFilters] = useStickyFilters<RegionalCommissionFilters>("lebtech.regional.commissions.filters", initialFilters);
 
   const resellers = useMemo(() => [...new Set(rows.map((r) => r.reseller))].sort(), [rows]);
   const countries = useMemo(() => [...new Set(rows.map((r) => r.country))].sort(), [rows]);

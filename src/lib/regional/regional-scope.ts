@@ -30,3 +30,13 @@ export function scopeByCountry<T extends { country: string }>(
 ): T[] {
   return rows.filter((r) => effectiveCountries.includes(r.country));
 }
+
+/**
+ * §28 "Country Access Denied" — true when the `?country=` selection is a real,
+ * non-default value that is NOT one of the director's assigned countries. Used
+ * to surface a switch-to-assigned notice (scope itself already falls back safely
+ * to all-assigned, so this is a UX signal, not a security gate).
+ */
+export function isCountryAccessDenied(assigned: readonly string[], selected?: string): boolean {
+  return Boolean(selected) && selected !== COUNTRY_ALL && !assigned.includes(selected as string);
+}

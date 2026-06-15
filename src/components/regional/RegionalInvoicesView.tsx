@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Input, Select } from "@/components/ui/field";
 import { EscalationButton } from "@/components/regional/EscalationModal";
+import { useStickyFilters } from "@/components/regional/useStickyFilters";
 import {
   filterInvoices,
   overdueInvoiceCount,
@@ -34,7 +35,7 @@ export function RegionalInvoicesView({
   scopeLabel: string;
   customerIdByName: Record<string, string>;
 }) {
-  const [filters, setFilters] = useState<RegionalInvoiceFilters>({});
+  const [filters, setFilters] = useStickyFilters<RegionalInvoiceFilters>("lebtech.regional.invoices.filters", {});
 
   const resellers = useMemo(() => [...new Set(rows.map((r) => r.reseller))].sort(), [rows]);
   const countries = useMemo(() => [...new Set(rows.map((r) => r.country))].sort(), [rows]);

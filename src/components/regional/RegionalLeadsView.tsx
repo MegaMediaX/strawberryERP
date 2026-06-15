@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Input, Select } from "@/components/ui/field";
 import { EscalationButton } from "@/components/regional/EscalationModal";
+import { useStickyFilters } from "@/components/regional/useStickyFilters";
 import { applyRegionalLeadView, regionalLeadViews, type RegionalLeadView } from "@/lib/regional/regional-lead-views";
 import { distinctValues, filterLeads, sortLeads, type LeadFilters } from "@/lib/sales/lead-filters";
 import { leadStatuses } from "@/lib/sample-data";
@@ -34,7 +35,7 @@ export function RegionalLeadsView({
   initialFilters?: Filters;
 }) {
   const [view, setView] = useState<RegionalLeadView>(initialView);
-  const [filters, setFilters] = useState<Filters>(initialFilters);
+  const [filters, setFilters] = useStickyFilters<Filters>("lebtech.regional.leads.filters", initialFilters);
 
   const resellers = useMemo(() => distinctValues(leads, "reseller"), [leads]);
   const priorities = useMemo(() => distinctValues(leads, "priority"), [leads]);
