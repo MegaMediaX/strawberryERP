@@ -3,6 +3,7 @@ import {
   apiKeys,
   apiLogs,
   commissionEntries,
+  contracts,
   currencySettings,
   invoices,
   integrationSettings,
@@ -12,6 +13,7 @@ import {
   type ApiKeyRecord,
   type ApiLog,
   type CommissionEntry,
+  type Contract,
   type CurrencySetting,
   type IntegrationSetting,
   type Invoice,
@@ -46,6 +48,7 @@ type DevStore = {
   resellerRecords: Reseller[];
   importantDetails: ImportantDetailEntry[];
   importantDetailLocks: Record<string, boolean>;
+  contracts: Contract[];
 };
 
 const globalStore = globalThis as typeof globalThis & {
@@ -82,6 +85,7 @@ export function getDevStore() {
       resellerRecords: [...defaultResellers],
       importantDetails: seedImportantDetails(),
       importantDetailLocks: seedImportantDetailLocks(),
+      contracts: [...contracts],
     };
   }
 
@@ -90,7 +94,19 @@ export function getDevStore() {
   const store = globalStore.__lebtechDevStore;
   store.importantDetails ??= seedImportantDetails();
   store.importantDetailLocks ??= seedImportantDetailLocks();
+  store.contracts ??= [...contracts];
   return store;
+}
+
+/** Contracts authored for a customer (same reseller). */
+export function getContractsFor(customer: string, reseller: string): Contract[] {
+  return getDevStore().contracts.filter((c) => c.customer === customer && c.reseller === reseller);
+}
+
+/** Append a contract record (spec §17 upload; dev-store stub, no real Drive). */
+export function appendContract(record: Contract): Contract {
+  getDevStore().contracts.unshift(record);
+  return record;
 }
 
 /** Important Details entries authored for a reseller (spec §14). */

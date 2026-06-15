@@ -3,7 +3,8 @@ import Link from "next/link";
 import { ResellerCustomerDetail, type CustomerInvoice, type CustomerReceipt } from "@/components/reseller/ResellerCustomerDetail";
 import { Card, CardContent } from "@/components/ui/card";
 import { customerRollup, type ContractLike, type InvoiceLike, type ReceiptLike } from "@/lib/reseller/customer-rollup";
-import { contracts as seedContracts, customers as seedCustomers, invoices as seedInvoices, receipts as seedReceipts } from "@/lib/phase2-data";
+import { customers as seedCustomers, invoices as seedInvoices, receipts as seedReceipts } from "@/lib/phase2-data";
+import { getDevStore } from "@/lib/dev-store";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 import { getUiLeads, getUiRows } from "@/lib/ui-data";
 
@@ -29,14 +30,15 @@ export default async function ResellerCustomerDetailPage({ params }: { params: P
   }
 
   const customer = { id: String(raw.id), name: String(raw.name), country: String(raw.country), reseller: String(raw.reseller) };
+  const devContracts = getDevStore().contracts;
   const rollup = customerRollup(
     customer,
-    seedContracts as unknown as ContractLike[],
+    devContracts as unknown as ContractLike[],
     seedInvoices as unknown as InvoiceLike[],
     seedReceipts as unknown as ReceiptLike[],
   );
 
-  const contract = seedContracts.find((c) => c.customer === customer.name && c.reseller === customer.reseller);
+  const contract = devContracts.find((c) => c.customer === customer.name && c.reseller === customer.reseller);
   const invoices: CustomerInvoice[] = seedInvoices
     .filter((i) => i.customer === customer.name && i.reseller === customer.reseller)
     .map((i) => ({ id: i.id, invoiceNumber: i.invoiceNumber, currency: i.currency, total: i.total, paymentStatus: i.paymentStatus }));

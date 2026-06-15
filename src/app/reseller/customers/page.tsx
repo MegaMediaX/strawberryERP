@@ -1,6 +1,7 @@
 import { ResellerCustomersView, type CustomerRow } from "@/components/reseller/ResellerCustomersView";
 import { buildCustomerRows, type ContractLike, type InvoiceLike, type ReceiptLike } from "@/lib/reseller/customer-rollup";
-import { contracts as seedContracts, customers as seedCustomers, invoices as seedInvoices, receipts as seedReceipts } from "@/lib/phase2-data";
+import { customers as seedCustomers, invoices as seedInvoices, receipts as seedReceipts } from "@/lib/phase2-data";
+import { getDevStore } from "@/lib/dev-store";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 import { getUiLeads, getUiRows } from "@/lib/ui-data";
 
@@ -19,7 +20,7 @@ export default async function ResellerCustomersPage() {
 
   const rows = buildCustomerRows(
     customers,
-    seedContracts as unknown as ContractLike[],
+    getDevStore().contracts as unknown as ContractLike[],
     seedInvoices as unknown as InvoiceLike[],
     seedReceipts as unknown as ReceiptLike[],
   );
