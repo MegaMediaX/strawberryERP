@@ -33,6 +33,7 @@ import {
 import type { EscalationRecord } from "@/lib/regional/escalation";
 import { defaultCountries, type CountryRecord } from "@/lib/admin/countries";
 import type { ResellerConfig } from "@/lib/admin/reseller-wizard";
+import type { ExpenseRecord } from "@/lib/admin/pnl";
 
 type DevStore = {
   invoices: Invoice[];
@@ -59,6 +60,7 @@ type DevStore = {
   leadOverrides: Record<string, LeadOverride>;
   customerOverrides: Record<string, CustomerOverride>;
   invoiceDocSettings: InvoiceDocSettings;
+  expenses: ExpenseRecord[];
 };
 
 /** §18 invoice document settings (toggles + footer). dev-store, hooks-only. */
@@ -119,6 +121,11 @@ export function getDevStore() {
       leadOverrides: {},
       customerOverrides: {},
       invoiceDocSettings: { pdfTemplate: "Default", qrCode: true, paymentLink: true, whatsappShare: true, emailSend: true, footer: "Thank you for your business." },
+      expenses: [
+        { id: "EXP-1001", category: "Software", amount: 1200, currency: "USD", date: "2026-06-03", notes: "ERPNext hosting", attachmentName: "" },
+        { id: "EXP-1002", category: "Marketing", amount: 800, currency: "USD", country: "Lebanon", date: "2026-06-07", notes: "Q2 campaign", attachmentName: "" },
+        { id: "EXP-1003", category: "Salaries", amount: 4500, currency: "USD", date: "2026-06-01", notes: "June payroll", attachmentName: "" },
+      ],
     };
   }
 
@@ -135,7 +142,17 @@ export function getDevStore() {
   store.leadOverrides ??= {};
   store.customerOverrides ??= {};
   store.invoiceDocSettings ??= { pdfTemplate: "Default", qrCode: true, paymentLink: true, whatsappShare: true, emailSend: true, footer: "Thank you for your business." };
+  store.expenses ??= [];
   return store;
+}
+
+/** Platform expenses (spec §21). Newest-first. */
+export function getExpenses(): ExpenseRecord[] {
+  return getDevStore().expenses;
+}
+export function appendExpense(record: ExpenseRecord): ExpenseRecord {
+  getDevStore().expenses.unshift(record);
+  return record;
 }
 
 /** §18 invoice document settings (toggles/footer). */
