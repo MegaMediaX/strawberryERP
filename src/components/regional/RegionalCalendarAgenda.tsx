@@ -31,7 +31,7 @@ function EventRow({ ev }: { ev: AgendaEvent }) {
   return (
     <Link
       href={ev.href}
-      className={`flex items-start gap-3 rounded-xl border px-3 py-2.5 transition hover:bg-[var(--background)] ${ev.overdue ? "border-rose-300 dark:border-rose-800" : "border-[var(--border)]"}`}
+      className={`flex min-w-0 items-start gap-3 rounded-xl border px-3 py-2.5 transition hover:bg-[var(--background)] ${ev.overdue ? "border-rose-300 dark:border-rose-800" : "border-[var(--border)]"}`}
     >
       <span className={`mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-lg ${ev.overdue ? "bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300" : "bg-[var(--background)] text-[var(--muted)]"}`}>
         <Icon className="size-3.5" aria-hidden />
@@ -54,11 +54,13 @@ export function RegionalCalendarAgenda({
   invoices,
   escalations,
   scopeLabel,
+  hrefBase = "/regional",
 }: {
   leads: PortalLead[];
   invoices: AgendaInvoice[];
   escalations: AgendaEscalation[];
   scopeLabel: string;
+  hrefBase?: string;
 }) {
   const [filters, setFilters] = useState<RegionalAgendaFilters>({});
 
@@ -66,7 +68,7 @@ export function RegionalCalendarAgenda({
     () => [...new Set([...leads.map((l) => l.reseller), ...invoices.map((i) => i.reseller), ...escalations.map((e) => e.reseller)])].sort(),
     [leads, invoices, escalations],
   );
-  const sections = useMemo(() => buildRegionalAgenda(leads, invoices, escalations, filters, new Date()), [leads, invoices, escalations, filters]);
+  const sections = useMemo(() => buildRegionalAgenda(leads, invoices, escalations, filters, new Date(), hrefBase), [leads, invoices, escalations, filters, hrefBase]);
   const total = useMemo(() => regionalAgendaCount(sections), [sections]);
 
   function set<K extends keyof RegionalAgendaFilters>(k: K, v: RegionalAgendaFilters[K]) {

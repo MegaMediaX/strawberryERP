@@ -90,6 +90,7 @@ export function buildRegionalAgenda(
   escalations: readonly AgendaEscalation[],
   filters: RegionalAgendaFilters,
   now: Date,
+  hrefBase = "/regional",
 ): RegionalAgendaSection[] {
   const byBucket = new Map<FollowUpBucket, AgendaEvent[]>();
   const push = (bucket: FollowUpBucket, ev: AgendaEvent) => {
@@ -106,7 +107,7 @@ export function buildRegionalAgenda(
       push(bucket, {
         id: `lead-${l.id}`, kind: "lead", title: l.company, meta: `Follow-up · ${l.assignedTo}`,
         country: l.country, reseller: l.reseller, when: l.followUp || "Unscheduled",
-        href: `/regional/leads/${l.id}`, overdue: bucket === "Overdue",
+        href: `${hrefBase}/leads/${l.id}`, overdue: bucket === "Overdue",
       });
     }
   }
@@ -118,7 +119,7 @@ export function buildRegionalAgenda(
       push(bucket, {
         id: `inv-${i.id}`, kind: "invoice", title: i.invoiceNumber, meta: `${i.customer} · ${i.currency} ${i.amount.toLocaleString()} due`,
         country: i.country, reseller: i.reseller, when: isoDay(i.dueDate ?? ""),
-        href: `/regional/invoices`, overdue: bucket === "Overdue",
+        href: `${hrefBase}/invoices`, overdue: bucket === "Overdue",
       });
     }
   }
@@ -130,7 +131,7 @@ export function buildRegionalAgenda(
       push(bucket, {
         id: `esc-${e.id}`, kind: "escalation", title: e.entityLabel, meta: `Escalated · ${e.reasonLabel}`,
         country: e.country, reseller: e.reseller, when: isoDay(e.createdAt),
-        href: e.entityType === "Lead" ? `/regional/leads/${e.entityId}` : `/regional/escalations`,
+        href: e.entityType === "Lead" ? `${hrefBase}/leads/${e.entityId}` : `${hrefBase}/escalations`,
         overdue: false,
       });
     }
