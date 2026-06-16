@@ -31,6 +31,7 @@ import {
   type ImportantDetailEntry,
 } from "@/lib/business/important-details-mgmt";
 import type { EscalationRecord } from "@/lib/regional/escalation";
+import { defaultCountries, type CountryRecord } from "@/lib/admin/countries";
 
 type DevStore = {
   invoices: Invoice[];
@@ -52,6 +53,7 @@ type DevStore = {
   contracts: Contract[];
   users: PortalUser[];
   escalations: EscalationRecord[];
+  countries: CountryRecord[];
 };
 
 const globalStore = globalThis as typeof globalThis & {
@@ -91,6 +93,7 @@ export function getDevStore() {
       contracts: [...contracts],
       users: portalUsers.map((u) => ({ ...u, countries: [...u.countries] })),
       escalations: [],
+      countries: defaultCountries(),
     };
   }
 
@@ -102,7 +105,34 @@ export function getDevStore() {
   store.contracts ??= [...contracts];
   store.users ??= portalUsers.map((u) => ({ ...u, countries: [...u.countries] }));
   store.escalations ??= [];
+  store.countries ??= defaultCountries();
   return store;
+}
+
+/** All configured countries (spec §9). */
+export function getCountries(): CountryRecord[] {
+  return getDevStore().countries;
+}
+
+/** Create or replace a country record (keyed by name). Caller audits. */
+export function upsertCountry(country: CountryRecord): CountryRecord {
+  const store = getDevStore();
+  const exists = store.countries.some((c) => c.name.toLowerCase() === country.name.toLowerCase());
+  store.countries = exists
+    ? store.countries.map((c) => (c.name.toLowerCase() === country.name.toLowerCase() ? country : c))
+    : [...store.countries, country];
+  return country;
+}
+
+/** Toggle a country's active flag (§9 Deactivate). Returns the updated record. */
+export function setCountryActive(name: string, active: boolean): CountryRecord | undefined {
+  const store = getDevStore();
+  let updated: CountryRecord | undefined;
+  store.countries = store.countries.map((c) => {
+    if (c.name.toLowerCase() === name.toLowerCase()) { updated = { ...c, active }; return updated; }
+    return c;
+  });
+  return updated;
 }
 
 /** Regional escalations (spec §16). Newest-first; never deleted (no-DELETE). */
