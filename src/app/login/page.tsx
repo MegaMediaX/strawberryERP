@@ -31,6 +31,7 @@ export default function LoginPage() {
         role === "Sales Team User" ? "/sales/dashboard"
           : role === "Reseller Admin" ? "/reseller/dashboard"
           : role === "Regional Director" ? "/regional/dashboard"
+          : role === "Super Admin" ? "/admin/dashboard"
           : "/";
     } catch {
       setError("Network error. Please try again.");

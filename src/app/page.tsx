@@ -20,6 +20,10 @@ export default async function Home() {
   if (session?.effectiveUser.role === "Regional Director") {
     redirect("/regional/dashboard");
   }
+  // Super Admins now live in the dedicated /admin control center (spec §3/§4).
+  if (session?.effectiveUser.role === "Super Admin") {
+    redirect("/admin/dashboard");
+  }
   const decision = authorizeUiRoute("/", session);
   if (!decision.allowed) {
     return <ProtectedRoute decision={decision} />;
