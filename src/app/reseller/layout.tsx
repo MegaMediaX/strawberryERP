@@ -6,6 +6,7 @@ import { ResellerNotificationsBell } from "@/components/reseller/ResellerNotific
 import { resellerNotificationData } from "@/lib/reseller/notification-data";
 import { resellerNotifications } from "@/lib/reseller/reseller-notifications";
 import { getPortalUiSession } from "@/lib/security/ui-session";
+import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
 
 /**
  * Reseller Admin persona shell (spec §2/§3/§31). Operational team-control
@@ -35,6 +36,8 @@ export default async function ResellerLayout({ children }: { children: ReactNode
   const notificationIds = resellerNotifications(await resellerNotificationData(session), new Date()).map((n) => n.id);
 
   return (
+    <>
+    <ImpersonationBanner />
     <div className="min-h-screen bg-[var(--app-bg)] text-[var(--foreground)] md:grid md:grid-cols-[230px_minmax(0,1fr)]">
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen flex-col border-r border-[var(--border)] bg-[var(--surface)] p-4 md:flex">
@@ -78,5 +81,6 @@ export default async function ResellerLayout({ children }: { children: ReactNode
       {/* Rendered at root (outside backdrop-blur header) so position:fixed anchors to the viewport. */}
       <ResellerBottomNav />
     </div>
+    </>
   );
 }

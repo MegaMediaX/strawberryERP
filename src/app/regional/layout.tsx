@@ -8,6 +8,7 @@ import { RegionalBottomNav, RegionalSidebar } from "@/components/regional/Region
 import { RegionalNotificationsBell } from "@/components/regional/RegionalNotificationsBell";
 import { regionalNotificationData } from "@/lib/regional/notification-data";
 import { getPortalUiSession } from "@/lib/security/ui-session";
+import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
 
 /**
  * Regional Director persona shell (spec §2/§4/§6). A country-level command
@@ -34,6 +35,8 @@ export default async function RegionalLayout({ children }: { children: ReactNode
   );
 
   return (
+    <>
+    <ImpersonationBanner />
     <div className="min-h-screen bg-[var(--app-bg)] text-[var(--foreground)] md:grid md:grid-cols-[230px_minmax(0,1fr)]">
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen flex-col border-r border-[var(--border)] bg-[var(--surface)] p-4 md:flex">
@@ -77,5 +80,6 @@ export default async function RegionalLayout({ children }: { children: ReactNode
 
       <RegionalBottomNav />
     </div>
+    </>
   );
 }

@@ -6,6 +6,7 @@ import { SalesNotificationsBell } from "@/components/sales/SalesNotificationsBel
 import { deriveNotifications } from "@/lib/sales/derive-notifications";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 import { getUiLeads } from "@/lib/ui-data";
+import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
 
 /**
  * Sales persona shell (spec §24/§28/§29). Guard: only a Sales Team User lives
@@ -32,6 +33,8 @@ export default async function SalesLayout({ children }: { children: ReactNode })
     .toUpperCase();
 
   return (
+    <>
+    <ImpersonationBanner />
     <div className="min-h-screen bg-[var(--app-bg)] text-[var(--foreground)]">
       <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--surface)]/90 backdrop-blur">
         <div className="mx-auto flex w-full max-w-[1100px] items-center justify-between gap-3 px-4 py-3">
@@ -54,5 +57,6 @@ export default async function SalesLayout({ children }: { children: ReactNode })
       {/* Rendered at root (outside the backdrop-blur header) so position:fixed anchors to the viewport. */}
       <SalesBottomNav />
     </div>
+    </>
   );
 }

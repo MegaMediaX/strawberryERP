@@ -137,22 +137,30 @@ export function resolvePortalSession(request: Request): PortalSession {
   };
 }
 
-function readSessionCookie(headers: Headers): string | undefined {
+function readCookie(headers: Headers, cookieName: string): string | undefined {
   const raw = headers.get("cookie");
   if (!raw) return undefined;
   for (const part of raw.split(";")) {
     const [name, ...rest] = part.trim().split("=");
-    if (name === SESSION_COOKIE) return rest.join("=");
+    if (name === cookieName) return rest.join("=");
   }
   return undefined;
 }
+
+function readSessionCookie(headers: Headers): string | undefined {
+  return readCookie(headers, SESSION_COOKIE);
+}
+
+/** Cookie that carries an active Super-Admin "Login As" target (spec §12). */
+export const IMPERSONATE_COOKIE = "lebtech_impersonate";
 
 function buildSession(
   user: PortalUser,
   headers: Headers,
   source: PortalSession["source"],
 ): PortalSession {
-  const impersonatedUserId = headers.get("x-platform-impersonate-user-id");
+  // Header wins (dev/headless + existing tests); else the §12 Login-As cookie.
+  const impersonatedUserId = headers.get("x-platform-impersonate-user-id") ?? readCookie(headers, IMPERSONATE_COOKIE);
   const impersonated = impersonatedUserId
     ? portalUsers.find((item) => item.id === impersonatedUserId && item.active)
     : undefined;
