@@ -185,6 +185,31 @@ export function appendUser(user: PortalUser): PortalUser {
   return user;
 }
 
+/** Find a user by id (spec §11). */
+export function getUserById(id: string): PortalUser | undefined {
+  return getDevStore().users.find((u) => u.id === id);
+}
+
+/** Toggle a user's active flag (§11 Deactivate). Returns the updated user. */
+export function setUserActive(id: string, active: boolean): PortalUser | undefined {
+  const store = getDevStore();
+  let updated: PortalUser | undefined;
+  store.users = store.users.map((u) => (u.id === id ? (updated = { ...u, active }) : u));
+  return updated;
+}
+
+/** Update a user's scope (countries/reseller) (§11 Edit). Returns the updated user. */
+export function updateUserScope(id: string, patch: { countries?: string[]; reseller?: string | undefined }): PortalUser | undefined {
+  const store = getDevStore();
+  let updated: PortalUser | undefined;
+  store.users = store.users.map((u) => {
+    if (u.id !== id) return u;
+    updated = { ...u, countries: (patch.countries ?? u.countries) as PortalUser["countries"], reseller: "reseller" in patch ? patch.reseller : u.reseller };
+    return updated;
+  });
+  return updated;
+}
+
 /** Contracts authored for a customer (same reseller). */
 export function getContractsFor(customer: string, reseller: string): Contract[] {
   return getDevStore().contracts.filter((c) => c.customer === customer && c.reseller === reseller);
