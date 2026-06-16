@@ -779,7 +779,7 @@ export const settingsSections = [
 ];
 
 export const customFieldTargets = ["leads", "customers", "resellers", "invoices", "receipts"] as const;
-export const customFieldTypes = ["text", "number", "date", "dropdown", "checkbox", "textarea"] as const;
+export const customFieldTypes = ["text", "number", "date", "dropdown", "checkbox", "textarea", "file", "currency", "phone", "email"] as const;
 
 export function validateCountry(country: string | undefined) {
   if (!country) {

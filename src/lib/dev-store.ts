@@ -35,6 +35,7 @@ import { defaultCountries, type CountryRecord } from "@/lib/admin/countries";
 import type { ResellerConfig } from "@/lib/admin/reseller-wizard";
 import type { ExpenseRecord } from "@/lib/admin/pnl";
 import { defaultWhiteLabel, mergeWhiteLabel, type WhiteLabelSettings } from "@/lib/admin/white-label";
+import { defaultCustomFields, type CustomFieldRecord } from "@/lib/admin/custom-fields";
 
 type DevStore = {
   invoices: Invoice[];
@@ -63,6 +64,7 @@ type DevStore = {
   invoiceDocSettings: InvoiceDocSettings;
   expenses: ExpenseRecord[];
   whiteLabel: WhiteLabelSettings;
+  customFields: CustomFieldRecord[];
 };
 
 /** §18 invoice document settings (toggles + footer). dev-store, hooks-only. */
@@ -129,6 +131,7 @@ export function getDevStore() {
         { id: "EXP-1003", category: "Salaries", amount: 4500, currency: "USD", date: "2026-06-01", notes: "June payroll", attachmentName: "" },
       ],
       whiteLabel: { ...defaultWhiteLabel, enabledModules: [...defaultWhiteLabel.enabledModules] },
+      customFields: defaultCustomFields.map((f) => ({ ...f, options: f.options ? [...f.options] : undefined })),
     };
   }
 
@@ -147,7 +150,23 @@ export function getDevStore() {
   store.invoiceDocSettings ??= { pdfTemplate: "Default", qrCode: true, paymentLink: true, whatsappShare: true, emailSend: true, footer: "Thank you for your business." };
   store.expenses ??= [];
   store.whiteLabel ??= { ...defaultWhiteLabel, enabledModules: [...defaultWhiteLabel.enabledModules] };
+  store.customFields ??= defaultCustomFields.map((f) => ({ ...f, options: f.options ? [...f.options] : undefined }));
   return store;
+}
+
+/** §31 custom field definitions. */
+export function getCustomFields(): CustomFieldRecord[] {
+  return getDevStore().customFields;
+}
+export function appendCustomField(record: CustomFieldRecord): CustomFieldRecord {
+  getDevStore().customFields.push(record);
+  return record;
+}
+export function removeCustomField(id: string): CustomFieldRecord | undefined {
+  const store = getDevStore();
+  const removed = store.customFields.find((f) => f.id === id);
+  store.customFields = store.customFields.filter((f) => f.id !== id);
+  return removed;
 }
 
 /** §30 white-label / branding settings (singleton). */
