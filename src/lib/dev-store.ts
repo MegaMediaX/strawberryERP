@@ -423,6 +423,22 @@ export function getCommissionEntry(id: string) {
   return getDevStore().commissionEntries.find((entry) => entry.id === id);
 }
 
+/** §23 revoke an API key (disable + stamp revokedAt). No hard delete. */
+export function revokeApiKey(id: string, revokedAt: string) {
+  const store = getDevStore();
+  let updated: ApiKeyRecord | undefined;
+  store.apiKeys = store.apiKeys.map((k) => {
+    if (k.id !== id) return k;
+    updated = { ...k, isActive: false, revokedAt };
+    return updated;
+  });
+  return updated;
+}
+
+export function getApiKey(id: string) {
+  return getDevStore().apiKeys.find((k) => k.id === id);
+}
+
 export function appendApiKey(record: ApiKeyRecord) {
   getDevStore().apiKeys.unshift(record);
   return record;
