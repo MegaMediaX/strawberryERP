@@ -38,6 +38,8 @@ import type { ResellerConfig } from "@/lib/admin/reseller-wizard";
 import type { ExpenseRecord } from "@/lib/admin/pnl";
 import { defaultWhiteLabel, mergeWhiteLabel, type WhiteLabelSettings } from "@/lib/admin/white-label";
 import { defaultCustomFields, type CustomFieldRecord } from "@/lib/admin/custom-fields";
+import { defaultPermissionMatrix, type PermissionMatrix } from "@/lib/admin/permission-matrix";
+import { defaultPlatformSettings, type PlatformSettings, type SettingsSection } from "@/lib/admin/platform-settings";
 
 type DevStore = {
   invoices: Invoice[];
@@ -68,6 +70,8 @@ type DevStore = {
   whiteLabel: WhiteLabelSettings;
   customFields: CustomFieldRecord[];
   notificationRules: NotificationRule[];
+  permissionMatrix: PermissionMatrix;
+  platformSettings: PlatformSettings;
 };
 
 /** §18 invoice document settings (toggles + footer). dev-store, hooks-only. */
@@ -152,6 +156,8 @@ export function getDevStore() {
       whiteLabel: { ...defaultWhiteLabel, enabledModules: [...defaultWhiteLabel.enabledModules] },
       customFields: defaultCustomFields.map((f) => ({ ...f, options: f.options ? [...f.options] : undefined })),
       notificationRules: notificationRules.map((r) => ({ ...r, channels: [...r.channels] })),
+      permissionMatrix: structuredClone(defaultPermissionMatrix),
+      platformSettings: structuredClone(defaultPlatformSettings),
     };
   }
 
@@ -172,7 +178,28 @@ export function getDevStore() {
   store.whiteLabel ??= { ...defaultWhiteLabel, enabledModules: [...defaultWhiteLabel.enabledModules] };
   store.customFields ??= defaultCustomFields.map((f) => ({ ...f, options: f.options ? [...f.options] : undefined }));
   store.notificationRules ??= notificationRules.map((r) => ({ ...r, channels: [...r.channels] }));
+  store.permissionMatrix ??= structuredClone(defaultPermissionMatrix);
+  store.platformSettings ??= structuredClone(defaultPlatformSettings);
   return store;
+}
+
+/** §44 permission matrix. */
+export function getPermissionMatrix(): PermissionMatrix {
+  return getDevStore().permissionMatrix;
+}
+export function setPermissionMatrix(matrix: PermissionMatrix): PermissionMatrix {
+  getDevStore().permissionMatrix = matrix;
+  return matrix;
+}
+
+/** §37/38/39 platform settings. */
+export function getPlatformSettings(): PlatformSettings {
+  return getDevStore().platformSettings;
+}
+export function setPlatformSettingsSection(section: SettingsSection, value: PlatformSettings[SettingsSection]): PlatformSettings {
+  const store = getDevStore();
+  store.platformSettings = { ...store.platformSettings, [section]: value };
+  return store.platformSettings;
 }
 
 /** §29 notification rules. */
