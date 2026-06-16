@@ -58,6 +58,17 @@ type DevStore = {
   resellerMetadata: ResellerConfig[];
   leadOverrides: Record<string, LeadOverride>;
   customerOverrides: Record<string, CustomerOverride>;
+  invoiceDocSettings: InvoiceDocSettings;
+};
+
+/** §18 invoice document settings (toggles + footer). dev-store, hooks-only. */
+export type InvoiceDocSettings = {
+  pdfTemplate: string;
+  qrCode: boolean;
+  paymentLink: boolean;
+  whatsappShare: boolean;
+  emailSend: boolean;
+  footer: string;
 };
 
 /** Admin mutations applied over the static lead seed (spec §13/§14). */
@@ -107,6 +118,7 @@ export function getDevStore() {
       resellerMetadata: [],
       leadOverrides: {},
       customerOverrides: {},
+      invoiceDocSettings: { pdfTemplate: "Default", qrCode: true, paymentLink: true, whatsappShare: true, emailSend: true, footer: "Thank you for your business." },
     };
   }
 
@@ -122,7 +134,18 @@ export function getDevStore() {
   store.resellerMetadata ??= [];
   store.leadOverrides ??= {};
   store.customerOverrides ??= {};
+  store.invoiceDocSettings ??= { pdfTemplate: "Default", qrCode: true, paymentLink: true, whatsappShare: true, emailSend: true, footer: "Thank you for your business." };
   return store;
+}
+
+/** §18 invoice document settings (toggles/footer). */
+export function getInvoiceDocSettings(): InvoiceDocSettings {
+  return getDevStore().invoiceDocSettings;
+}
+export function setInvoiceDocSettings(patch: Partial<InvoiceDocSettings>): InvoiceDocSettings {
+  const store = getDevStore();
+  store.invoiceDocSettings = { ...store.invoiceDocSettings, ...patch };
+  return store.invoiceDocSettings;
 }
 
 /** Customer overrides applied by Super Admin actions (delete/add-note) (§15/§16). */
