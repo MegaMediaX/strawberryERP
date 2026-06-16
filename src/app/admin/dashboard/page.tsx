@@ -1,5 +1,10 @@
-import { AdminPlaceholder } from "@/components/admin/AdminPlaceholder";
+import { AdminDashboardView } from "@/components/admin/AdminDashboardView";
+import { adminDashboardData } from "@/lib/admin/dashboard-data";
+import { getPortalUiSession } from "@/lib/security/ui-session";
 
-export default function Page() {
-  return <AdminPlaceholder title="Dashboard" detail="Global platform performance, today-needs-attention, country & reseller leaderboards (§5-§8)." />;
+export default async function AdminDashboardPage() {
+  const session = await getPortalUiSession();
+  if (!session) return null;
+  const data = await adminDashboardData(session);
+  return <AdminDashboardView data={data} />;
 }

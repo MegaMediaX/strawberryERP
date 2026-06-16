@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 
 import { AdminBottomNav, AdminSidebar } from "@/components/admin/AdminNav";
+import { adminBadgeData } from "@/lib/admin/dashboard-data";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 
 /**
@@ -25,6 +26,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   }
 
   const initials = session.effectiveUser.name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
+  const badges = await adminBadgeData();
 
   return (
     <div className="min-h-screen bg-[var(--app-bg)] text-[var(--foreground)] md:grid md:grid-cols-[248px_minmax(0,1fr)]">
@@ -37,7 +39,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
             <p className="truncate text-[11px] text-[var(--muted)]">Super Admin</p>
           </div>
         </div>
-        <AdminSidebar />
+        <AdminSidebar badges={badges} />
         <div className="mt-auto flex items-center gap-2.5 border-t border-[var(--border)] pt-4">
           <span className="grid size-9 place-items-center rounded-full bg-[var(--brand-soft)] text-[13px] font-bold text-[var(--brand-hover)]">{initials || "SA"}</span>
           <div className="min-w-0">
@@ -60,7 +62,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         <main className="mx-auto w-full max-w-[1280px] px-4 py-5 pb-24 md:px-6 md:pb-8">{children}</main>
       </div>
 
-      <AdminBottomNav />
+      <AdminBottomNav badges={badges} />
     </div>
   );
 }
