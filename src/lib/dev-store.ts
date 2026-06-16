@@ -407,6 +407,22 @@ export function appendReceipt(receipt: Receipt, updatedInvoice: Invoice, commiss
   return receipt;
 }
 
+/** §22 commission management — update one entry's status and/or amount in place. */
+export function updateCommissionEntry(id: string, patch: Partial<Pick<CommissionEntry, "status" | "commissionAmount">>) {
+  const store = getDevStore();
+  let updated: CommissionEntry | undefined;
+  store.commissionEntries = store.commissionEntries.map((entry) => {
+    if (entry.id !== id) return entry;
+    updated = { ...entry, ...patch };
+    return updated;
+  });
+  return updated;
+}
+
+export function getCommissionEntry(id: string) {
+  return getDevStore().commissionEntries.find((entry) => entry.id === id);
+}
+
 export function appendApiKey(record: ApiKeyRecord) {
   getDevStore().apiKeys.unshift(record);
   return record;
