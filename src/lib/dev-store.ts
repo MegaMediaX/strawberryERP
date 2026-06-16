@@ -57,10 +57,14 @@ type DevStore = {
   countries: CountryRecord[];
   resellerMetadata: ResellerConfig[];
   leadOverrides: Record<string, LeadOverride>;
+  customerOverrides: Record<string, CustomerOverride>;
 };
 
 /** Admin mutations applied over the static lead seed (spec §13/§14). */
 export type LeadOverride = { assignedTo?: string; status?: string; convertedAt?: string; archived?: boolean };
+
+/** Admin mutations applied over the static customer seed (spec §15/§16). */
+export type CustomerOverride = { archived?: boolean; notes?: string[] };
 
 const globalStore = globalThis as typeof globalThis & {
   __lebtechDevStore?: DevStore;
@@ -102,6 +106,7 @@ export function getDevStore() {
       countries: defaultCountries(),
       resellerMetadata: [],
       leadOverrides: {},
+      customerOverrides: {},
     };
   }
 
@@ -116,7 +121,21 @@ export function getDevStore() {
   store.countries ??= defaultCountries();
   store.resellerMetadata ??= [];
   store.leadOverrides ??= {};
+  store.customerOverrides ??= {};
   return store;
+}
+
+/** Customer overrides applied by Super Admin actions (delete/add-note) (§15/§16). */
+export function getCustomerOverrides(): Record<string, CustomerOverride> {
+  return getDevStore().customerOverrides;
+}
+
+export function applyCustomerOverride(id: string, patch: CustomerOverride): CustomerOverride {
+  const store = getDevStore();
+  const cur = store.customerOverrides[id] ?? {};
+  const next: CustomerOverride = { ...cur, ...patch, ...(patch.notes ? { notes: [...(cur.notes ?? []), ...patch.notes] } : {}) };
+  store.customerOverrides = { ...store.customerOverrides, [id]: next };
+  return next;
 }
 
 /** Lead overrides applied by Super Admin actions (reassign/convert/archive) (§13/§14). */
