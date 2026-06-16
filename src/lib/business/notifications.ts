@@ -16,6 +16,13 @@ export const notificationEventTypes = [
   "Contract Signed",
   "Customer Converted",
   "Commission Created",
+  "Contract Pending",
+  "Payment Overdue",
+  "Lead Assigned",
+  "Lead Transferred",
+  "API Error",
+  "WhatsApp Failure",
+  "Delete Request Submitted",
 ] as const;
 
 export const notificationChannels = ["Email", "WhatsApp", "Calendar", "In-App"] as const;

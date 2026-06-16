@@ -7,9 +7,11 @@ import {
   currencySettings,
   invoices,
   integrationSettings,
+  notificationRules,
   paymentMethods,
   receipts,
   type ActivityTimelineEvent,
+  type NotificationRule,
   type ApiKeyRecord,
   type ApiLog,
   type CommissionEntry,
@@ -65,6 +67,7 @@ type DevStore = {
   expenses: ExpenseRecord[];
   whiteLabel: WhiteLabelSettings;
   customFields: CustomFieldRecord[];
+  notificationRules: NotificationRule[];
 };
 
 /** §18 invoice document settings (toggles + footer). dev-store, hooks-only. */
@@ -132,6 +135,7 @@ export function getDevStore() {
       ],
       whiteLabel: { ...defaultWhiteLabel, enabledModules: [...defaultWhiteLabel.enabledModules] },
       customFields: defaultCustomFields.map((f) => ({ ...f, options: f.options ? [...f.options] : undefined })),
+      notificationRules: notificationRules.map((r) => ({ ...r, channels: [...r.channels] })),
     };
   }
 
@@ -151,7 +155,30 @@ export function getDevStore() {
   store.expenses ??= [];
   store.whiteLabel ??= { ...defaultWhiteLabel, enabledModules: [...defaultWhiteLabel.enabledModules] };
   store.customFields ??= defaultCustomFields.map((f) => ({ ...f, options: f.options ? [...f.options] : undefined }));
+  store.notificationRules ??= notificationRules.map((r) => ({ ...r, channels: [...r.channels] }));
   return store;
+}
+
+/** §29 notification rules. */
+export function getNotificationRules(): NotificationRule[] {
+  return getDevStore().notificationRules;
+}
+export function appendNotificationRule(rule: NotificationRule): NotificationRule {
+  getDevStore().notificationRules.push(rule);
+  return rule;
+}
+export function updateNotificationRule(id: string, patch: Partial<NotificationRule>): NotificationRule | undefined {
+  const store = getDevStore();
+  let updated: NotificationRule | undefined;
+  store.notificationRules = store.notificationRules.map((r) => {
+    if (r.id !== id) return r;
+    updated = { ...r, ...patch, channels: patch.channels ? [...patch.channels] : r.channels };
+    return updated;
+  });
+  return updated;
+}
+export function getNotificationRule(id: string): NotificationRule | undefined {
+  return getDevStore().notificationRules.find((r) => r.id === id);
 }
 
 /** §31 custom field definitions. */

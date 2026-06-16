@@ -181,7 +181,14 @@ export type NotificationRule = {
     | "Receipt Issued"
     | "Contract Signed"
     | "Customer Converted"
-    | "Commission Created";
+    | "Commission Created"
+    | "Contract Pending"
+    | "Payment Overdue"
+    | "Lead Assigned"
+    | "Lead Transferred"
+    | "API Error"
+    | "WhatsApp Failure"
+    | "Delete Request Submitted";
   channels: NotificationChannel[];
   country: Country | "All countries";
   reseller: string | "All resellers";
