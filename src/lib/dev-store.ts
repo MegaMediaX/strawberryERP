@@ -32,6 +32,7 @@ import {
 } from "@/lib/business/important-details-mgmt";
 import type { EscalationRecord } from "@/lib/regional/escalation";
 import { defaultCountries, type CountryRecord } from "@/lib/admin/countries";
+import type { ResellerConfig } from "@/lib/admin/reseller-wizard";
 
 type DevStore = {
   invoices: Invoice[];
@@ -54,6 +55,7 @@ type DevStore = {
   users: PortalUser[];
   escalations: EscalationRecord[];
   countries: CountryRecord[];
+  resellerMetadata: ResellerConfig[];
 };
 
 const globalStore = globalThis as typeof globalThis & {
@@ -94,6 +96,7 @@ export function getDevStore() {
       users: portalUsers.map((u) => ({ ...u, countries: [...u.countries] })),
       escalations: [],
       countries: defaultCountries(),
+      resellerMetadata: [],
     };
   }
 
@@ -106,7 +109,22 @@ export function getDevStore() {
   store.users ??= portalUsers.map((u) => ({ ...u, countries: [...u.countries] }));
   store.escalations ??= [];
   store.countries ??= defaultCountries();
+  store.resellerMetadata ??= [];
   return store;
+}
+
+/** Extended reseller config captured by the §10 creation wizard (keyed by reseller name). */
+export function getResellerMetadata(reseller: string): ResellerConfig | undefined {
+  return getDevStore().resellerMetadata.find((m) => m.reseller.toLowerCase() === reseller.toLowerCase());
+}
+
+export function upsertResellerMetadata(config: ResellerConfig): ResellerConfig {
+  const store = getDevStore();
+  const exists = store.resellerMetadata.some((m) => m.reseller.toLowerCase() === config.reseller.toLowerCase());
+  store.resellerMetadata = exists
+    ? store.resellerMetadata.map((m) => (m.reseller.toLowerCase() === config.reseller.toLowerCase() ? config : m))
+    : [...store.resellerMetadata, config];
+  return config;
 }
 
 /** All configured countries (spec §9). */
