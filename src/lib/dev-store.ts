@@ -56,7 +56,11 @@ type DevStore = {
   escalations: EscalationRecord[];
   countries: CountryRecord[];
   resellerMetadata: ResellerConfig[];
+  leadOverrides: Record<string, LeadOverride>;
 };
+
+/** Admin mutations applied over the static lead seed (spec §13/§14). */
+export type LeadOverride = { assignedTo?: string; status?: string; convertedAt?: string; archived?: boolean };
 
 const globalStore = globalThis as typeof globalThis & {
   __lebtechDevStore?: DevStore;
@@ -97,6 +101,7 @@ export function getDevStore() {
       escalations: [],
       countries: defaultCountries(),
       resellerMetadata: [],
+      leadOverrides: {},
     };
   }
 
@@ -110,7 +115,20 @@ export function getDevStore() {
   store.escalations ??= [];
   store.countries ??= defaultCountries();
   store.resellerMetadata ??= [];
+  store.leadOverrides ??= {};
   return store;
+}
+
+/** Lead overrides applied by Super Admin actions (reassign/convert/archive) (§13/§14). */
+export function getLeadOverrides(): Record<string, LeadOverride> {
+  return getDevStore().leadOverrides;
+}
+
+export function applyLeadOverride(id: string, patch: LeadOverride): LeadOverride {
+  const store = getDevStore();
+  const next = { ...(store.leadOverrides[id] ?? {}), ...patch };
+  store.leadOverrides = { ...store.leadOverrides, [id]: next };
+  return next;
 }
 
 /** Extended reseller config captured by the §10 creation wizard (keyed by reseller name). */

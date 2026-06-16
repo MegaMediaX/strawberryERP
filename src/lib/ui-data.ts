@@ -4,6 +4,7 @@ import { frappeBackendClient } from "@/lib/backend/frappe-client";
 import { isFrappeConfigured } from "@/lib/frappe-client";
 import type { PortalSession } from "@/lib/portal-security";
 import { leads as devLeads, leadStatuses, type Country, type LeadStatus } from "@/lib/sample-data";
+import { getLeadOverrides } from "@/lib/dev-store";
 
 export type PortalLead = {
   id: string;
@@ -69,7 +70,15 @@ export async function getUiObject<T extends Record<string, unknown>>(
 
 export async function getUiLeads(session: PortalSession): Promise<UiDataResult<PortalLead[]>> {
   if (!isFrappeConfigured()) {
-    return { source: "dev-store", data: scopeLeads(devLeads.map((lead) => ({ ...lead, country: lead.country as Country })), session) };
+    // Apply Super-Admin lead overrides (reassign/convert/archive) over the static seed.
+    const overrides = getLeadOverrides();
+    const merged = devLeads
+      .map((lead) => {
+        const o = overrides[lead.id];
+        return { ...lead, country: lead.country as Country, ...(o ? { assignedTo: o.assignedTo ?? lead.assignedTo, status: (o.status as LeadStatus) ?? lead.status } : {}) };
+      })
+      .filter((lead) => !overrides[lead.id]?.archived);
+    return { source: "dev-store", data: scopeLeads(merged, session) };
   }
 
   try {
