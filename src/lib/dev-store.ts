@@ -34,6 +34,7 @@ import type { EscalationRecord } from "@/lib/regional/escalation";
 import { defaultCountries, type CountryRecord } from "@/lib/admin/countries";
 import type { ResellerConfig } from "@/lib/admin/reseller-wizard";
 import type { ExpenseRecord } from "@/lib/admin/pnl";
+import { defaultWhiteLabel, mergeWhiteLabel, type WhiteLabelSettings } from "@/lib/admin/white-label";
 
 type DevStore = {
   invoices: Invoice[];
@@ -61,6 +62,7 @@ type DevStore = {
   customerOverrides: Record<string, CustomerOverride>;
   invoiceDocSettings: InvoiceDocSettings;
   expenses: ExpenseRecord[];
+  whiteLabel: WhiteLabelSettings;
 };
 
 /** §18 invoice document settings (toggles + footer). dev-store, hooks-only. */
@@ -126,6 +128,7 @@ export function getDevStore() {
         { id: "EXP-1002", category: "Marketing", amount: 800, currency: "USD", country: "Lebanon", date: "2026-06-07", notes: "Q2 campaign", attachmentName: "" },
         { id: "EXP-1003", category: "Salaries", amount: 4500, currency: "USD", date: "2026-06-01", notes: "June payroll", attachmentName: "" },
       ],
+      whiteLabel: { ...defaultWhiteLabel, enabledModules: [...defaultWhiteLabel.enabledModules] },
     };
   }
 
@@ -143,7 +146,18 @@ export function getDevStore() {
   store.customerOverrides ??= {};
   store.invoiceDocSettings ??= { pdfTemplate: "Default", qrCode: true, paymentLink: true, whatsappShare: true, emailSend: true, footer: "Thank you for your business." };
   store.expenses ??= [];
+  store.whiteLabel ??= { ...defaultWhiteLabel, enabledModules: [...defaultWhiteLabel.enabledModules] };
   return store;
+}
+
+/** §30 white-label / branding settings (singleton). */
+export function getWhiteLabel(): WhiteLabelSettings {
+  return getDevStore().whiteLabel;
+}
+export function setWhiteLabel(patch: Partial<WhiteLabelSettings>): WhiteLabelSettings {
+  const store = getDevStore();
+  store.whiteLabel = mergeWhiteLabel(store.whiteLabel, patch);
+  return store.whiteLabel;
 }
 
 /** Platform expenses (spec §21). Newest-first. */
