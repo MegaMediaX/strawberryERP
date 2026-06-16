@@ -13,7 +13,9 @@ import { validateCountryForm, type CountryFormInput, type CountryRecord } from "
 
 function ensureSuperAdmin(request: Request) {
   const session = resolvePortalSession(request);
-  if (session.effectiveUser.role !== "Super Admin") return { denied: jsonError("Super Admin only.", 403), session };
+  // Use the authenticated user (not effectiveUser) so the real Super Admin keeps
+  // admin access during an active Login-As — consistent with every other admin route.
+  if (session.user.role !== "Super Admin") return { denied: jsonError("Super Admin only.", 403), session };
   return { denied: null, session };
 }
 
