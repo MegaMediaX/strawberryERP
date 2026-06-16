@@ -36,6 +36,10 @@ export type DeleteQueueRecord = {
   status: "Pending" | "Restored" | "Permanently Deleted" | "Cleared";
   requestedAt: string;
   resolvedAt?: string;
+  /** §32 columns — optional context captured at request time. */
+  role?: string;
+  country?: string;
+  reseller?: string;
 };
 
 export const portalUsers: PortalUser[] = [

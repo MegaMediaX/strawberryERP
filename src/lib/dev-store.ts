@@ -110,6 +110,22 @@ export function getDevStore() {
           reason: "Duplicate draft created during onboarding",
           status: "Pending",
           requestedAt: "2026-06-08T10:10:00Z",
+          role: "Reseller Admin",
+          country: "Cyprus",
+          reseller: "Nicosia Trade Hub",
+        },
+        {
+          id: "DEL-9002",
+          entityType: "Lead",
+          entityId: "LEAD-2477",
+          label: "Spam lead from web form",
+          requestedBy: "Rami K.",
+          reason: "Obvious spam submission",
+          status: "Pending",
+          requestedAt: "2026-06-09T14:25:00Z",
+          role: "Sales Team User",
+          country: "Lebanon",
+          reseller: "Beirut Digital Partners",
         },
       ],
       reminderRules: [...defaultReminderRules],
@@ -549,6 +565,23 @@ export function resolveDeleteQueue(id: string, status: DeleteQueueRecord["status
     record.id === id ? { ...record, status, resolvedAt: new Date().toISOString() } : record,
   );
   return store.deleteQueue.find((record) => record.id === id);
+}
+
+/** §32 Clear All — permanently delete every Pending request. Returns how many were cleared. */
+export function clearDeleteQueue() {
+  const store = getDevStore();
+  const now = new Date().toISOString();
+  let cleared = 0;
+  store.deleteQueue = store.deleteQueue.map((record) => {
+    if (record.status !== "Pending") return record;
+    cleared += 1;
+    return { ...record, status: "Permanently Deleted", resolvedAt: now };
+  });
+  return cleared;
+}
+
+export function getDeleteQueueRecord(id: string) {
+  return getDevStore().deleteQueue.find((record) => record.id === id);
 }
 
 function maskSecretConfig(config: Record<string, string | boolean | number | undefined>) {
