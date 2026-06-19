@@ -59,7 +59,7 @@ export function AdminSlotApprovalsView({ pending, zoneNames }: { pending: FloorP
           </tbody>
         </table>
       </CardContent></Card>
-      <p className="text-xs text-[var(--muted)]">Approving confirms the reservation (🔴) and adds a draft invoice line for the reseller. Holds auto-expire after 24 working hours.</p>
+      <p className="text-xs text-[var(--muted)]">Approving confirms the reservation and adds a draft invoice line for the reseller. Holds auto-expire after 24 working hours.</p>
     </div>
   );
 }

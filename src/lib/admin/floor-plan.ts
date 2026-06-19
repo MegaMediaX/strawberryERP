@@ -45,19 +45,22 @@ export function buildFloorPlan(input: {
 
   const slots: FloorPlanSlot[] = Object.entries(input.layout).map(([label, pos]) => {
     const rec = live[label] ?? { status: "Available" as SlotStatus };
-    const status: SlotStatus = activeSet.has(label) ? rec.status : "Inactive";
+    const isActive = activeSet.has(label);
+    const status: SlotStatus = isActive ? rec.status : "Inactive";
+    // When config forces a slot Inactive, don't leak the stale hold fields.
+    const showHold = isActive && (rec.status === "OnHold" || rec.status === "Reserved");
     return {
       label,
       zoneId: pos.zoneId,
       x: pos.x,
       y: pos.y,
       status,
-      heldBy: rec.heldBy,
-      heldAt: rec.heldAt,
-      approvedBy: rec.approvedBy,
-      reservedInvoice: rec.reservedInvoice,
+      heldBy: showHold ? rec.heldBy : undefined,
+      heldAt: showHold ? rec.heldAt : undefined,
+      approvedBy: showHold ? rec.approvedBy : undefined,
+      reservedInvoice: showHold ? rec.reservedInvoice : undefined,
       price: input.config.priceBySlot[label] ?? 0,
-      active: activeSet.has(label),
+      active: isActive,
       expiresAt: status === "OnHold" && rec.heldAt ? holdExpiresAt(rec.heldAt, HOLD_WORKING_HOURS, input.config.calendar) : undefined,
     };
   });

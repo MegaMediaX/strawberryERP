@@ -69,17 +69,18 @@ export function applyTransition(record: SlotStatusRecord, action: SlotAction, ct
     return { ok: false, error: `Cannot ${action} a slot that is "${record.status}".` };
   }
   switch (action) {
+    // Returned records are FULL replacements (callers never merge), so the
+    // Available/Inactive results intentionally carry no hold fields.
     case "requestHold":
       return { ok: true, next: { status: "OnHold", heldBy: ctx.actor, heldAt: ctx.now } };
     case "cancel":
     case "reject":
-      return { ok: true, next: { status: "Available" } };
+    case "release":
+      return { ok: true, next: { status: "Available", heldBy: undefined, heldAt: undefined, approvedBy: undefined, reservedInvoice: undefined } };
     case "approve":
       return { ok: true, next: { status: "Reserved", heldBy: record.heldBy, heldAt: record.heldAt, approvedBy: ctx.actor } };
-    case "release":
-      return { ok: true, next: { status: "Available" } };
     case "setInactive":
-      return { ok: true, next: { status: "Inactive" } };
+      return { ok: true, next: { status: "Inactive", heldBy: undefined, heldAt: undefined } };
     case "setActive":
       return { ok: true, next: { status: "Available" } };
   }

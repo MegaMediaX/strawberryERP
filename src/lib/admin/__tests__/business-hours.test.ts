@@ -66,6 +66,14 @@ describe("holdExpiresAt", () => {
     // Mon 06:00 → counts from Mon 09:00; 24h → Wed 17:00
     expect(holdExpiresAt(iso("2026-06-15T06:00"), 24, cal)).toBe(iso("2026-06-17T17:00"));
   });
+  it("skips a holiday when advancing the expiry", () => {
+    // Tue 2026-06-16 is a holiday → Mon(8)+[Tue skipped]+Wed(8)+Thu 09:00+8h = Thu 17:00
+    const withHoliday: BusinessCalendar = { ...cal, holidays: ["2026-06-16"] };
+    expect(holdExpiresAt(iso("2026-06-15T09:00"), 24, withHoliday)).toBe(iso("2026-06-18T17:00"));
+  });
+  it("returns the hold instant for a degenerate calendar (no working days)", () => {
+    expect(holdExpiresAt(iso("2026-06-15T09:00"), 24, { ...cal, workingDays: [] })).toBe(iso("2026-06-15T09:00"));
+  });
 });
 
 describe("defaultBusinessCalendar", () => {

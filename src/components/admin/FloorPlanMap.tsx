@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircleCheck, CircleSlash, Clock, Lock } from "lucide-react";
 
@@ -40,7 +40,9 @@ export function FloorPlanMap({ data, role, actor, isAdmin }: { data: FloorPlanDa
   const [busy, setBusy] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [err, setErr] = useState("");
-  const now = useMemo(() => Date.now(), []);
+  // Tick once a minute so the working-hours countdown stays live, not frozen at mount.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => { const t = setInterval(() => setNow(Date.now()), 60_000); return () => clearInterval(t); }, []);
   const isReseller = role === "Reseller Admin" || role === "Sales Team User";
 
   const visibleSlots = useMemo(
@@ -62,6 +64,7 @@ export function FloorPlanMap({ data, role, actor, isAdmin }: { data: FloorPlanDa
         : await fetch("/api/slots/hold", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ label, action }) });
       const d = (await res.json()) as { error?: string };
       if (!res.ok) { setErr(d.error ?? "Action failed."); return; }
+      setSelected(null); // the slot's available actions changed — close the stale panel
       router.refresh();
     } finally { setBusy(null); }
   }

@@ -80,6 +80,10 @@ export function workingHoursElapsed(startISO: string, nowISO: string, cal: Busin
 
 /** The wall-clock instant a hold lapses, advancing `allowed` working hours from `heldAt`. */
 export function holdExpiresAt(heldAtISO: string, workingHoursAllowed: number, cal: BusinessCalendar): string {
+  // Degenerate calendar (no working days): a hold can never accrue working time,
+  // so it never lapses — return the hold instant rather than spinning the guard
+  // loop to a date decades out.
+  if (cal.workingDays.length === 0 || cal.endHour <= cal.startHour) return heldAtISO;
   let remaining = workingHoursAllowed;
   const cursor = new Date(heldAtISO);
 

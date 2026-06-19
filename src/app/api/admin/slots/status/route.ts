@@ -1,8 +1,9 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
 import { devStoreResponse } from "@/lib/backend/backend-router";
-import { appendAudit, appendSlotInvoiceLine, getSlotConfig, getSlotStatuses, setSlotStatus } from "@/lib/dev-store";
+import { appendAudit, appendSlotInvoiceLine, getSlotConfig, getSlotLayout, getSlotStatuses, setSlotStatus } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { applyTransition, normalizeExpiredHolds, type SlotAction } from "@/lib/admin/slot-status";
+import { parseSlot } from "@/lib/admin/slots";
 
 /**
  * §slots P3 — Super-Admin approval actions (approve / reject / release).
@@ -18,6 +19,7 @@ export async function PATCH(request: Request) {
   let p: { label?: string; action?: SlotAction };
   try { p = (await request.json()) as typeof p; } catch { return jsonError("Invalid request body."); }
   if (!p.label || !p.action || !ADMIN_ACTIONS.includes(p.action)) return jsonError("A valid slot label and action are required.");
+  if (!parseSlot(p.label) || !getSlotLayout()[p.label]) return jsonError("Unknown slot label.", 400);
 
   const now = new Date().toISOString();
   const config = getSlotConfig();
