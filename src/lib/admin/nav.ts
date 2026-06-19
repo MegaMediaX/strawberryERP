@@ -11,7 +11,7 @@ export type AdminIcon =
   | "globe" | "store" | "user-cog" | "percent" | "file-cog" | "coins"
   | "credit-card" | "banknote" | "trending-up" | "shield" | "palette"
   | "form-input" | "bell" | "key" | "plug" | "trash" | "scroll" | "sliders"
-  | "bar-chart" | "search" | "user" | "more";
+  | "bar-chart" | "search" | "user" | "more" | "layout-grid";
 
 /** Badge slots for urgent counts (§4). Counts are injected at render time. */
 export type AdminBadgeKey =
@@ -55,6 +55,7 @@ export const adminSidebar: AdminNavGroup[] = [
     { label: "P&L", href: "/admin/accounting/pnl", icon: "trending-up" },
   ] },
   { label: "Platform", items: [
+    { label: "Exhibition Floor", href: "/admin/slots/layout", icon: "layout-grid" },
     { label: "White Label", href: "/admin/white-label", icon: "shield" },
     { label: "Branding", href: "/admin/branding", icon: "palette" },
     { label: "Custom Fields", href: "/admin/custom-fields", icon: "form-input" },

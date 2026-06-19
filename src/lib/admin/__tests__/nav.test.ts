@@ -21,7 +21,7 @@ describe("admin nav model (spec §4)", () => {
     expect(byGroup.Partners).toEqual(["Countries", "Resellers", "Users", "Commissions"]);
     expect(byGroup.Accounting).toEqual(["Invoicing", "Currencies", "Payment Methods", "Expenses", "P&L"]);
     expect(byGroup.Platform).toEqual([
-      "White Label", "Branding", "Custom Fields", "Notifications",
+      "Exhibition Floor", "White Label", "Branding", "Custom Fields", "Notifications",
       "API Developer Center", "Integrations", "Delete Queue", "Audit Logs", "Settings",
     ]);
   });

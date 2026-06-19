@@ -88,6 +88,8 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Decisions log (PM escalations)
 
+- **2026-06-17 — Exhibition Floor Plan editor fidelity + phasing (PM ruling).** PM confirmed P2 (Super-Admin drag-drop layout editor) as the next slice and ruled: ship **snap-to-grid zone-based placement ONLY** — defer free-form pixel positioning + background floor images post-launch (the value is the hold→approve workflow, not editor polish). Keep order **P1→P2→P3→P4** (do NOT front-run the approval workflow: P3's map needs a real user-authored layout from P2, not an auto-grid). P2 acceptance: desktop snap-grid canvas (palette + zones CRUD + place + active toggle + price), 380px read-only "desktop-only" banner, `PATCH /api/admin/slots/layout` (Super-Admin + audit + DELETE→405), persist across reload, nav entry under Platform. Full plan: `plans/exhibition-floor-plan.md`.
+
 - **2026-06-13 — Lead status-transition matrix.** Handoff §3 lists the 6 statuses + "Scheduled Follow-Up requires a date" but no transition matrix. Decided (self, documented, not a blocker): New→only attempt/contact; any progress state ↔ any other progress state (re-engagement allowed incl. reviving Not Interested); →Scheduled Follow-Up requires a date; no return to New after contact begins. Encoded in `src/lib/business/lead-workflow.ts`. Revisit if product specifies a stricter funnel.
 
 - **2026-06-14 — Post-DoD work order (PM ruling).** Build pushed to PRIVATE repo `MegaMediaX/strawberryERP`. PM (multi-tenant SaaS/CRM expert) sequenced: **(1) SCRUB SECRETS first** — hardcoded seed passwords were in 6 tracked test/smoke files; moved to env-var lookups (`SEED_ADMIN_PW`/`SEED_REGIONAL_PW`/`SEED_RESELLER_PW`/`SEED_SALES_PW`), real values in untracked `.env`, placeholders in `.env.example`, hermetic vitest setup injects only `SEED_*`. Done — 303 tests pass, typecheck/lint clean, pushed (`fb3c0b3`). **(2) Then PHASE 1 UX ROADMAP (B1→B2):** New-Lead form, full call screen, lead→customer conversion, lead transfer/reassignment (B1); then mobile shell bottom-nav + FAB (B2); each a 1–2 cycle fire with spec-flow validation + live browser QA. Principle: close credential-hygiene debt before it compounds, then ship user-visible value on a hardened base. NOTE: scrub covers the working tree + future commits only — the 53 commits of pre-scrub history still contain the plaintext; acceptable while private, rewrite (or rotate) required before any public-ization.
@@ -99,6 +101,14 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 ---
 
 ## Resume journal (newest first)
+
+### Fire EX-P2 — 2026-06-17 — Exhibition Floor Plan slice P2: Super-Admin drag-drop layout editor ✅ SHIPPED
+- **PM ruling applied:** snap-to-grid zone placement only (no free-form/floor-image); order P1→P2→P3→P4 kept.
+- **Shipped:** `AdminSlotLayoutEditor` (HTML5 drag-and-drop: palette of unplaced active slots → drop onto a 6×4 grid per zone = snap; per-slot select → active toggle + price; remove×; zone add/rename/reorder; Save disabled until dirty; legend; mobile = desktop-only banner + read-only zone summary) · `PATCH/DELETE(405) /api/admin/slots/layout` (Super-Admin-only; validates labels/zones/positions, rejects duplicate cells + negative prices; persists slotLayout+slotZones+slotConfig; audited) · page `/admin/slots/layout` · nav "Exhibition Floor" under Platform (+ new `layout-grid` icon).
+- **Gate:** `npm test` **758 pass** · typecheck/lint clean · build green (page + API emitted). Updated nav.test Platform list.
+- **Browser (super.admin):** desktop — 2 zones/48 cells/7 seeded tiles, select A1→price 1500, remove A2→palette+Save enables; save persists across reload (A1/A2 only after a test save); **audit "update · SlotLayout floor-plan"** on dashboard. API: save 200; bad-zone/dup-cell/neg-price **400**; **DELETE 405**. Mobile 380 → desktop-only banner + zone summary, no overflow.
+- **Next:** P3 — read-only Exhibition Floor Plan map (whole-map, color+label+icon states, working-hours countdown, hold/approve APIs).
+
 
 ### Fire SA18 (cont. 124) — 2026-06-17 — SUPER ADMIN UI slice 18 (FINAL): admin Invoices + Receipts lists+detail + COMPLETION AUDIT ✅ COMPLETE
 - **PM ruling (recorded):** Final slice = the last 4 placeholders (global invoices + receipts, list + detail) with full access + admin actions, then the STOP-condition audit. Reuse the tested `regionalInvoiceRows`/`filterInvoices`/`filterReceipts` + `invoicePaymentState` over a new unscoped billing bundle. Admin deletion goes through the §32 delete queue (never a hard delete).
