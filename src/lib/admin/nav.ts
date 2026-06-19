@@ -55,7 +55,7 @@ export const adminSidebar: AdminNavGroup[] = [
     { label: "P&L", href: "/admin/accounting/pnl", icon: "trending-up" },
   ] },
   { label: "Platform", items: [
-    { label: "Exhibition Floor", href: "/admin/slots/layout", icon: "layout-grid" },
+    { label: "Exhibition Floor", href: "/admin/slots", icon: "layout-grid" },
     { label: "White Label", href: "/admin/white-label", icon: "shield" },
     { label: "Branding", href: "/admin/branding", icon: "palette" },
     { label: "Custom Fields", href: "/admin/custom-fields", icon: "form-input" },

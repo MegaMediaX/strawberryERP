@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
-  BarChart3, CalendarClock, FileText, Home, Percent, Receipt, Settings,
+  BarChart3, CalendarClock, FileText, Home, LayoutGrid, Percent, Receipt, Settings,
   User, UserCheck, UserCog, Users, MoreHorizontal,
 } from "lucide-react";
 import type { ComponentType } from "react";
@@ -25,6 +25,7 @@ const ICONS: Record<ResellerIcon, ComponentType<{ className?: string }>> = {
   settings: Settings,
   user: User,
   more: MoreHorizontal,
+  "layout-grid": LayoutGrid,
 };
 
 /** Desktop sidebar (spec §3). */

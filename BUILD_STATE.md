@@ -102,6 +102,15 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire EX-P3 — 2026-06-19 — Exhibition Floor Plan slice P3: live map + hold/approve workflow ✅ SHIPPED
+- **Scope call (self, recorded):** honored locked "whole-map all roles" by mounting the SAME `FloorPlanMap` at `/admin/slots` (Super Admin: view + approve/reject/release) AND `/reseller/exhibition` (resellers: view + request-hold/cancel-own) + reseller nav entry. Admin nav "Exhibition Floor" repointed to the map (`/admin/slots`), editor linked from it.
+- **Shipped:** `floor-plan.ts` (`buildFloorPlan` — positions saved layout + applies compute-on-read expiry + computes per-hold `expiresAt`; `floorPlanCounts`; **3 tests**) · `FloorPlanMap` (color+label+icon tiles, legend, status/zone sticky filters, working-hours countdown, click→role-aware actions) · `POST /api/slots/hold` (reseller requestHold/cancel, acts as **effectiveUser** so impersonation works, fail-closed, audited, DELETE→405) · `PATCH /api/admin/slots/status` (Super-Admin approve/reject/release, audited, DELETE→405) · admin + reseller pages · reseller nav "Exhibition".
+- **Gate:** `npm test` **761 pass** (+3) · typecheck/lint clean · build green (6 routes emitted).
+- **Browser (super.admin + impersonated reseller):** admin map 7 tiles correct states + legend; A2 OnHold shows countdown "Expires 2026-06-22 10:00 · 2d 21h left"; **approve A2 → Reserved**, release A3 → Available; bad edge **400**, admin self-hold **403**, DELETE **405**. Impersonated reseller: **hold A1 → OnHold (held by Beirut Digital Partners)**, invalid cancel **403**, reseller page shows only "Request hold". **Audit:** hold·SlotHold / approve·SlotStatus / release·SlotStatus on dashboard. Auto-expiry compute-on-read unit-tested. Mobile 380 → both maps no overflow.
+- **Fixes during verify:** countdown label was mislabeled "working days" (divided calendar hrs by 8) → now honest calendar countdown to the working-hours-correct expiry instant; hold route now acts as effectiveUser (enables impersonation holds; real non-impersonating Super Admin still blocked).
+- **Next:** P4 — Slot Approvals queue (mirror delete-queue) + approval→draft-invoice-line + code-reviewer/security-reviewer pass.
+
+
 ### Fire EX-P2 — 2026-06-17 — Exhibition Floor Plan slice P2: Super-Admin drag-drop layout editor ✅ SHIPPED
 - **PM ruling applied:** snap-to-grid zone placement only (no free-form/floor-image); order P1→P2→P3→P4 kept.
 - **Shipped:** `AdminSlotLayoutEditor` (HTML5 drag-and-drop: palette of unplaced active slots → drop onto a 6×4 grid per zone = snap; per-slot select → active toggle + price; remove×; zone add/rename/reorder; Save disabled until dirty; legend; mobile = desktop-only banner + read-only zone summary) · `PATCH/DELETE(405) /api/admin/slots/layout` (Super-Admin-only; validates labels/zones/positions, rejects duplicate cells + negative prices; persists slotLayout+slotZones+slotConfig; audited) · page `/admin/slots/layout` · nav "Exhibition Floor" under Platform (+ new `layout-grid` icon).

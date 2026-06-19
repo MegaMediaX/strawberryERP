@@ -3,10 +3,10 @@ import { describe, expect, it } from "vitest";
 import { isActiveReseller, resellerBottomNav, resellerMore, resellerSidebar } from "@/lib/reseller/nav";
 
 describe("reseller nav model (spec §3)", () => {
-  it("has the 10 sidebar items in order", () => {
+  it("has the 11 sidebar items in order", () => {
     expect(resellerSidebar.map((i) => i.label)).toEqual([
       "Dashboard", "Leads", "Customers", "Invoices", "Receipts",
-      "Commissions", "Team", "Calendar", "Reports", "Settings",
+      "Commissions", "Team", "Calendar", "Reports", "Exhibition", "Settings",
     ]);
   });
 

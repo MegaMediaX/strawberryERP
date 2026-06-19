@@ -6,7 +6,7 @@
 export type ResellerIcon =
   | "home" | "users" | "user-check" | "receipt" | "file-text"
   | "percent" | "user-cog" | "calendar" | "bar-chart" | "settings"
-  | "user" | "more";
+  | "user" | "more" | "layout-grid";
 
 export interface NavItem {
   label: string;
@@ -25,6 +25,7 @@ export const resellerSidebar: NavItem[] = [
   { label: "Team", href: "/reseller/team", icon: "user-cog" },
   { label: "Calendar", href: "/reseller/calendar", icon: "calendar" },
   { label: "Reports", href: "/reseller/reports", icon: "bar-chart" },
+  { label: "Exhibition", href: "/reseller/exhibition", icon: "layout-grid" },
   { label: "Settings", href: "/reseller/settings", icon: "settings" },
 ];
 
