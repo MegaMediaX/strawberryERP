@@ -2,6 +2,7 @@ import {
   activityTimeline,
   apiKeys,
   apiLogs,
+  calculateInvoiceTotals,
   commissionEntries,
   contracts,
   currencySettings,
@@ -258,6 +259,37 @@ export function getSlotZones(): SlotZone[] {
 export function setSlotZones(zones: SlotZone[]): SlotZone[] {
   getDevStore().slotZones = zones;
   return zones;
+}
+
+/**
+ * §slots P4 — on approval, attach the slot as a line on the reseller's DRAFT
+ * slot-reservation invoice (creating that draft once). Returns the invoice id.
+ * The final invoice stays the existing separate flow.
+ */
+export function appendSlotInvoiceLine(opts: { reseller: string; label: string; price: number; currency: string }): string {
+  const store = getDevStore();
+  const draftId = `SLOT-DRAFT-${opts.reseller.replace(/\s+/g, "-").toUpperCase()}`;
+  let invoice = store.invoices.find((i) => i.id === draftId);
+  const line = { description: `Slot ${opts.label}`, quantity: 1, unitPrice: opts.price };
+
+  if (!invoice) {
+    invoice = {
+      id: draftId, invoiceNumber: `DRAFT-${opts.reseller.slice(0, 3).toUpperCase()}`, numberingMode: "Reseller Prefix",
+      country: "Lebanon", reseller: opts.reseller, customer: "Slot reservations (draft)", currency: opts.currency,
+      lineItems: [line], subtotal: 0, discount: 0, taxAmount: 0, total: 0,
+      paymentStatus: "Unpaid", invoiceStatus: "Draft", dueDate: "", generatedPdfUrl: "", qrCodeUrl: "",
+      paymentLink: "", createdByUser: "Slot reservation", issuedAt: "",
+    };
+    const totals = calculateInvoiceTotals(invoice.lineItems, 0, 0);
+    invoice = { ...invoice, ...totals };
+    store.invoices = [invoice, ...store.invoices];
+  } else {
+    const lineItems = [...invoice.lineItems, line];
+    const totals = calculateInvoiceTotals(lineItems, invoice.discount, invoice.taxAmount);
+    const updated = { ...invoice, lineItems, ...totals };
+    store.invoices = store.invoices.map((i) => (i.id === draftId ? updated : i));
+  }
+  return draftId;
 }
 
 /** §44 permission matrix. */

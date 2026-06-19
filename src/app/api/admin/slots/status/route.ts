@@ -1,6 +1,6 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
 import { devStoreResponse } from "@/lib/backend/backend-router";
-import { appendAudit, getSlotConfig, getSlotStatuses, setSlotStatus } from "@/lib/dev-store";
+import { appendAudit, appendSlotInvoiceLine, getSlotConfig, getSlotStatuses, setSlotStatus } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { applyTransition, normalizeExpiredHolds, type SlotAction } from "@/lib/admin/slot-status";
 
@@ -26,9 +26,16 @@ export async function PATCH(request: Request) {
   const result = applyTransition(current, p.action, { role: session.user.role, actor: session.user.name, now });
   if (!result.ok) return jsonError(result.error, 400);
 
+  // §P4 — on approval, attach the slot as a line on the reseller's draft invoice.
+  let draftInvoice: string | undefined;
+  if (p.action === "approve" && result.next.heldBy) {
+    draftInvoice = appendSlotInvoiceLine({ reseller: result.next.heldBy, label: p.label, price: config.priceBySlot[p.label] ?? 0, currency: config.currency });
+    result.next.reservedInvoice = draftInvoice;
+  }
+
   setSlotStatus(p.label, result.next);
-  const audit = appendAudit({ entityType: "SlotStatus", entityId: p.label, action: p.action, oldValue: current.status, newValue: result.next.status, performedBy: session.auditLabel });
-  return devStoreResponse({ slot: p.label, status: result.next, message: `Slot ${p.label} → ${result.next.status}.` }, { audit });
+  const audit = appendAudit({ entityType: "SlotStatus", entityId: p.label, action: p.action, oldValue: current.status, newValue: draftInvoice ? `${result.next.status} · ${draftInvoice}` : result.next.status, performedBy: session.auditLabel });
+  return devStoreResponse({ slot: p.label, status: result.next, draftInvoice, message: `Slot ${p.label} → ${result.next.status}.` }, { audit });
 }
 
 export function DELETE() {

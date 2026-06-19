@@ -102,6 +102,13 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire EX-P4 — 2026-06-19 — Exhibition Floor Plan slice P4: approvals queue + draft-invoice handoff ✅ SHIPPED
+- **Shipped:** dev-store `appendSlotInvoiceLine` (creates/extends a per-reseller `SLOT-DRAFT-<reseller>` Draft invoice, recomputes totals via `calculateInvoiceTotals`) · `/api/admin/slots/status` approve path now attaches the draft line + sets `reservedInvoice` · `AdminSlotApprovalsView` (mirror delete-queue: pending OnHold table + countdown + Approve/Reject) · page `/admin/slots/approvals` + "Approvals (N)" link on the floor-plan header.
+- **Gate:** `npm test` **761 pass** · typecheck/lint clean · build green (approvals route emitted).
+- **Browser (super.admin):** approvals queue lists pending hold A2 → **Approve → queue empties, A2 Reserved**, draft invoice **DRAFT-BEI** created (Beirut Digital Partners · USD 1,500) with line **"Slot A2"** (detail confirms). **Audit** approve·SlotStatus A2 on dashboard. Mobile 380 → no overflow.
+- **Next:** final /verify + code-reviewer + security-reviewer over P1–P4, fix critical/high, report completion.
+
+
 ### Fire EX-P3 — 2026-06-19 — Exhibition Floor Plan slice P3: live map + hold/approve workflow ✅ SHIPPED
 - **Scope call (self, recorded):** honored locked "whole-map all roles" by mounting the SAME `FloorPlanMap` at `/admin/slots` (Super Admin: view + approve/reject/release) AND `/reseller/exhibition` (resellers: view + request-hold/cancel-own) + reseller nav entry. Admin nav "Exhibition Floor" repointed to the map (`/admin/slots`), editor linked from it.
 - **Shipped:** `floor-plan.ts` (`buildFloorPlan` — positions saved layout + applies compute-on-read expiry + computes per-hold `expiresAt`; `floorPlanCounts`; **3 tests**) · `FloorPlanMap` (color+label+icon tiles, legend, status/zone sticky filters, working-hours countdown, click→role-aware actions) · `POST /api/slots/hold` (reseller requestHold/cancel, acts as **effectiveUser** so impersonation works, fail-closed, audited, DELETE→405) · `PATCH /api/admin/slots/status` (Super-Admin approve/reject/release, audited, DELETE→405) · admin + reseller pages · reseller nav "Exhibition".
