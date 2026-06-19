@@ -40,6 +40,9 @@ import { defaultWhiteLabel, mergeWhiteLabel, type WhiteLabelSettings } from "@/l
 import { defaultCustomFields, type CustomFieldRecord } from "@/lib/admin/custom-fields";
 import { defaultPermissionMatrix, type PermissionMatrix } from "@/lib/admin/permission-matrix";
 import { defaultPlatformSettings, type PlatformSettings, type SettingsSection } from "@/lib/admin/platform-settings";
+import { generateSlotCatalog, type SlotConfig, type SlotLayoutEntry, type SlotZone } from "@/lib/admin/slots";
+import { defaultBusinessCalendar } from "@/lib/admin/business-hours";
+import type { SlotStatusRecord } from "@/lib/admin/slot-status";
 
 type DevStore = {
   invoices: Invoice[];
@@ -72,7 +75,37 @@ type DevStore = {
   notificationRules: NotificationRule[];
   permissionMatrix: PermissionMatrix;
   platformSettings: PlatformSettings;
+  slotConfig: SlotConfig;
+  slotStatuses: Record<string, SlotStatusRecord>;
+  slotLayout: Record<string, SlotLayoutEntry>;
+  slotZones: SlotZone[];
 };
+
+/** §slots — seed a small demo floor plan so the map has something to render. */
+function seedSlots(): { config: SlotConfig; statuses: Record<string, SlotStatusRecord>; layout: Record<string, SlotLayoutEntry>; zones: SlotZone[] } {
+  const config: SlotConfig = {
+    slotsPerLetter: 6,
+    activeSlots: ["A1", "A2", "A3", "A4", "B1", "B2", "B3"],
+    priceBySlot: { A1: 1500, A2: 1500, A3: 1200, A4: 1200, B1: 900, B2: 900, B3: 900 },
+    currency: "USD",
+    calendar: defaultBusinessCalendar("Asia/Beirut"),
+  };
+  const zones: SlotZone[] = [
+    { id: "hall-a", name: "Hall A — Premium", order: 0 },
+    { id: "hall-b", name: "Hall B — Standard", order: 1 },
+  ];
+  const layout: Record<string, SlotLayoutEntry> = {
+    A1: { zoneId: "hall-a", x: 0, y: 0 }, A2: { zoneId: "hall-a", x: 1, y: 0 },
+    A3: { zoneId: "hall-a", x: 2, y: 0 }, A4: { zoneId: "hall-a", x: 3, y: 0 },
+    B1: { zoneId: "hall-b", x: 0, y: 0 }, B2: { zoneId: "hall-b", x: 1, y: 0 }, B3: { zoneId: "hall-b", x: 2, y: 0 },
+  };
+  const statuses: Record<string, SlotStatusRecord> = {
+    A2: { status: "OnHold", heldBy: "Beirut Digital Partners", heldAt: "2026-06-17T10:00:00.000Z" },
+    A3: { status: "Reserved", heldBy: "Beirut Digital Partners", heldAt: "2026-06-12T09:00:00.000Z", approvedBy: "Super Admin", reservedInvoice: "INV-2026-LB-0041" },
+    B2: { status: "Inactive" },
+  };
+  return { config, statuses, layout, zones };
+}
 
 /** §18 invoice document settings (toggles + footer). dev-store, hooks-only. */
 export type InvoiceDocSettings = {
@@ -158,6 +191,7 @@ export function getDevStore() {
       notificationRules: notificationRules.map((r) => ({ ...r, channels: [...r.channels] })),
       permissionMatrix: structuredClone(defaultPermissionMatrix),
       platformSettings: structuredClone(defaultPlatformSettings),
+      ...(() => { const s = seedSlots(); return { slotConfig: s.config, slotStatuses: s.statuses, slotLayout: s.layout, slotZones: s.zones }; })(),
     };
   }
 
@@ -180,7 +214,50 @@ export function getDevStore() {
   store.notificationRules ??= notificationRules.map((r) => ({ ...r, channels: [...r.channels] }));
   store.permissionMatrix ??= structuredClone(defaultPermissionMatrix);
   store.platformSettings ??= structuredClone(defaultPlatformSettings);
+  if (!store.slotConfig) { const s = seedSlots(); store.slotConfig = s.config; store.slotStatuses = s.statuses; store.slotLayout = s.layout; store.slotZones = s.zones; }
   return store;
+}
+
+/** §slots — config (catalog size, active, prices, calendar). */
+export function getSlotConfig(): SlotConfig {
+  return getDevStore().slotConfig;
+}
+export function setSlotConfig(patch: Partial<SlotConfig>): SlotConfig {
+  const store = getDevStore();
+  store.slotConfig = { ...store.slotConfig, ...patch };
+  return store.slotConfig;
+}
+/** Full catalog of labels the config allows (A1..Z<n>). */
+export function getSlotCatalog(): string[] {
+  return generateSlotCatalog(getDevStore().slotConfig.slotsPerLetter);
+}
+
+/** §slots — live statuses (label → record). */
+export function getSlotStatuses(): Record<string, SlotStatusRecord> {
+  return getDevStore().slotStatuses;
+}
+export function getSlotStatusRecord(label: string): SlotStatusRecord {
+  return getDevStore().slotStatuses[label] ?? { status: "Available" };
+}
+export function setSlotStatus(label: string, record: SlotStatusRecord): SlotStatusRecord {
+  getDevStore().slotStatuses[label] = record;
+  return record;
+}
+
+/** §slots — layout (label → {zoneId,x,y}) + zones. */
+export function getSlotLayout(): Record<string, SlotLayoutEntry> {
+  return getDevStore().slotLayout;
+}
+export function setSlotLayout(layout: Record<string, SlotLayoutEntry>): Record<string, SlotLayoutEntry> {
+  getDevStore().slotLayout = layout;
+  return layout;
+}
+export function getSlotZones(): SlotZone[] {
+  return getDevStore().slotZones;
+}
+export function setSlotZones(zones: SlotZone[]): SlotZone[] {
+  getDevStore().slotZones = zones;
+  return zones;
 }
 
 /** §44 permission matrix. */
