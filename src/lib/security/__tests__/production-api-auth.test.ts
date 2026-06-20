@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { createSessionToken, SESSION_COOKIE } from "@/lib/auth/session-token";
 import { evaluateApiPermission } from "@/lib/security/permissions";
+import { resolvePortalSession } from "@/lib/portal-security";
 
 /**
  * §17/§18 regression: the /api/frappe boundary must FAIL CLOSED in production.
@@ -58,5 +59,32 @@ describe("production /api/frappe auth", () => {
   it("still allows dev-header identity outside production (developer convenience)", () => {
     const d = evaluate({ "x-platform-user-id": "USR-SUPER" });
     expect(d.allowed).toBe(true);
+  });
+});
+
+describe("resolvePortalSession — admin-route fail-closed (regression for the /api/admin escalation)", () => {
+  it("unauthenticated production resolves to a NON-Super-Admin, unauthenticated user", () => {
+    withProductionEnv(() => {
+      const s = resolvePortalSession(new Request("https://portal.local/api/admin/resellers"));
+      expect(s.authenticated).toBe(false);
+      expect(s.user.role).not.toBe("Super Admin"); // the bug: used to default to Super Admin
+      expect(s.user.id).toBe("ANON");
+    });
+  });
+
+  it("ignores a spoofed x-platform-user-id in production (stays anonymous)", () => {
+    withProductionEnv(() => {
+      const s = resolvePortalSession(new Request("https://portal.local/api/admin/resellers", { headers: { "x-platform-user-id": "USR-SUPER" } }));
+      expect(s.user.role).not.toBe("Super Admin");
+    });
+  });
+
+  it("a valid signed cookie still resolves the real Super Admin in production", () => {
+    withProductionEnv(() => {
+      const token = createSessionToken("USR-SUPER");
+      const s = resolvePortalSession(new Request("https://portal.local/api/admin/resellers", { headers: { cookie: `${SESSION_COOKIE}=${token}` } }));
+      expect(s.authenticated).toBe(true);
+      expect(s.user.role).toBe("Super Admin");
+    });
   });
 });

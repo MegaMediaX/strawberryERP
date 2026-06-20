@@ -97,6 +97,21 @@ export function getDefaultSession(): PortalSession {
   };
 }
 
+/**
+ * Fail-closed identity for an unauthenticated production request (no signed
+ * cookie, dev headers disallowed). Least-privilege + inactive + no scope, so
+ * role/scope guards on every route deny it — never the Super-Admin default.
+ */
+const ANONYMOUS_USER: PortalUser = {
+  id: "ANON",
+  name: "Unauthenticated",
+  email: "",
+  role: "Sales Team User",
+  countries: [],
+  reseller: undefined,
+  active: false,
+};
+
 export function resolvePortalSession(request: Request): PortalSession {
   // 1. A verified, signed session cookie is authoritative (real login).
   const payload = verifySessionToken(readSessionCookie(request.headers));
@@ -118,7 +133,11 @@ export function resolvePortalSession(request: Request): PortalSession {
   const sessionToken = request.headers.get("x-portal-session-token") ?? bearerToken;
   const expiresAt = request.headers.get("x-platform-session-expires-at") ?? undefined;
   const userId = allowDevHeaders ? (request.headers.get("x-platform-user-id") ?? "USR-SUPER") : null;
-  const user = (userId ? portalUsers.find((item) => item.id === userId && item.active) : undefined) ?? portalUsers[0];
+  // Unauthenticated production (userId === null) → anonymous, NOT the Super-Admin
+  // default. Dev/proxy header mode still resolves a real user as before.
+  const user = userId
+    ? (portalUsers.find((item) => item.id === userId && item.active) ?? portalUsers[0])
+    : ANONYMOUS_USER;
 
   const impersonatedUserId = allowDevHeaders ? request.headers.get("x-platform-impersonate-user-id") : null;
   const impersonated = impersonatedUserId
