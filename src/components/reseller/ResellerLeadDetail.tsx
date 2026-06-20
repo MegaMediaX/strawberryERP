@@ -42,6 +42,7 @@ export function ResellerLeadDetail({
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
       <div className="min-w-0">
         <LeadCallScreen
+          key={lead.id}
           lead={lead}
           users={users}
           actingUser={actingUser}

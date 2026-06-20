@@ -101,6 +101,7 @@ export default async function PlatformRoute({ params }: PageProps) {
           <ActionLink href="/leads" variant="secondary">← Back to leads</ActionLink>
         </div>
         <LeadCallScreen
+          key={lead.id}
           lead={lead}
           users={portalUsers}
           actingUser={{

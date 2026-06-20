@@ -32,6 +32,7 @@ export default async function SalesLeadDetailPage({ params }: { params: Promise<
     <div className="grid gap-4">
       <Link href="/sales/leads" className="text-sm font-semibold text-[var(--brand)]">← Back to my leads</Link>
       <LeadCallScreen
+        key={lead.id}
         lead={lead}
         enableQuickOutcomes
         enableNotesCompose
