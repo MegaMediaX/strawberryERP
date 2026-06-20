@@ -81,8 +81,17 @@ def validate_customer_csv(csv_text: str):
     return {"accepted": accepted, "warnings": warnings}
 
 
+# Substrings that mark a field as a secret/internal column never to be exported.
+_SENSITIVE_FIELD_MARKERS = ("hash", "secret", "token", "password", "config_json")
+
+
 @frappe.whitelist(methods=["GET"])
 def export_records(doctype: str, fields: str | None = None):
+    # Export is a Super-Admin operation and must never leak internal columns
+    # (key_hash, config_json, …) or dump unscoped bulk data (review #4).
+    if "Super Admin" not in frappe.get_roles():
+        frappe.throw("Export is restricted to Super Admin.", frappe.PermissionError)
+
     allowed = {
         "Invoice",
         "Receipt",
@@ -96,7 +105,10 @@ def export_records(doctype: str, fields: str | None = None):
     if doctype not in allowed:
         frappe.throw("Export not allowed for this DocType.", frappe.PermissionError)
 
-    selected_fields = [field.strip() for field in fields.split(",")] if fields else ["name", "modified"]
+    requested = [field.strip() for field in fields.split(",") if field.strip()] if fields else ["name", "modified"]
+    selected_fields = [f for f in requested if not any(marker in f.lower() for marker in _SENSITIVE_FIELD_MARKERS)]
+    if not selected_fields:
+        selected_fields = ["name", "modified"]
     rows = frappe.get_all(doctype, fields=selected_fields, limit_page_length=5000)
     output = io.StringIO()
     writer = csv.DictWriter(output, fieldnames=selected_fields)
