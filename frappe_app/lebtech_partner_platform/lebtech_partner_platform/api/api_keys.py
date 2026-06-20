@@ -113,6 +113,10 @@ def update_api_key(name: str, **payload):
 
 @frappe.whitelist(methods=["POST"])
 def log_api_request(**payload):
+    # API-request logging is privileged — NOT an open write surface. Without this
+    # gate any authenticated user could forge audit rows / flood the log (review
+    # #5). Real per-request logging, if added, must call an internal helper.
+    require_super_admin("api_log")
     doc = frappe.get_doc({"doctype": API_LOG_DOCTYPE, **payload})
     doc.insert(ignore_permissions=True)
     frappe.db.commit()
