@@ -55,11 +55,17 @@ def update_invoice(name: str, **payload):
     if payload.get("country"):
         validate_country_value(payload["country"])
 
+    # Block mass-assignment of scope / computed / lifecycle fields (review #8) —
+    # totals are derived, status is driven by dedicated actions, reseller is scope.
+    protected = {"doctype", "name", "owner", "creation", "modified", "modified_by",
+                 "reseller", "total", "subtotal", "tax_amount", "invoice_number",
+                 "payment_status", "invoice_status"}
     doc = frappe.get_doc("Invoice", name)
     old_status = doc.invoice_status
     for field, value in payload.items():
-        if field not in {"doctype", "name"}:
-            doc.set(field, value)
+        if field in protected:
+            continue
+        doc.set(field, value)
     doc.save()
     frappe.db.commit()
     write_activity("Invoice", doc.name, "update", old_status, doc.invoice_status)
@@ -118,10 +124,14 @@ def update_receipt(name: str, **payload):
     if payload.get("country"):
         validate_country_value(payload["country"])
 
+    # Block mass-assignment of scope / immutable fields (review #8).
+    protected = {"doctype", "name", "owner", "creation", "modified", "modified_by",
+                 "reseller", "amount", "receipt_number", "invoice"}
     doc = frappe.get_doc("Receipt", name)
     for field, value in payload.items():
-        if field not in {"doctype", "name"}:
-            doc.set(field, value)
+        if field in protected:
+            continue
+        doc.set(field, value)
     doc.save()
     frappe.db.commit()
     write_activity("Receipt", doc.name, "update")

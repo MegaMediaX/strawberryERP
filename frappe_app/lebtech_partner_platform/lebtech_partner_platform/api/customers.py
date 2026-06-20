@@ -56,10 +56,14 @@ def update_customer(name: str, **payload):
     if payload.get("country"):
         validate_country_value(payload["country"])
 
+    # Block mass-assignment of system / scope fields (review #8) — a reseller
+    # must not move a customer to another reseller via `reseller`.
+    protected = {"doctype", "name", "owner", "creation", "modified", "modified_by", "reseller"}
     doc = frappe.get_doc("Partner Customer", name)
     for field, value in payload.items():
-        if field not in {"doctype", "name"}:
-            doc.set(field, value)
+        if field in protected:
+            continue
+        doc.set(field, value)
     doc.save()
     frappe.db.commit()
     write_activity("Partner Customer", doc.name, "update")
