@@ -17,12 +17,15 @@ function get(query: string, userId = "USR-SUPER") {
 }
 
 describe("GET /api/frappe/leads — pagination", () => {
-  it("returns full scoped array when no pagination params (backward compatible)", async () => {
+  it("paginates with defaults (page 1, size 50) when no params — never a full-table dump", async () => {
     const res = await get("");
-    const body = (await res.json()) as { ok: boolean; data: unknown[]; total?: number };
+    const body = (await res.json()) as { ok: boolean; data: unknown[]; page: number; pageSize: number; total: number };
     expect(body.ok).toBe(true);
     expect(Array.isArray(body.data)).toBe(true);
-    expect(body.total).toBeUndefined();
+    expect(body.page).toBe(1);
+    expect(body.pageSize).toBe(50);
+    expect(body.data.length).toBeLessThanOrEqual(50);
+    expect(typeof body.total).toBe("number");
   });
 
   it("returns a page with meta when page/pageSize are supplied", async () => {

@@ -56,28 +56,24 @@ export async function GET(request: Request) {
 
   const pageParam = url.searchParams.get("page");
   const pageSizeParam = url.searchParams.get("pageSize");
-  if (pageParam || pageSizeParam) {
-    const result = paginate(scopedLeads, {
-      page: pageParam ? Number(pageParam) : undefined,
-      pageSize: pageSizeParam ? Number(pageSizeParam) : undefined,
-      sortBy: url.searchParams.get("sortBy") ?? undefined,
-      sortDir: url.searchParams.get("sortDir") === "desc" ? "desc" : "asc",
-      filters: {
-        status: url.searchParams.get("status") ?? "",
-        country: url.searchParams.get("country") ?? "",
-        priority: url.searchParams.get("priority") ?? "",
-      },
-    });
-    return devStoreResponse(result.rows, {
-      page: result.page,
-      pageSize: result.pageSize,
-      total: result.total,
-      totalPages: result.totalPages,
-      policy: "Configure FRAPPE_BASE_URL, FRAPPE_API_KEY, and FRAPPE_API_SECRET to proxy ERPNext data.",
-    });
-  }
-
-  return devStoreResponse(scopedLeads, {
+  // Pagination is MANDATORY — never return the full scoped table (unbounded
+  // payload / OOM risk at scale). Absent params default to page 1, size 50.
+  const result = paginate(scopedLeads, {
+    page: pageParam ? Number(pageParam) : 1,
+    pageSize: pageSizeParam ? Number(pageSizeParam) : 50,
+    sortBy: url.searchParams.get("sortBy") ?? undefined,
+    sortDir: url.searchParams.get("sortDir") === "desc" ? "desc" : "asc",
+    filters: {
+      status: url.searchParams.get("status") ?? "",
+      country: url.searchParams.get("country") ?? "",
+      priority: url.searchParams.get("priority") ?? "",
+    },
+  });
+  return devStoreResponse(result.rows, {
+    page: result.page,
+    pageSize: result.pageSize,
+    total: result.total,
+    totalPages: result.totalPages,
     policy: "Configure FRAPPE_BASE_URL, FRAPPE_API_KEY, and FRAPPE_API_SECRET to proxy ERPNext data.",
   });
 }
