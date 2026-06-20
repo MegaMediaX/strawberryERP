@@ -334,9 +334,10 @@ function resolveApiKey(request: Request) {
     return undefined;
   }
 
-  return getDevStore().apiKeys.find(
-    (key) => key.id === requestedKey || key.prefix === requestedKey || key.keyName === requestedKey,
-  );
+  // Match ONLY on the key's public `prefix` (the unguessable, per-key value
+  // shipped with the generated token). The `id` (e.g. APIK-001) and admin-chosen
+  // `keyName` are guessable/enumerable and must NOT authenticate a request.
+  return getDevStore().apiKeys.find((key) => key.prefix === requestedKey);
 }
 
 function apiKeyHeader(request: Request) {

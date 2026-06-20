@@ -74,6 +74,12 @@ describe("§9 — invalid keys are rejected", () => {
     expect(d.allowed).toBe(false);
     expect(d.status).toBe(401);
   });
+
+  it("does NOT authenticate by guessable keyName or id (only the prefix is a credential)", () => {
+    // The seeded key has keyName "LT-DEV-03" and id "APIK-001"; neither may authenticate.
+    expect(evaluate({ resource: "leads", method: "GET", keyPrefix: "LT-DEV-03" }).status).toBe(401);
+    expect(evaluate({ resource: "leads", method: "GET", keyPrefix: "APIK-001" }).status).toBe(401);
+  });
 });
 
 describe("§9 — no key header falls through to session auth (keys are opt-in)", () => {
