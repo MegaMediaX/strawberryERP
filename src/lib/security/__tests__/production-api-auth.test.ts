@@ -20,13 +20,18 @@ function evaluate(headers: Record<string, string>) {
 
 function withProductionEnv<T>(fn: () => T): T {
   const original = process.env.NODE_ENV;
+  const originalSecret = process.env.PORTAL_SESSION_SECRET;
   try {
     // @ts-expect-error override for the test
     process.env.NODE_ENV = "production";
+    // Production always configures the signing secret (the app now throws otherwise).
+    process.env.PORTAL_SESSION_SECRET = "test-production-secret";
     return fn();
   } finally {
     // @ts-expect-error restore
     process.env.NODE_ENV = original;
+    if (originalSecret === undefined) delete process.env.PORTAL_SESSION_SECRET;
+    else process.env.PORTAL_SESSION_SECRET = originalSecret;
   }
 }
 

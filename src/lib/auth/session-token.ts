@@ -12,7 +12,16 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 const DEV_SECRET = "dev-only-insecure-session-secret-change-me";
 
 function secret(): string {
-  return process.env.PORTAL_SESSION_SECRET || DEV_SECRET;
+  const configured = process.env.PORTAL_SESSION_SECRET;
+  if (!configured) {
+    // Never sign tokens with the public dev fallback in production — that would
+    // let anyone forge a session. Fail closed (review #15).
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("PORTAL_SESSION_SECRET must be set in production.");
+    }
+    return DEV_SECRET;
+  }
+  return configured;
 }
 
 export interface SessionPayload {

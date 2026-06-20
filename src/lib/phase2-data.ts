@@ -1009,7 +1009,12 @@ export function generateApiKeyRecord(payload: {
 }) {
   const plainTextKey = `ltp_live_${randomBytes(24).toString("hex")}`;
   const prefix = plainTextKey.slice(0, 13);
-  const salt = readRuntimeValue("API_KEY_HASH_SECRET") || "local-dev-only-change-me";
+  const configuredSalt = readRuntimeValue("API_KEY_HASH_SECRET");
+  if (!configuredSalt && process.env.NODE_ENV === "production") {
+    // Hashing keys with the public dev salt in production is insecure (review #15).
+    throw new Error("API_KEY_HASH_SECRET must be set in production.");
+  }
+  const salt = configuredSalt || "local-dev-only-change-me";
   const keyHash = `sha256:${createHash("sha256").update(`${plainTextKey}:${salt}`).digest("hex")}`;
   const record: ApiKeyRecord = {
     id: `APIK-${String(apiKeys.length + 1).padStart(3, "0")}`,
