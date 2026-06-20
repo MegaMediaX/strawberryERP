@@ -1,17 +1,21 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const sans = Plus_Jakarta_Sans({
+// Self-hosted (vendored woff2) so production image builds never fetch Google
+// Fonts — that network call fails on locked-down VPS/CI builds.
+const sans = localFont({
+  src: "./fonts/plus-jakarta-sans.woff2",
   variable: "--font-geist-sans",
-  subsets: ["latin"],
   display: "swap",
+  weight: "200 800",
 });
 
-const mono = JetBrains_Mono({
+const mono = localFont({
+  src: "./fonts/jetbrains-mono.woff2",
   variable: "--font-geist-mono",
-  subsets: ["latin"],
   display: "swap",
+  weight: "100 800",
 });
 
 export const metadata: Metadata = {

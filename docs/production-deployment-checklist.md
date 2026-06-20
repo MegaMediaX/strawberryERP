@@ -1,5 +1,11 @@
 # Production Deployment Checklist
 
+> **Scope note.** This checklist covers the **full stack** (Next.js + Frappe/ERPNext
+> + MariaDB + Redis — "Scope B"). For the **portal-only Hostinger deploy** (Next.js
+> alone in dev-store mode behind NGINX, via Docker Manager — "Scope A"), follow
+> [hostinger-deploy.md](hostinger-deploy.md) instead; that path uses
+> `docker-compose.portal.yml` and does not require this Frappe-stack checklist.
+
 Use this checklist before promoting LebTech Partner Platform to production.
 
 ## Domain and SSL

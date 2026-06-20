@@ -1,0 +1,66 @@
+# Scope A — Next.js portal ONLY (dev-store / hooks-only mode; Frappe NOT wired).
+# Designed for Hostinger's Docker Manager (it runs a compose file + an env set).
+# Only nginx publishes a port; the web container is internal. Bring it up with:
+#   docker compose -f docker-compose.portal.yml up -d --build
+# See docs/hostinger-deploy.md for the full runbook.
+#
+# Explicit project name so this portal-only stack never collides with the full
+# Frappe stack in docker-compose.yml (same directory => same default project
+# name otherwise, which would clobber/orphan the other stack's containers).
+name: lebtech-portal
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: lebtech-portal:latest
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      # The app FAILS FAST on boot if these are unset (security hardening). The
+      # ":?" makes compose itself refuse to start without them — set them in .env.
+      PORTAL_SESSION_SECRET: ${PORTAL_SESSION_SECRET:?set PORTAL_SESSION_SECRET in .env}
+      API_KEY_HASH_SECRET: ${API_KEY_HASH_SECRET:?set API_KEY_HASH_SECRET in .env}
+      # Leave FRAPPE_BASE_URL / FRAPPE_API_KEY / FRAPPE_API_SECRET EMPTY to keep
+      # the portal in dev-store mode (Scope A). Set them only for the full stack.
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1024m
+    networks:
+      - portal
+
+  nginx:
+    image: ${NGINX_IMAGE:-nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10}
+    ports:
+      - "${NGINX_BIND_ADDRESS:-0.0.0.0}:${NGINX_HTTP_PORT:-80}:80"
+      # After provisioning TLS (certbot or Hostinger proxy — see the runbook),
+      # mount certs + a 443 server block and publish 443 here:
+      # - "443:443"
+    volumes:
+      - ./infra/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      frontend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/api/health/live >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - portal
+
+networks:
+  portal:
+    driver: bridge

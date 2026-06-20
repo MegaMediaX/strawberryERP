@@ -18,6 +18,17 @@ export function missingFrappeConfiguration() {
 export async function checkFrappeReadiness() {
   const missing = missingFrappeConfiguration();
   if (missing.length) {
+    // All three unset = dev-store / hooks-only mode (Scope A). This is an
+    // intentional configuration in which the portal serves entirely from the
+    // in-memory dev-store, so the app IS ready — readiness must report 200.
+    // A PARTIAL config (some set, some missing) is a genuine misconfiguration
+    // and stays not-ready so a bad deploy fails its readiness probe.
+    if (missing.length === requiredFrappeVariables.length) {
+      return {
+        ready: true,
+        status: "dev_store" as const,
+      };
+    }
     return {
       ready: false,
       status: "configuration_missing" as const,
