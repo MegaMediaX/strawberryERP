@@ -1,16 +1,11 @@
 import "server-only";
 
+import { buildBillingRows } from "@/lib/billing/billing-rows";
 import { getDevStore } from "@/lib/dev-store";
 import { customers as seedCustomers } from "@/lib/phase2-data";
 import type { PortalSession } from "@/lib/portal-security";
-import {
-  regionalInvoiceRows,
-  type RegionalInvoiceLike,
-  type RegionalInvoiceRow,
-  type RegionalReceiptRow,
-} from "@/lib/regional/billing-list";
+import type { RegionalInvoiceRow, RegionalReceiptRow } from "@/lib/regional/billing-list";
 import { resolveRegionalCountries } from "@/lib/regional/regional-scope";
-import type { ReceiptLike } from "@/lib/reseller/invoice-payment-state";
 import { getUiRows } from "@/lib/ui-data";
 
 export interface RegionalBillingData {
@@ -34,46 +29,13 @@ export async function regionalBillingData(session: PortalSession, country?: stri
   ]);
 
   const inScope = (c: unknown) => effective.includes(String(c));
-
-  const invoiceInputs: RegionalInvoiceLike[] = invoicesResult.data
-    .filter((i) => inScope(i.country))
-    .map((i) => ({
-      id: String(i.id),
-      invoiceNumber: String(i.invoiceNumber ?? i.id),
-      customer: String(i.customer ?? ""),
-      country: String(i.country ?? ""),
-      reseller: String(i.reseller ?? ""),
-      currency: String(i.currency ?? ""),
-      total: Number(i.total ?? 0),
-      dueDate: i.dueDate ? String(i.dueDate) : undefined,
-      createdBy: String(i.createdByUser ?? "—"),
-    }));
-
-  // All in-scope receipts feed both the §20 list AND the §19 payment-state derivation.
-  const receiptRows: RegionalReceiptRow[] = receiptsResult.data
-    .filter((r) => inScope(r.country))
-    .map((r) => ({
-      id: String(r.id),
-      receiptNumber: String(r.receiptNumber ?? r.id),
-      invoice: String(r.invoice ?? ""),
-      customer: String(r.customer ?? ""),
-      country: String(r.country ?? ""),
-      reseller: String(r.reseller ?? ""),
-      amount: Number(r.amount ?? 0),
-      currency: String(r.currency ?? ""),
-      paymentMethod: String(r.paymentMethod ?? "—"),
-      issuedBy: String(r.issuedBy ?? "—"),
-      issuedAt: String(r.issuedAt ?? ""),
-    }))
-    .sort((a, b) => b.issuedAt.localeCompare(a.issuedAt));
-
-  const receiptLikes: ReceiptLike[] = receiptRows.map((r) => ({ invoice: r.invoice, reseller: r.reseller, amount: r.amount, paymentMethod: r.paymentMethod }));
+  const { invoices, receipts } = buildBillingRows(invoicesResult.data, receiptsResult.data, new Date(), inScope);
 
   return {
     effective,
     scopeLabel: country && effective.length === 1 ? effective[0] : `All my countries (${assigned.join(", ")})`,
-    invoices: regionalInvoiceRows(invoiceInputs, receiptLikes, new Date()),
-    receipts: receiptRows,
+    invoices,
+    receipts,
     customerIdByName: Object.fromEntries(customersResult.data.map((c) => [String(c.name), String(c.id)])),
   };
 }
