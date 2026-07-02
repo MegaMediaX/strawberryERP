@@ -27,6 +27,16 @@ const DISPOSITION_STATUS: Record<CallDisposition, LeadStatus> = {
   "Callback scheduled": "Scheduled Follow-Up",
 };
 
+/** Reverse of DISPOSITION_STATUS: the disposition that yields a target status.
+ *  Every contacted status maps back to a disposition; "New Lead" does not (you
+ *  can't transition *to* it), so the call screen falls back to a plain update. */
+export function dispositionForStatus(status: string): CallDisposition | null {
+  const found = (Object.keys(DISPOSITION_STATUS) as CallDisposition[]).find(
+    (d) => DISPOSITION_STATUS[d] === status,
+  );
+  return found ?? null;
+}
+
 export interface DispositionInput {
   leadId: string;
   disposition: CallDisposition;

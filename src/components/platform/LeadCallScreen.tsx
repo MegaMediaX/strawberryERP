@@ -10,6 +10,7 @@ import { validateLeadTransition } from "@/lib/business/lead-workflow";
 import { buildCustomerFromLead, validateConversion, type ConversionOverrides } from "@/lib/business/lead-conversion";
 import { eligibleAssignees, validateReassignment } from "@/lib/business/lead-reassignment";
 import { quickOutcomes, type QuickOutcome } from "@/lib/business/quick-outcomes";
+import { dispositionForStatus } from "@/lib/telephony/disposition";
 import { formatNoteLine, noteTemplates, parseNotes, prependNote } from "@/lib/sales/notes-formatter";
 import type { TimelineEntry } from "@/lib/sales/timeline-builder";
 import { leadStatuses } from "@/lib/sample-data";
@@ -97,11 +98,21 @@ export function LeadCallScreen({
     }
     setBusy(true);
     try {
-      const res = await fetch("/api/frappe/leads", {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ id: lead.id, status: targetStatus, followUpDate: targetDate || undefined }),
-      });
+      // Route contacted-status changes through the call-disposition endpoint so
+      // they write a call_disposition audit entry (ADR 0001, Phase 2B). Targets
+      // with no disposition (only "New Lead") fall back to a plain lead update.
+      const disposition = dispositionForStatus(targetStatus);
+      const res = disposition
+        ? await fetch("/api/calls/disposition", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ leadId: lead.id, disposition, followUpDate: targetDate || undefined }),
+          })
+        : await fetch("/api/frappe/leads", {
+            method: "PATCH",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ id: lead.id, status: targetStatus, followUpDate: targetDate || undefined }),
+          });
       const body = (await res.json().catch(() => ({}))) as { error?: { message?: string } | string };
       if (!res.ok) {
         setError(typeof body.error === "string" ? body.error : body.error?.message ?? "Could not update the lead.");

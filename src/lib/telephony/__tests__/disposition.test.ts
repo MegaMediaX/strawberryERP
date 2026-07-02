@@ -1,6 +1,20 @@
 import { describe, expect, it } from "vitest";
 
-import { parseDispositionInput, resolveDisposition } from "@/lib/telephony/disposition";
+import { dispositionForStatus, parseDispositionInput, resolveDisposition } from "@/lib/telephony/disposition";
+
+describe("dispositionForStatus (reverse map used by the call screen)", () => {
+  it("maps each contacted status back to a disposition", () => {
+    expect(dispositionForStatus("Attempted Contact (No Response)")).toBe("No answer");
+    expect(dispositionForStatus("Contacted (Interested)")).toBe("Interested");
+    expect(dispositionForStatus("Contacted (Not Interested)")).toBe("Not interested");
+    expect(dispositionForStatus("Contacted (Awaiting Response)")).toBe("Awaiting response");
+    expect(dispositionForStatus("Scheduled Follow-Up")).toBe("Callback scheduled");
+  });
+
+  it("returns null for 'New Lead' (no transition targets it)", () => {
+    expect(dispositionForStatus("New Lead (Uncontacted)")).toBeNull();
+  });
+});
 
 describe("parseDispositionInput", () => {
   it("accepts a valid disposition", () => {
