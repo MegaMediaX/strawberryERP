@@ -167,6 +167,10 @@ export function requiredApiScope(resource: string, method: ApiMethod): ApiScope 
     return method === "GET" ? "read:commissions" : null;
   }
 
+  if (resource === "calls" || resource.startsWith("calls")) {
+    return `${mode}:calls` as ApiScope;
+  }
+
   return null;
 }
 

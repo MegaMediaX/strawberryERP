@@ -227,7 +227,9 @@ export type ApiScope =
   | "read:resellers"
   | "write:resellers"
   | "read:reports"
-  | "read:commissions";
+  | "read:commissions"
+  | "read:calls"
+  | "write:calls";
 
 export const invoiceStatuses: InvoiceStatus[] = ["Draft", "Issued", "Partially Paid", "Fully Paid", "Cancelled"];
 
@@ -592,6 +594,22 @@ export const apiKeys: ApiKeyRecord[] = [
     rateLimitPerMinute: 60,
     isActive: false,
     revokedAt: "2026-06-01T00:00:00Z",
+    createdBy: "Super Admin",
+    lastUsedAt: "",
+  },
+  {
+    id: "APIK-TELEPHONY",
+    keyName: "LT-TELEPHONY",
+    description: "Telephony middleware call-log ingest (ADR 0001, write:calls only)",
+    keyHash: "sha256:telephony-smoke",
+    prefix: "ltp_calls_test",
+    scopes: ["write:calls", "read:calls"],
+    readAccess: true,
+    writeAccess: true,
+    expiresAt: "2026-12-31",
+    ipWhitelist: [],
+    rateLimitPerMinute: 120,
+    isActive: true,
     createdBy: "Super Admin",
     lastUsedAt: "",
   },

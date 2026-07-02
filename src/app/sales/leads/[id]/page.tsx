@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { LeadCallScreen } from "@/components/platform/LeadCallScreen";
 import { resolveImportantDetails } from "@/lib/business/important-details-mgmt";
-import { getImportantDetails } from "@/lib/dev-store";
+import { getCallRecords, getImportantDetails } from "@/lib/dev-store";
 import { buildTimeline } from "@/lib/sales/timeline-builder";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 import { getUiLeads } from "@/lib/ui-data";
@@ -36,7 +36,7 @@ export default async function SalesLeadDetailPage({ params }: { params: Promise<
         lead={lead}
         enableQuickOutcomes
         enableNotesCompose
-        timeline={buildTimeline(lead)}
+        timeline={buildTimeline(lead, getCallRecords().filter((c) => c.leadId === lead.id))}
         importantDetails={resolveImportantDetails(lead, getImportantDetails(lead.reseller))}
         actingUser={{
           id: session.effectiveUser.id,

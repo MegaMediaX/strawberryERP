@@ -34,6 +34,7 @@ import {
   type ImportantDetailEntry,
 } from "@/lib/business/important-details-mgmt";
 import type { EscalationRecord } from "@/lib/regional/escalation";
+import type { CallRecord } from "@/lib/telephony/call-record";
 import { defaultCountries, type CountryRecord } from "@/lib/admin/countries";
 import type { ResellerConfig } from "@/lib/admin/reseller-wizard";
 import type { ExpenseRecord } from "@/lib/admin/pnl";
@@ -53,6 +54,7 @@ type DevStore = {
   apiLogs: ApiLog[];
   integrationSettings: IntegrationSetting[];
   activityTimeline: ActivityTimelineEvent[];
+  callRecords: CallRecord[];
   deleteQueue: DeleteQueueRecord[];
   reminderRules: FollowUpReminderRule[];
   paymentMethods: PaymentMethod[];
@@ -138,6 +140,7 @@ export function getDevStore() {
       apiLogs: [...apiLogs],
       integrationSettings: [...integrationSettings],
       activityTimeline: [...activityTimeline],
+      callRecords: [],
       deleteQueue: [
         {
           id: "DEL-9001",
@@ -602,6 +605,27 @@ export function appendAudit(event: Omit<ActivityTimelineEvent, "id" | "timestamp
   };
   getDevStore().activityTimeline.unshift(record);
   return record;
+}
+
+/**
+ * Idempotent upsert of a telephony call record, keyed by externalId (ADR 0001).
+ * A re-POST of the same call overwrites the existing row — never a duplicate.
+ * Returns { record, created } so the route can pick 201 vs 200 semantics.
+ */
+export function upsertCallRecord(record: CallRecord): { record: CallRecord; created: boolean } {
+  const store = getDevStore();
+  const idx = store.callRecords.findIndex((c) => c.externalId === record.externalId);
+  if (idx >= 0) {
+    store.callRecords[idx] = record;
+    return { record, created: false };
+  }
+  store.callRecords.unshift(record);
+  return { record, created: true };
+}
+
+/** All call records, most-recent-first (dev-store; Frappe seam later). */
+export function getCallRecords(): CallRecord[] {
+  return getDevStore().callRecords;
 }
 
 export function appendInvoice(invoice: Invoice, commissions: CommissionEntry[] = []) {
