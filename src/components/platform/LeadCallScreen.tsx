@@ -73,6 +73,8 @@ export function LeadCallScreen({
   const [noteBusy, setNoteBusy] = useState(false);
   const [noteMsg, setNoteMsg] = useState<string | null>(null);
   const [timelineOpen, setTimelineOpen] = useState(false);
+  const [dialBusy, setDialBusy] = useState(false);
+  const [dialMsg, setDialMsg] = useState<string | null>(null);
 
   const authorName = actingUser ? users.find((u) => u.id === actingUser.id)?.name ?? "You" : "You";
 
@@ -165,6 +167,41 @@ export function LeadCallScreen({
       setTimeout(() => setCopied(false), 1500);
     } catch {
       setCopied(false);
+    }
+  }
+
+  /** Click-to-call via the CRM dial channel (ADR 0001 Phase 3). The on-prem
+   *  middleware pulls the command and dials through tinyphone. Simulated until
+   *  TELEPHONY_LIVE_DIAL=true server-side. */
+  async function dialViaCrm() {
+    setDialMsg(null);
+    setDialBusy(true);
+    try {
+      const res = await fetch("/api/calls/dial", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ number: lead.phone, leadId: lead.id }),
+      });
+      const body = (await res.json().catch(() => ({}))) as {
+        status?: string;
+        note?: string | null;
+        live?: boolean;
+        error?: { message?: string } | string;
+      };
+      if (!res.ok) {
+        setDialMsg(typeof body.error === "string" ? body.error : body.error?.message ?? "Could not place the call.");
+        return;
+      }
+      setCallLogged(true);
+      setDialMsg(
+        body.live
+          ? `Dialing ${lead.phone} — the softphone is placing the call.`
+          : body.note ?? "Call queued (simulated — live dialing is off).",
+      );
+    } catch {
+      setDialMsg("Network error. Please try again.");
+    } finally {
+      setDialBusy(false);
     }
   }
 
@@ -265,7 +302,16 @@ export function LeadCallScreen({
               <a href={`mailto:${lead.email}`} className={`${actionBase} bg-slate-700 hover:bg-slate-800`}>
                 Email
               </a>
+              <button
+                type="button"
+                onClick={dialViaCrm}
+                disabled={dialBusy}
+                className={`${actionBase} bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60`}
+              >
+                {dialBusy ? "Calling…" : "Call via CRM"}
+              </button>
             </div>
+            {dialMsg ? <p className="text-sm text-[var(--muted)]">{dialMsg}</p> : null}
             <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
