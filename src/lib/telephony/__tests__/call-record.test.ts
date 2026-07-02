@@ -141,6 +141,7 @@ describe("buildCallRecord", () => {
     });
     expect(rec.externalId).toBe(validBody.external_id);
     expect(rec.leadId).toBe("LEAD-1");
+    expect(rec.agent).toBe("rami@x"); // attributed to the linked lead's assignee
     expect(rec.reseller).toBe("Beirut Digital");
     expect(rec.extension).toBe("1001");
     expect(rec.talkSeconds).toBe(42);

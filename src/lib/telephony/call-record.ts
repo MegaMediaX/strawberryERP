@@ -37,6 +37,12 @@ export interface CallRecord {
   reseller?: string;
   country?: string;
   assignedTo?: string;
+  /**
+   * The sales agent this call is attributed to for KPIs. Best-effort: the linked
+   * lead's assignedTo for auto-logged calls, or the click-to-call requester.
+   * Full per-agent fidelity needs per-user extensions (ADR Phase 5).
+   */
+  agent?: string;
   /** Ingest timestamp (server clock). */
   loggedAt: string;
 }
@@ -207,6 +213,9 @@ export interface BuildCallRecordOptions {
   account: string;
   extension: string;
   loggedAt: string;
+  /** Explicit agent attribution (e.g. click-to-call requester). Falls back to
+   *  the linked lead's assignedTo when omitted. */
+  agent?: string;
 }
 
 /** Assemble the persisted CallRecord from a parsed payload + resolved link. */
@@ -236,6 +245,7 @@ export function buildCallRecord(
     ...(link.reseller ? { reseller: link.reseller } : {}),
     ...(link.country ? { country: link.country } : {}),
     ...(link.assignedTo ? { assignedTo: link.assignedTo } : {}),
+    ...((opts.agent ?? link.assignedTo) ? { agent: opts.agent ?? link.assignedTo } : {}),
     loggedAt: opts.loggedAt,
   };
 }
