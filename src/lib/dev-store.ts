@@ -628,6 +628,11 @@ export function getCallRecords(): CallRecord[] {
   return getDevStore().callRecords;
 }
 
+/** Calls that matched no lead/customer — the triage bucket (ADR 0001 §F). */
+export function getUnlinkedCalls(): CallRecord[] {
+  return getDevStore().callRecords.filter((c) => c.linkState === "unlinked");
+}
+
 export function appendInvoice(invoice: Invoice, commissions: CommissionEntry[] = []) {
   const store = getDevStore();
   store.invoices.unshift(invoice);
