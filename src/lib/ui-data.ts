@@ -75,7 +75,7 @@ export async function getUiLeads(session: PortalSession): Promise<UiDataResult<P
     const merged = devLeads
       .map((lead) => {
         const o = overrides[lead.id];
-        return { ...lead, country: lead.country as Country, ...(o ? { assignedTo: o.assignedTo ?? lead.assignedTo, status: (o.status as LeadStatus) ?? lead.status } : {}) };
+        return { ...lead, country: lead.country as Country, ...(o ? { assignedTo: o.assignedTo ?? lead.assignedTo, status: (o.status as LeadStatus) ?? lead.status, followUp: o.followUp ?? lead.followUp } : {}) };
       })
       .filter((lead) => !overrides[lead.id]?.archived);
     return { source: "dev-store", data: scopeLeads(merged, session) };

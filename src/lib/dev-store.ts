@@ -121,7 +121,7 @@ export type InvoiceDocSettings = {
 };
 
 /** Admin mutations applied over the static lead seed (spec §13/§14). */
-export type LeadOverride = { assignedTo?: string; status?: string; convertedAt?: string; archived?: boolean };
+export type LeadOverride = { assignedTo?: string; status?: string; convertedAt?: string; archived?: boolean; followUp?: string };
 
 /** Admin mutations applied over the static customer seed (spec §15/§16). */
 export type CustomerOverride = { archived?: boolean; notes?: string[] };
