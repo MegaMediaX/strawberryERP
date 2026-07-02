@@ -35,6 +35,7 @@ import {
 } from "@/lib/business/important-details-mgmt";
 import type { EscalationRecord } from "@/lib/regional/escalation";
 import type { CallRecord } from "@/lib/telephony/call-record";
+import type { DialCommand, DialStatus } from "@/lib/telephony/dial";
 import { defaultCountries, type CountryRecord } from "@/lib/admin/countries";
 import type { ResellerConfig } from "@/lib/admin/reseller-wizard";
 import type { ExpenseRecord } from "@/lib/admin/pnl";
@@ -55,6 +56,7 @@ type DevStore = {
   integrationSettings: IntegrationSetting[];
   activityTimeline: ActivityTimelineEvent[];
   callRecords: CallRecord[];
+  dialQueue: DialCommand[];
   deleteQueue: DeleteQueueRecord[];
   reminderRules: FollowUpReminderRule[];
   paymentMethods: PaymentMethod[];
@@ -141,6 +143,7 @@ export function getDevStore() {
       integrationSettings: [...integrationSettings],
       activityTimeline: [...activityTimeline],
       callRecords: [],
+      dialQueue: [],
       deleteQueue: [
         {
           id: "DEL-9001",
@@ -631,6 +634,60 @@ export function getCallRecords(): CallRecord[] {
 /** Calls that matched no lead/customer — the triage bucket (ADR 0001 §F). */
 export function getUnlinkedCalls(): CallRecord[] {
   return getDevStore().callRecords.filter((c) => c.linkState === "unlinked");
+}
+
+/** Click-to-call dial queue (ADR 0001 Phase 3, CRM side). Newest-first. */
+export function getDialQueue(): DialCommand[] {
+  return getDevStore().dialQueue;
+}
+
+/** Enqueue a dial command (or a pre-resolved simulated one). */
+export function enqueueDial(input: {
+  number: string;
+  leadId?: string;
+  requestedBy: string;
+  status?: DialStatus;
+  note?: string;
+}): DialCommand {
+  const store = getDevStore();
+  const cmd: DialCommand = {
+    id: `DIAL-${Date.now()}-${store.dialQueue.length}`,
+    number: input.number,
+    ...(input.leadId ? { leadId: input.leadId } : {}),
+    requestedBy: input.requestedBy,
+    status: input.status ?? "queued",
+    createdAt: new Date().toISOString(),
+    ...(input.note ? { note: input.note } : {}),
+    ...(input.status && input.status !== "queued" ? { resolvedAt: new Date().toISOString() } : {}),
+  };
+  store.dialQueue.unshift(cmd);
+  return cmd;
+}
+
+/** Middleware pull: claim the oldest queued command (FIFO). */
+export function claimNextDial(): DialCommand | undefined {
+  const store = getDevStore();
+  for (let i = store.dialQueue.length - 1; i >= 0; i--) {
+    const c = store.dialQueue[i];
+    if (c.status === "queued") {
+      const claimed: DialCommand = { ...c, status: "claimed", claimedAt: new Date().toISOString() };
+      store.dialQueue[i] = claimed;
+      return claimed;
+    }
+  }
+  return undefined;
+}
+
+/** Middleware report: resolve a claimed command to a terminal status. */
+export function resolveDial(id: string, status: DialStatus, note?: string): DialCommand | undefined {
+  const store = getDevStore();
+  let updated: DialCommand | undefined;
+  store.dialQueue = store.dialQueue.map((c) => {
+    if (c.id !== id) return c;
+    updated = { ...c, status, resolvedAt: new Date().toISOString(), ...(note ? { note } : {}) };
+    return updated;
+  });
+  return updated;
 }
 
 export function appendInvoice(invoice: Invoice, commissions: CommissionEntry[] = []) {
