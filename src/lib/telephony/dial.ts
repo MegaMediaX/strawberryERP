@@ -1,4 +1,5 @@
 import { isBlockedPhone, normalizePhone } from "@/lib/telephony/call-record";
+import { checkDialPolicy } from "@/lib/telephony/dial-policy";
 
 /**
  * Click-to-call command channel (ADR 0001, Phase 3 — CRM side, simulation mode).
@@ -49,6 +50,11 @@ export function validateDialRequest(body: unknown): DialParse {
   if (!number) return { ok: false, error: "number is required.", status: 400 };
   if (isBlockedPhone(number)) {
     return { ok: false, error: "Dialing this country is blocked.", status: 403 };
+  }
+  // Per-country reach policy: the trunk can only place certain line types.
+  const policy = checkDialPolicy(number);
+  if (!policy.ok) {
+    return { ok: false, error: policy.reason ?? "The auto-dialer cannot call this number.", status: 403 };
   }
   const leadId = typeof b.leadId === "string" && b.leadId.trim() ? b.leadId.trim() : undefined;
   return { ok: true, value: { number, leadId } };

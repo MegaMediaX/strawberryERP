@@ -43,8 +43,8 @@ afterEach(() => {
 });
 
 describe("POST /api/calls/dial — simulation mode (default)", () => {
-  it("enqueues a simulated dial (202, status simulated, honest live-off note)", async () => {
-    const res = await dial({ number: "03123456", leadId: leads[0].id });
+  it("enqueues a simulated dial for a Lebanese landline (202, status simulated, honest live-off note)", async () => {
+    const res = await dial({ number: "01350000", leadId: leads[0].id });
     expect(res.status).toBe(202);
     const json = await res.json();
     expect(json.status).toBe("simulated");
@@ -57,13 +57,20 @@ describe("POST /api/calls/dial — simulation mode (default)", () => {
     expect(res.status).toBe(403);
   });
 
+  it("refuses a Lebanese mobile with 403 (trunk is landline-only)", async () => {
+    const res = await dial({ number: "+961 70 144 221", leadId: leads[0].id });
+    expect(res.status).toBe(403);
+    const json = await res.json();
+    expect(json.error.message).toMatch(/mobile/i);
+  });
+
   it("rejects an invalid body with 400", async () => {
     const res = await dial({});
     expect(res.status).toBe(400);
   });
 
   it("returns 404 for a lead outside the caller's scope", async () => {
-    const res = await dial({ number: "03123456", leadId: "LEAD-NOPE" });
+    const res = await dial({ number: "01350000", leadId: "LEAD-NOPE" });
     expect(res.status).toBe(404);
   });
 });
@@ -72,8 +79,8 @@ describe("dial command channel — live queue (middleware pull + report)", () =>
   it("queues, is claimed by the middleware, then reported completed", async () => {
     process.env.TELEPHONY_LIVE_DIAL = "true";
 
-    // 1. Sales requests a real dial → queued.
-    const reqRes = await dial({ number: "03999000" });
+    // 1. Sales requests a real dial (Lebanese landline) → queued.
+    const reqRes = await dial({ number: "01999000" });
     expect(reqRes.status).toBe(202);
     const { id, status } = await reqRes.json();
     expect(status).toBe("queued");

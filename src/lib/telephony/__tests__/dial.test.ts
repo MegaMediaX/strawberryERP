@@ -3,11 +3,11 @@ import { describe, expect, it } from "vitest";
 import { simulateDialResult, validateDialRequest } from "@/lib/telephony/dial";
 
 describe("validateDialRequest", () => {
-  it("accepts a valid number and normalizes it", () => {
-    const r = validateDialRequest({ number: "03 123 456", leadId: "LEAD-1" });
+  it("accepts a valid (Lebanese landline) number and normalizes it", () => {
+    const r = validateDialRequest({ number: "01 350 000", leadId: "LEAD-1" });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    expect(r.value.number).toBe("03123456");
+    expect(r.value.number).toBe("01350000");
     expect(r.value.leadId).toBe("LEAD-1");
   });
 
@@ -19,6 +19,14 @@ describe("validateDialRequest", () => {
   it("rejects a country-blocked (IL/ISR) number with 403", () => {
     const r = validateDialRequest({ number: "+972 50 123 4567" });
     expect(r).toMatchObject({ ok: false, status: 403 });
+  });
+
+  it("rejects a Lebanese mobile with 403 (trunk is landline-only) and a clear reason", () => {
+    const r = validateDialRequest({ number: "+961 70 144 221" });
+    expect(r).toMatchObject({ ok: false, status: 403 });
+    if (r.ok) return;
+    expect(r.error).toMatch(/mobile/i);
+    expect(r.error).toMatch(/landline/i);
   });
 
   it("rejects a non-object body", () => {
