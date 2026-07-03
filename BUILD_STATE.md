@@ -106,6 +106,14 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Fire TEL-KPI-UI — 2026-07-03 — Call-center KPI dashboard UI + per-lead call summary ✅ SHIPPED (feature complete)
+- **Admin Call Center dashboard** at `/admin/reports/call-center` (`CallCenterView`): client fetch of `GET /api/reports/call-kpis?from&to`, 5 team summary cards (calls / answer-rate / total / avg talk / active agents), sortable per-agent table (desktop) + agent cards (mobile), sticky date-range filter (`useStickyFilters`, sessionStorage key `lebtech.admin.callcenter.filters`), empty/loading/error+retry states. Desktop sidebar gained a **Reports group** (Reports + Call Center — reports previously had no desktop nav entry); admin Reports page forward-links to it. Nav spec test updated to 6 groups.
+- **Per-lead call summary** on `/sales/leads/[id]`: "X calls · Y answered · Zm talk" next to the back link (`LeadCallSummary`, derived from `getCallRecords()` by leadId; hidden when no calls).
+- KPI lib/API/CallRecord/middleware untouched (frozen per task). Gates: typecheck/lint/build/test all exit 0 (**868 tests**).
+- **Browser (dev-store, super.admin):** seeded 4 calls via POST /api/calls (2 Rami, 1 Lina, 1 unlinked) → team cards 4 / 75% / 10m58s / 3m39s / 3 agents all correct; sort asc/desc verified; from=07-03 → Lina only; from=08-01 → empty state; Clear restores; filters survive reload; 380px + 1280px no overflow; per-lead summary "2 calls · 1 answered · 3m talk" on LEAD-2408 (sales login). Pushed 0463e46..fbd0082 → origin/master.
+- **Known quirks:** date bounds are UTC days (matches AdminAuditLogsView convention); on the call-center page both "Reports" and "Call Center" sidebar items highlight (startsWith match — kept so the mobile bottom-bar Reports stays active).
+- **Next start:** telephony Phase 3 click-to-call remains blocked on PBX outbound trunk for ext 1001 (ext 1002 available for internal tests); optionally CSV export on the call-center table to match other report views.
+
 ### Fire EX-P4 — 2026-06-19 — Exhibition Floor Plan slice P4: approvals queue + draft-invoice handoff ✅ SHIPPED
 - **Shipped:** dev-store `appendSlotInvoiceLine` (creates/extends a per-reseller `SLOT-DRAFT-<reseller>` Draft invoice, recomputes totals via `calculateInvoiceTotals`) · `/api/admin/slots/status` approve path now attaches the draft line + sets `reservedInvoice` · `AdminSlotApprovalsView` (mirror delete-queue: pending OnHold table + countdown + Approve/Reject) · page `/admin/slots/approvals` + "Approvals (N)" link on the floor-plan header.
 - **Gate:** `npm test` **761 pass** · typecheck/lint clean · build green (approvals route emitted).
