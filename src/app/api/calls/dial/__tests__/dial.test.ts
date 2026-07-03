@@ -100,6 +100,27 @@ describe("dial command channel — live queue (middleware pull + report)", () =>
     expect((await rep.json()).status).toBe("completed");
   });
 
+  it("dedupes rapid dials to the same number — second reuses the command, one active in queue (DIAL-R1)", async () => {
+    process.env.TELEPHONY_LIVE_DIAL = "true";
+
+    // Two rapid dials to the SAME normalized number, before the middleware claims.
+    const first = await dial({ number: "01888000" });
+    const second = await dial({ number: "01888000" });
+    expect(first.status).toBe(202);
+    expect(second.status).toBe(202);
+
+    const a = await first.json();
+    const b = await second.json();
+    expect(a.status).toBe("queued");
+    // Second click returns the SAME command id — no duplicate was enqueued.
+    expect(b.id).toBe(a.id);
+
+    // Exactly one active ('queued') command for that number exists in the queue.
+    const { getDialQueue } = await import("@/lib/dev-store");
+    const active = getDialQueue().filter((c) => c.number === "01888000" && c.status === "queued");
+    expect(active).toHaveLength(1);
+  });
+
   it("reports 404 for an unknown dial id", async () => {
     const res = await nextPost({ id: "DIAL-NOPE", status: "failed" });
     expect(res.status).toBe(404);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
@@ -75,6 +75,17 @@ export function LeadCallScreen({
   const [timelineOpen, setTimelineOpen] = useState(false);
   const [dialBusy, setDialBusy] = useState(false);
   const [dialMsg, setDialMsg] = useState<string | null>(null);
+  // DIAL-R1: brief post-request cooldown so the button stays disabled for a
+  // moment after the request settles, preventing rapid re-click duplicate dials.
+  const [dialCooldown, setDialCooldown] = useState(false);
+  const dialCooldownTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (dialCooldownTimer.current) clearTimeout(dialCooldownTimer.current);
+    },
+    [],
+  );
 
   const authorName = actingUser ? users.find((u) => u.id === actingUser.id)?.name ?? "You" : "You";
 
@@ -202,6 +213,10 @@ export function LeadCallScreen({
       setDialMsg("Network error. Please try again.");
     } finally {
       setDialBusy(false);
+      // Keep the button disabled a beat longer to swallow rapid re-clicks (DIAL-R1).
+      setDialCooldown(true);
+      if (dialCooldownTimer.current) clearTimeout(dialCooldownTimer.current);
+      dialCooldownTimer.current = setTimeout(() => setDialCooldown(false), 2500);
     }
   }
 
@@ -305,7 +320,7 @@ export function LeadCallScreen({
               <button
                 type="button"
                 onClick={dialViaCrm}
-                disabled={dialBusy}
+                disabled={dialBusy || dialCooldown}
                 className={`${actionBase} bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60`}
               >
                 {dialBusy ? "Calling…" : "Call via CRM"}

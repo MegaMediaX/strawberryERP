@@ -47,21 +47,25 @@ export async function POST(request: Request) {
   const live = isLiveDialingEnabled();
   const sim = live ? null : simulateDialResult();
   const requestedBy = session.effectiveUser.name || session.effectiveUser.email || "sales";
-  const cmd = enqueueDial({
+  const { command: cmd, reused } = enqueueDial({
     number: parsed.value.number,
     leadId: parsed.value.leadId,
     requestedBy,
     ...(sim ? { status: sim.status, note: sim.note } : {}),
   });
 
-  appendAudit({
-    entityType: parsed.value.leadId ? "lead" : "call",
-    entityId: parsed.value.leadId ?? cmd.id,
-    action: "dial_requested",
-    oldValue: "",
-    newValue: `${cmd.number} (${cmd.status})`,
-    performedBy: requestedBy,
-  });
+  // DIAL-R1: a reused (deduped) command already has a 'dial_requested' audit entry
+  // from its first enqueue — don't write a second one for the same in-flight call.
+  if (!reused) {
+    appendAudit({
+      entityType: parsed.value.leadId ? "lead" : "call",
+      entityId: parsed.value.leadId ?? cmd.id,
+      action: "dial_requested",
+      oldValue: "",
+      newValue: `${cmd.number} (${cmd.status})`,
+      performedBy: requestedBy,
+    });
+  }
 
   return NextResponse.json(
     { ok: true, id: cmd.id, status: cmd.status, number: cmd.number, note: cmd.note ?? null, live },

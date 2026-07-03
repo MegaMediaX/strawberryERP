@@ -641,15 +641,37 @@ export function getDialQueue(): DialCommand[] {
   return getDevStore().dialQueue;
 }
 
-/** Enqueue a dial command (or a pre-resolved simulated one). */
+/**
+ * Enqueue a dial command (or a pre-resolved simulated one).
+ *
+ * Dedupe (audit finding DIAL-R1): rapid "Call via CRM" clicks must not enqueue
+ * duplicate dial commands — in live mode each becomes a real call. Before creating
+ * a command we scan for an ACTIVE command (status 'queued' or 'claimed') with the
+ * same normalized number and return it instead. Only active commands collapse;
+ * terminal ones (completed/failed/simulated) never dedupe, so a later dial to the
+ * same number after resolution creates a fresh command. The route passes an
+ * already-normalized number (validateDialRequest -> normalizePhone), so we key on
+ * `input.number` directly. `reused` lets the caller skip a duplicate audit entry.
+ */
 export function enqueueDial(input: {
   number: string;
   leadId?: string;
   requestedBy: string;
   status?: DialStatus;
   note?: string;
-}): DialCommand {
+}): { command: DialCommand; reused: boolean } {
   const store = getDevStore();
+
+  // Only a fresh 'queued' request can dedupe against an in-flight one. A caller
+  // that pre-resolves the command (simulated mode) always creates its own.
+  const wantsQueued = (input.status ?? "queued") === "queued";
+  if (wantsQueued) {
+    const existing = store.dialQueue.find(
+      (c) => c.number === input.number && (c.status === "queued" || c.status === "claimed"),
+    );
+    if (existing) return { command: existing, reused: true };
+  }
+
   const cmd: DialCommand = {
     id: `DIAL-${Date.now()}-${store.dialQueue.length}`,
     number: input.number,
@@ -661,7 +683,7 @@ export function enqueueDial(input: {
     ...(input.status && input.status !== "queued" ? { resolvedAt: new Date().toISOString() } : {}),
   };
   store.dialQueue.unshift(cmd);
-  return cmd;
+  return { command: cmd, reused: false };
 }
 
 /** Middleware pull: claim the oldest queued command (FIFO). */
