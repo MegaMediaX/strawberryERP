@@ -25,11 +25,15 @@ function priorityTone(p: string): "rose" | "amber" | "blue" | "neutral" {
   return "neutral";
 }
 
-export function AdminLeadsView({ leads, assignees }: { leads: PortalLead[]; assignees: string[] }) {
+export function AdminLeadsView({ leads, assignees, initialFilters }: { leads: PortalLead[]; assignees: string[]; initialFilters?: Filters }) {
   const router = useRouter();
   const [view, setView] = useState<AdminLeadView>("all");
-  const [filters, setFilters] = useStickyFilters<Filters>("lebtech.admin.leads.filters", {});
+  // Strip empty forward-link params so a bare visit falls back to sticky filters;
+  // a real param (e.g. ?status=…) takes precedence over stored ones.
+  const seed = Object.fromEntries(Object.entries(initialFilters ?? {}).filter(([, v]) => v)) as Filters;
+  const [filters, setFilters] = useStickyFilters<Filters>("lebtech.admin.leads.filters", seed);
   const [busy, setBusy] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
   const [reassign, setReassign] = useState<PortalLead | null>(null);
   const [target, setTarget] = useState("");
 
@@ -45,20 +49,35 @@ export function AdminLeadsView({ leads, assignees }: { leads: PortalLead[]; assi
 
   function set<K extends keyof Filters>(k: K, v: Filters[K]) { setFilters((p) => ({ ...p, [k]: v || undefined })); }
 
+  async function patchLead(body: Record<string, unknown>, label: string): Promise<boolean> {
+    const res = await fetch("/api/admin/leads", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    if (!res.ok) {
+      const data = (await res.json().catch(() => ({}))) as { error?: { message?: string } | string };
+      setErr(typeof data.error === "string" ? data.error : data.error?.message ?? label);
+      return false;
+    }
+    return true;
+  }
   async function act(lead: PortalLead, action: "convert" | "archive", confirmMsg?: string) {
     if (confirmMsg && !window.confirm(confirmMsg)) return;
     setBusy(lead.id);
+    setErr(null);
     try {
-      await fetch("/api/admin/leads", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ leadId: lead.id, action }) });
-      router.refresh();
+      if (await patchLead({ leadId: lead.id, action }, `Could not ${action} the lead.`)) router.refresh();
+    } catch {
+      setErr("Network error. Please try again.");
     } finally { setBusy(null); }
   }
   async function doReassign() {
     if (!reassign || !target) return;
     setBusy(reassign.id);
+    setErr(null);
     try {
-      await fetch("/api/admin/leads", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ leadId: reassign.id, action: "reassign", assignedTo: target }) });
-      setReassign(null); setTarget(""); router.refresh();
+      if (await patchLead({ leadId: reassign.id, action: "reassign", assignedTo: target }, "Could not reassign the lead.")) {
+        setReassign(null); setTarget(""); router.refresh();
+      }
+    } catch {
+      setErr("Network error. Please try again.");
     } finally { setBusy(null); }
   }
 
@@ -68,6 +87,7 @@ export function AdminLeadsView({ leads, assignees }: { leads: PortalLead[]; assi
         <h1 className="text-xl font-bold tracking-tight">Leads</h1>
         <p className="text-sm text-[var(--muted)]">{visible.length} of {leads.length} · all countries · all resellers</p>
       </div>
+      {err ? <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">{err}</p> : null}
 
       <div className="flex flex-wrap gap-2" role="tablist" aria-label="Saved views">
         {adminLeadViews.map((v) => (

@@ -48,6 +48,11 @@ describe("filterInvoices", () => {
     expect(filterInvoices(rows, { overdueOnly: true }).map((r) => r.id)).toEqual(["INV-2"]);
     expect(filterInvoices(rows, { search: "cedar" }).map((r) => r.id)).toEqual(["INV-1"]);
   });
+
+  it("pendingOnly keeps everything that isn't Fully Paid (the 'Pending invoices' KPI)", () => {
+    // INV-1 Partially Paid + INV-2 Overdue are pending; INV-3 Paid is excluded.
+    expect(filterInvoices(rows, { pendingOnly: true }).map((r) => r.id).sort()).toEqual(["INV-1", "INV-2"]);
+  });
 });
 
 describe("filterReceipts (spec §20)", () => {

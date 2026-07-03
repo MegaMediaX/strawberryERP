@@ -33,12 +33,15 @@ export function RegionalCustomersView({
   rows,
   scopeLabel,
   phoneByCompany,
+  initialFilters,
 }: {
   rows: CustomerRollup[];
   scopeLabel: string;
   phoneByCompany: Record<string, string>;
+  initialFilters?: RegionalCustomerFilters;
 }) {
-  const [filters, setFilters] = useStickyFilters<RegionalCustomerFilters>("lebtech.regional.customers.filters", {});
+  const seed = Object.fromEntries(Object.entries(initialFilters ?? {}).filter(([, v]) => v !== undefined && v !== "")) as RegionalCustomerFilters;
+  const [filters, setFilters] = useStickyFilters<RegionalCustomerFilters>("lebtech.regional.customers.filters", seed);
 
   const resellers = useMemo(() => [...new Set(rows.map((r) => r.reseller))].sort(), [rows]);
   const countries = useMemo(() => [...new Set(rows.map((r) => r.country))].sort(), [rows]);

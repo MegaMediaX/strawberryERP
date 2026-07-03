@@ -30,12 +30,15 @@ export function RegionalInvoicesView({
   rows,
   scopeLabel,
   customerIdByName,
+  initialFilters,
 }: {
   rows: RegionalInvoiceRow[];
   scopeLabel: string;
   customerIdByName: Record<string, string>;
+  initialFilters?: RegionalInvoiceFilters;
 }) {
-  const [filters, setFilters] = useStickyFilters<RegionalInvoiceFilters>("lebtech.regional.invoices.filters", {});
+  const seed = Object.fromEntries(Object.entries(initialFilters ?? {}).filter(([, v]) => v !== undefined && v !== "")) as RegionalInvoiceFilters;
+  const [filters, setFilters] = useStickyFilters<RegionalInvoiceFilters>("lebtech.regional.invoices.filters", seed);
 
   const resellers = useMemo(() => [...new Set(rows.map((r) => r.reseller))].sort(), [rows]);
   const countries = useMemo(() => [...new Set(rows.map((r) => r.country))].sort(), [rows]);

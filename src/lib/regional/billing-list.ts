@@ -47,6 +47,8 @@ export interface RegionalInvoiceFilters {
   status?: InvoiceBusinessStatus;
   currency?: string;
   overdueOnly?: boolean;
+  /** "Pending invoices" dashboard KPI — anything not Fully Paid (Unpaid/Partially Paid/Overdue). */
+  pendingOnly?: boolean;
 }
 
 export function filterInvoices(
@@ -61,6 +63,7 @@ export function filterInvoices(
     if (f.status && r.businessStatus !== f.status) return false;
     if (f.currency && r.currency !== f.currency) return false;
     if (f.overdueOnly && !r.overdue) return false;
+    if (f.pendingOnly && r.businessStatus === "Paid") return false;
     return true;
   });
 }

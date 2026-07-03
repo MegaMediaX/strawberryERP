@@ -35,7 +35,9 @@ export function RegionalLeadsView({
   initialFilters?: Filters;
 }) {
   const [view, setView] = useState<RegionalLeadView>(initialView);
-  const [filters, setFilters] = useStickyFilters<Filters>("lebtech.regional.leads.filters", initialFilters);
+  // A forward-link view intent (e.g. ?followup=overdue) arrives with empty filters; force it so
+  // stored filters don't re-narrow the list the dashboard KPI promised.
+  const [filters, setFilters] = useStickyFilters<Filters>("lebtech.regional.leads.filters", initialFilters, initialView !== "all");
 
   const resellers = useMemo(() => distinctValues(leads, "reseller"), [leads]);
   const priorities = useMemo(() => distinctValues(leads, "priority"), [leads]);
