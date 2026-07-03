@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { CheckCircle2, Copy, Download, Send, ShieldCheck, Trash2, Upload } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -45,7 +46,9 @@ export function InvoiceBuilder({
     { description: "Platform service", quantity: 1, unitPrice: 2500 },
   ]);
   const [result, setResult] = useState<unknown>(null);
+  const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const router = useRouter();
 
   const totals = useMemo(() => {
     const subtotal = lineItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
@@ -58,22 +61,35 @@ export function InvoiceBuilder({
   async function submitInvoice() {
     setSaving(true);
     setResult(null);
-    const response = await fetch("/api/frappe/invoices", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        country,
-        reseller,
-        customer,
-        currency,
-        dueDate,
-        discount,
-        taxAmount,
-        lineItems,
-      }),
-    });
-    setResult(await response.json());
-    setSaving(false);
+    setError(null);
+    try {
+      const response = await fetch("/api/frappe/invoices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          country,
+          reseller,
+          customer,
+          currency,
+          dueDate,
+          discount,
+          taxAmount,
+          lineItems,
+        }),
+      });
+      const body = (await response.json().catch(() => ({}))) as { error?: { message?: string } | string };
+      if (!response.ok) {
+        setError(typeof body.error === "string" ? body.error : body.error?.message ?? "Could not create the invoice.");
+        return;
+      }
+      setResult(body);
+      // Reflect the new invoice in the server-rendered list on the way back.
+      router.refresh();
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -162,6 +178,9 @@ export function InvoiceBuilder({
               {saving ? "Creating..." : "Create invoice"}
             </Button>
           </div>
+          {error ? (
+            <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">{error}</p>
+          ) : null}
         </CardContent>
       </Card>
 
@@ -183,12 +202,12 @@ export function InvoiceBuilder({
           </div>
 
           <div className="grid gap-2">
-            <Button variant="secondary">
+            <Button variant="secondary" disabled title="PDF export ships in a later slice">
               <Download data-icon="inline-start" />
               Generate PDF
             </Button>
-            <Button variant="secondary">Generate QR code</Button>
-            <Button variant="secondary">
+            <Button variant="secondary" disabled title="QR codes ship in a later slice">Generate QR code</Button>
+            <Button variant="secondary" disabled title="WhatsApp sharing ships in a later slice">
               <Send data-icon="inline-start" />
               Share by WhatsApp
             </Button>
@@ -222,7 +241,9 @@ export function ReceiptBuilder({
   const [paymentReference, setPaymentReference] = useState("");
   const [attachmentUrl, setAttachmentUrl] = useState("");
   const [result, setResult] = useState<unknown>(null);
+  const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const router = useRouter();
 
   async function submitReceipt() {
     if (!invoice) {
@@ -231,23 +252,37 @@ export function ReceiptBuilder({
 
     setSaving(true);
     setResult(null);
-    const response = await fetch("/api/frappe/receipts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        invoice: invoice.id,
-        customer: invoice.customer,
-        reseller: invoice.reseller,
-        country: invoice.country,
-        amount,
-        currency: invoice.currency,
-        paymentMethod,
-        paymentReference,
-        attachmentUrl,
-      }),
-    });
-    setResult(await response.json());
-    setSaving(false);
+    setError(null);
+    try {
+      const response = await fetch("/api/frappe/receipts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          invoice: invoice.id,
+          customer: invoice.customer,
+          reseller: invoice.reseller,
+          country: invoice.country,
+          amount,
+          currency: invoice.currency,
+          paymentMethod,
+          paymentReference,
+          attachmentUrl,
+        }),
+      });
+      const body = (await response.json().catch(() => ({}))) as { error?: { message?: string } | string };
+      if (!response.ok) {
+        setError(typeof body.error === "string" ? body.error : body.error?.message ?? "Could not record the receipt.");
+        return;
+      }
+      setResult(body);
+      // Refresh the server-rendered balance, receipt list, and remaining amount
+      // so the page reflects this payment (and can't double-charge the balance).
+      router.refresh();
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -289,6 +324,9 @@ export function ReceiptBuilder({
             <Upload data-icon="inline-start" />
             {saving ? "Creating..." : "Create receipt"}
           </Button>
+          {error ? (
+            <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">{error}</p>
+          ) : null}
         </CardContent>
       </Card>
 
@@ -309,9 +347,9 @@ export function ReceiptBuilder({
             </div>
           ) : null}
           <div className="grid gap-2">
-            <Button variant="secondary">Generate receipt PDF</Button>
-            <Button variant="secondary">Send by WhatsApp</Button>
-            <Button variant="secondary">Send by email</Button>
+            <Button variant="secondary" disabled title="PDF export ships in a later slice">Generate receipt PDF</Button>
+            <Button variant="secondary" disabled title="WhatsApp sharing ships in a later slice">Send by WhatsApp</Button>
+            <Button variant="secondary" disabled title="Email sending ships in a later slice">Send by email</Button>
           </div>
           {result ? <ResultPanel result={result} /> : null}
         </CardContent>

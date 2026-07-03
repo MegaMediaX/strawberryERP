@@ -88,7 +88,7 @@ export default async function ResellerInvoiceDetailPage({ params }: { params: Pr
       {state.remaining > 0 ? (
         <div className="grid gap-2">
           <h2 className="text-lg font-bold tracking-tight">Record a payment</h2>
-          <ReceiptBuilder invoices={[invoice]} paymentMethods={methods.length ? methods : ["Cash"]} defaultAmount={state.remaining} />
+          <ReceiptBuilder key={`${receipts.length}-${state.remaining}`} invoices={[invoice]} paymentMethods={methods.length ? methods : ["Cash"]} defaultAmount={state.remaining} />
         </div>
       ) : (
         <Card><CardContent className="pt-5"><p className="text-sm font-medium text-emerald-600">This invoice is fully paid.</p></CardContent></Card>

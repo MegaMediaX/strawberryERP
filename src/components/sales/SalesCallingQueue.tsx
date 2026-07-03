@@ -75,10 +75,11 @@ export function SalesCallingQueue({
             Skip
           </button>
           <button onClick={advance} className="inline-flex h-10 items-center rounded-xl bg-[var(--brand)] px-4 text-sm font-bold text-white shadow-[var(--shadow-sm)] hover:bg-[var(--brand-hover)]">
-            {isLast ? "Finish" : "Save & Next →"}
+            {isLast ? "Finish" : "Next lead →"}
           </button>
         </div>
       </div>
+      <p className="-mt-2 text-xs text-[var(--muted)]">Log the outcome on the lead below (a quick outcome or “Save outcome”) before moving on — advancing doesn’t save for you.</p>
 
       <LeadCallScreen
         key={lead.id}
