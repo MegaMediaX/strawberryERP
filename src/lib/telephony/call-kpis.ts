@@ -48,6 +48,33 @@ export function agentOf(record: CallRecord): string {
   return record.agent ?? record.assignedTo ?? "Unassigned";
 }
 
+/** Minimal caller identity used to scope which call records are visible. */
+export interface CallScope {
+  role: string;
+  name?: string;
+  email?: string;
+  reseller?: string;
+  countries?: readonly string[];
+}
+
+/**
+ * Restrict call records to what a caller may see (mirrors the lead scoping):
+ * Super Admin → all; Reseller Admin → their reseller; Regional Director →
+ * their countries; Sales → only calls they made or that belong to their leads.
+ */
+export function scopeCallRecords(records: readonly CallRecord[], scope: CallScope): CallRecord[] {
+  if (scope.role === "Super Admin") return [...records];
+  if (scope.role === "Reseller Admin") {
+    return records.filter((r) => !!r.reseller && r.reseller === scope.reseller);
+  }
+  if (scope.role === "Regional Director") {
+    return records.filter((r) => !!r.country && (scope.countries ?? []).includes(r.country));
+  }
+  // Sales Team User (default): calls attributed to them, or on their leads.
+  const me = [scope.name, scope.email].filter(Boolean) as string[];
+  return records.filter((r) => me.includes(agentOf(r)) || (!!r.assignedTo && me.includes(r.assignedTo)));
+}
+
 function inWindow(record: CallRecord, window: KpiWindow): boolean {
   const t = Date.parse(record.startedAt);
   if (Number.isNaN(t)) return false;

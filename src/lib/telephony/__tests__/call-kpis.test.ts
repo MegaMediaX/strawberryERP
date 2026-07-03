@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { agentCallKpis, agentOf, filterByWindow, teamCallKpis } from "@/lib/telephony/call-kpis";
+import { agentCallKpis, agentOf, filterByWindow, scopeCallRecords, teamCallKpis } from "@/lib/telephony/call-kpis";
 import type { CallRecord } from "@/lib/telephony/call-record";
 
 function call(over: Partial<CallRecord> = {}): CallRecord {
@@ -90,6 +90,41 @@ describe("agentCallKpis", () => {
 
   it("returns [] for no calls", () => {
     expect(agentCallKpis([])).toEqual([]);
+  });
+});
+
+describe("scopeCallRecords", () => {
+  const recs = [
+    call({ agent: "rami@x", assignedTo: "rami@x", reseller: "Beirut Digital", country: "Lebanon" }),
+    call({ agent: "sara@x", assignedTo: "sara@x", reseller: "Beirut Digital", country: "Lebanon" }),
+    call({ agent: "omar@x", assignedTo: "omar@x", reseller: "MedTech CY", country: "Cyprus" }),
+    call({ agent: undefined, assignedTo: undefined, reseller: undefined, country: undefined, linkState: "unlinked" }),
+  ];
+
+  it("Super Admin sees all", () => {
+    expect(scopeCallRecords(recs, { role: "Super Admin" })).toHaveLength(4);
+  });
+
+  it("Reseller Admin sees only their reseller", () => {
+    const out = scopeCallRecords(recs, { role: "Reseller Admin", reseller: "Beirut Digital" });
+    expect(out).toHaveLength(2);
+    expect(out.every((r) => r.reseller === "Beirut Digital")).toBe(true);
+  });
+
+  it("Regional Director sees only their countries", () => {
+    const out = scopeCallRecords(recs, { role: "Regional Director", countries: ["Cyprus"] });
+    expect(out).toHaveLength(1);
+    expect(out[0].country).toBe("Cyprus");
+  });
+
+  it("Sales sees only their own calls", () => {
+    const out = scopeCallRecords(recs, { role: "Sales Team User", name: "rami@x", email: "rami@lebtech.example" });
+    expect(out).toHaveLength(1);
+    expect(agentOf(out[0])).toBe("rami@x");
+  });
+
+  it("an unknown role sees nothing (fail-closed)", () => {
+    expect(scopeCallRecords(recs, { role: "Mystery" })).toHaveLength(0);
   });
 });
 
