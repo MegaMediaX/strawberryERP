@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { LeadCallScreen } from "@/components/platform/LeadCallScreen";
+import { LeadCallSummary } from "@/components/platform/LeadCallSummary";
 import { resolveImportantDetails } from "@/lib/business/important-details-mgmt";
 import { getCallRecords, getImportantDetails } from "@/lib/dev-store";
 import { buildTimeline } from "@/lib/sales/timeline-builder";
@@ -28,15 +29,20 @@ export default async function SalesLeadDetailPage({ params }: { params: Promise<
     );
   }
 
+  const leadCalls = getCallRecords().filter((c) => c.leadId === lead.id);
+
   return (
     <div className="grid gap-4">
-      <Link href="/sales/leads" className="text-sm font-semibold text-[var(--brand)]">← Back to my leads</Link>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Link href="/sales/leads" className="text-sm font-semibold text-[var(--brand)]">← Back to my leads</Link>
+        <LeadCallSummary calls={leadCalls} />
+      </div>
       <LeadCallScreen
         key={lead.id}
         lead={lead}
         enableQuickOutcomes
         enableNotesCompose
-        timeline={buildTimeline(lead, getCallRecords().filter((c) => c.leadId === lead.id))}
+        timeline={buildTimeline(lead, leadCalls)}
         importantDetails={resolveImportantDetails(lead, getImportantDetails(lead.reseller))}
         actingUser={{
           id: session.effectiveUser.id,
