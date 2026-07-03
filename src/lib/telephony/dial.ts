@@ -61,12 +61,16 @@ export function isLiveDialingEnabled(): boolean {
 
 /**
  * Simulated dial outcome for dev-store mode: the call is NOT placed. Returns the
- * terminal status + a human note so the UI can show "simulated — trunk pending"
- * rather than pretend a call happened.
+ * terminal status + a human note so the UI shows an honest reason rather than
+ * pretending a call happened.
+ *
+ * The reason is the TELEPHONY_LIVE_DIAL flag being off (the PBX trunk for ext
+ * 1001 is provisioned and verified — do NOT tell the operator otherwise). Going
+ * live is a config + middleware step, not a telephony-hardware step.
  */
 export function simulateDialResult(): { status: DialStatus; note: string } {
   return {
     status: "simulated",
-    note: "Simulated — outbound trunk not yet provisioned for ext 1001; no call placed.",
+    note: "Simulated — live dialing is off (set TELEPHONY_LIVE_DIAL=true and connect the dialer middleware to place real calls). No call was placed.",
   };
 }

@@ -43,13 +43,13 @@ afterEach(() => {
 });
 
 describe("POST /api/calls/dial — simulation mode (default)", () => {
-  it("enqueues a simulated dial (202, status simulated, trunk-pending note)", async () => {
+  it("enqueues a simulated dial (202, status simulated, honest live-off note)", async () => {
     const res = await dial({ number: "03123456", leadId: leads[0].id });
     expect(res.status).toBe(202);
     const json = await res.json();
     expect(json.status).toBe("simulated");
     expect(json.live).toBe(false);
-    expect(json.note).toMatch(/trunk/i);
+    expect(json.note).toMatch(/TELEPHONY_LIVE_DIAL/);
   });
 
   it("refuses a country-blocked number with 403", async () => {

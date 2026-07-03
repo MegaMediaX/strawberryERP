@@ -195,8 +195,8 @@ export function LeadCallScreen({
       setCallLogged(true);
       setDialMsg(
         body.live
-          ? `Dialing ${lead.phone} — the softphone is placing the call.`
-          : body.note ?? "Call queued (simulated — live dialing is off).",
+          ? `Call queued for ${lead.phone} — the dialer will ring it shortly. Watch your softphone.`
+          : body.note ?? "Simulated — live dialing is off (TELEPHONY_LIVE_DIAL). No call was placed.",
       );
     } catch {
       setDialMsg("Network error. Please try again.");

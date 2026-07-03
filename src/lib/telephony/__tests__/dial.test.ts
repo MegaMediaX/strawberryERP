@@ -27,9 +27,12 @@ describe("validateDialRequest", () => {
 });
 
 describe("simulateDialResult", () => {
-  it("returns a simulated status with a clear trunk-pending note", () => {
+  it("returns a simulated status with an honest reason (live dialing off, not a trunk fault)", () => {
     const r = simulateDialResult();
     expect(r.status).toBe("simulated");
-    expect(r.note).toMatch(/trunk/i);
+    expect(r.note).toMatch(/TELEPHONY_LIVE_DIAL/);
+    expect(r.note).toMatch(/no call was placed/i);
+    // Must NOT blame the PBX trunk — it is provisioned and verified.
+    expect(r.note).not.toMatch(/trunk not/i);
   });
 });
