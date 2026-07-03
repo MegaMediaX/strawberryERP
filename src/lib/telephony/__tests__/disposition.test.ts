@@ -47,9 +47,11 @@ describe("resolveDisposition", () => {
     expect(r.value.targetStatus).toBe("Attempted Contact (No Response)");
   });
 
-  it("rejects 'Interested' directly from a New Lead (invalid transition)", () => {
+  it("maps 'Interested' directly from a New Lead (one-tap first-call logging)", () => {
     const r = resolveDisposition({ leadId: "LEAD-1", disposition: "Interested" }, "New Lead (Uncontacted)");
-    expect(r.ok).toBe(false);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value.targetStatus).toBe("Contacted (Interested)");
   });
 
   it("maps 'Interested' → Contacted (Interested) from a progress state", () => {

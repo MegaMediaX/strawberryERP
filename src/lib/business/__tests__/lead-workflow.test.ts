@@ -20,11 +20,21 @@ describe("canTransition", () => {
     for (const s of leadStatuses) expect(canTransition(s, s)).toBe(true);
   });
 
-  it("New (Uncontacted) may only attempt or make contact", () => {
+  it("New (Uncontacted) may reach any contact-progress state (one-tap first-call logging)", () => {
     expect(canTransition("New Lead (Uncontacted)", "Attempted Contact (No Response)")).toBe(true);
     expect(canTransition("New Lead (Uncontacted)", "Contacted (Awaiting Response)")).toBe(true);
-    expect(canTransition("New Lead (Uncontacted)", "Contacted (Interested)")).toBe(false);
-    expect(canTransition("New Lead (Uncontacted)", "Scheduled Follow-Up")).toBe(false);
+    expect(canTransition("New Lead (Uncontacted)", "Contacted (Interested)")).toBe(true);
+    expect(canTransition("New Lead (Uncontacted)", "Contacted (Not Interested)")).toBe(true);
+    expect(canTransition("New Lead (Uncontacted)", "Scheduled Follow-Up")).toBe(true);
+  });
+
+  it("scheduling a follow-up straight from New still requires a follow-up date", () => {
+    expect(
+      validateLeadTransition("New Lead (Uncontacted)", "Scheduled Follow-Up"),
+    ).toMatch(/requires a follow-up date/);
+    expect(
+      validateLeadTransition("New Lead (Uncontacted)", "Scheduled Follow-Up", "2026-07-04T10:00:00Z"),
+    ).toBeNull();
   });
 
   it("re-engagement: a Not Interested lead can be revived", () => {

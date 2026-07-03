@@ -6,7 +6,9 @@
  * is a deliberate product decision (recorded in BUILD_STATE.md → Decisions):
  *
  * - A lead may always stay in its current status (idempotent no-op updates).
- * - From "New Lead (Uncontacted)" you may only attempt or make contact.
+ * - From "New Lead (Uncontacted)" you may move to any contact-progress state,
+ *   so a first call that connects can be logged in one tap (interested,
+ *   not-interested, or scheduled follow-up) as well as attempted/awaiting.
  * - Any contacted/attempted/follow-up state may move to any other
  *   contact-progress state (re-engagement is allowed — a "Not Interested" lead
  *   can be revived).
@@ -30,6 +32,9 @@ const allowed: Record<LeadStatus, LeadStatus[]> = {
   "New Lead (Uncontacted)": [
     "Attempted Contact (No Response)",
     "Contacted (Awaiting Response)",
+    "Contacted (Interested)",
+    "Contacted (Not Interested)",
+    "Scheduled Follow-Up",
   ],
   "Attempted Contact (No Response)": progressStates,
   "Contacted (Awaiting Response)": progressStates,
