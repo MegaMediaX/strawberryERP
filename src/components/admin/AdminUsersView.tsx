@@ -27,25 +27,38 @@ const linkBtn = "inline-flex h-8 items-center rounded-lg border border-[var(--bo
 export function AdminUsersView({ rows }: { rows: AdminUserRow[] }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
   const [reset, setReset] = useState<AdminUserRow | null>(null);
   const [pw, setPw] = useState("");
   const [resetMsg, setResetMsg] = useState("");
 
   async function toggleActive(u: AdminUserRow) {
     setBusy(u.id);
+    setErr(null);
     try {
-      await fetch(`/api/admin/users/${u.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: u.active ? "deactivate" : "activate" }) });
+      const res = await fetch(`/api/admin/users/${u.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: u.active ? "deactivate" : "activate" }) });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        setErr(body.error ?? `Could not ${u.active ? "deactivate" : "activate"} ${u.name}.`);
+        return;
+      }
       router.refresh();
+    } catch {
+      setErr("Network error. Please try again.");
     } finally { setBusy(null); }
   }
 
   async function doReset() {
     if (!reset) return;
     setResetMsg("");
-    const res = await fetch(`/api/admin/users/${reset.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "reset_password", password: pw }) });
-    const data = (await res.json()) as { error?: string; data?: { message?: string } };
-    if (!res.ok) { setResetMsg(data.error ?? "Reset failed."); return; }
-    setReset(null); setPw(""); router.refresh();
+    try {
+      const res = await fetch(`/api/admin/users/${reset.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "reset_password", password: pw }) });
+      const data = (await res.json().catch(() => ({}))) as { error?: string; data?: { message?: string } };
+      if (!res.ok) { setResetMsg(data.error ?? "Reset failed."); return; }
+      setReset(null); setPw(""); router.refresh();
+    } catch {
+      setResetMsg("Network error. Please try again.");
+    }
   }
 
   return (
@@ -57,6 +70,7 @@ export function AdminUsersView({ rows }: { rows: AdminUserRow[] }) {
         </div>
         <Link href="/admin/users/new" className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[var(--brand)] px-3 text-sm font-semibold text-white hover:bg-[var(--brand-hover)]"><Plus className="size-4" /> Add user</Link>
       </div>
+      {err ? <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">{err}</p> : null}
 
       {/* Desktop table */}
       <Card className="hidden md:block">

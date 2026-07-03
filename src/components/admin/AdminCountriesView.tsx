@@ -15,16 +15,25 @@ const linkBtn = "inline-flex h-8 items-center rounded-lg border border-[var(--bo
 export function AdminCountriesView({ rows }: { rows: AdminCountryRow[] }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
 
   async function toggleActive(c: AdminCountryRow) {
     setBusy(c.name);
+    setErr(null);
     try {
-      await fetch("/api/admin/countries", {
+      const res = await fetch("/api/admin/countries", {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ name: c.name, active: !c.active }),
       });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: { message?: string } | string };
+        setErr(typeof body.error === "string" ? body.error : body.error?.message ?? `Could not update ${c.name}.`);
+        return;
+      }
       router.refresh();
+    } catch {
+      setErr("Network error. Please try again.");
     } finally { setBusy(null); }
   }
 
@@ -37,6 +46,7 @@ export function AdminCountriesView({ rows }: { rows: AdminCountryRow[] }) {
         </div>
         <Link href="/admin/countries/new" className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[var(--brand)] px-3 text-sm font-semibold text-white hover:bg-[var(--brand-hover)]"><Plus className="size-4" /> Add country</Link>
       </div>
+      {err ? <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">{err}</p> : null}
 
       {/* Desktop table */}
       <Card className="hidden md:block">
