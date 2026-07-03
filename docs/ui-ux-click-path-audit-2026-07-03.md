@@ -8,6 +8,29 @@ highest-impact findings were then **reproduced live in the browser** (dev-store 
 **Totals: 45 findings — 8 HIGH · 13 MEDIUM · 24 LOW — plus 20 by-design disabled placeholders
 (correct pattern: disabled + tooltip) and 15 items flagged for deeper manual testing.**
 
+### Fix status (batch 1 — shipped 2026-07-03, commits 7809f15 / 99e5e4b / b463e55)
+
+**Fixed + live-verified:**
+- S-001 — calling-queue "Save & Next" relabelled "Next lead →" + nudge (no more false save promise).
+- R-007 / R-008 / S-008 — invoice & receipt builders: try/catch/finally, error surfacing,
+  `router.refresh()` on success; receipt builder re-keyed so the amount field resets to the new
+  remaining (duplicate-payment trap gone).
+- R-009 / S-009 — six dead preview buttons disabled with tooltips.
+- A-002 (+ A-001 leads leg) — admin leads page honors `?status=/?reseller=/?assignedUser=/…`.
+- R-001 — regional invoices `?status=pending` → new `pendingOnly` filter (unit-tested).
+- R-002 / R-003 — regional customers & invoices honor `?reseller=`.
+- R-005 — `useStickyFilters` `forceInitial`: view-only intents (`?followup=overdue`) no longer
+  re-narrowed by stored filters.
+- A-003 (core) — countries/resellers/users activate-deactivate, user password reset, and admin
+  lead convert/archive/reassign now check `res.ok`, surface the error, and only refresh on success.
+
+**Remaining follow-ups (not yet fixed):** A-004…A-017 (other silent-failure dialogs: payment
+methods, currencies, integration test/save, customer delete/add-note, delete-queue clear-all,
+branding reset, invoicing warning, exit-impersonation, notifications sticky filter), A-003 tail
+(notifications patchRule, custom-field remove, API-key revoke), R-004/R-006/R-010…R-014,
+S-002…S-007/S-010…S-017, and all "needs manual testing" items. Many S-* are dev-store
+echo-only writes (persist once the Frappe proxy is live).
+
 Live-confirmed in browser: A-001/A-002, S-001, R-008 (see § Live verification).
 
 Reference implementations already in the codebase for most fixes:
