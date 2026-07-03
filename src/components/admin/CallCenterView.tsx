@@ -86,6 +86,7 @@ export function CallCenterView() {
         if (!res.ok) throw new Error(`Request failed (${res.status})`);
         const json = (await res.json()) as { ok: boolean } & CallKpiReport;
         if (!json.ok) throw new Error("Report unavailable");
+        if (controller.signal.aborted) return; // superseded by a newer window
         setState({ report: { team: json.team, agents: json.agents }, loading: false, error: null });
       })
       .catch((e: unknown) => {
