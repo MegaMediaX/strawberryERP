@@ -1,7 +1,7 @@
 /**
  * Super Admin navigation model (spec §3/§4). Pure data + active-path helper so
  * it is unit-testable. Desktop = a GROUPED, collapsible sidebar (Dashboard ·
- * Operations · Partners · Accounting · Platform); mobile = a 5-item bottom bar
+ * Operations · Partners · Accounting · Reports · Platform); mobile = a 5-item bottom bar
  * (Home/Operations/Partners/Reports/More) with a "More" sheet. Urgent badges
  * (delete queue, failed API/WhatsApp, overdue invoices, integration errors) are
  * keyed here and wired to live counts by the dashboard slice.
@@ -11,7 +11,7 @@ export type AdminIcon =
   | "globe" | "store" | "user-cog" | "percent" | "file-cog" | "coins"
   | "credit-card" | "banknote" | "trending-up" | "shield" | "palette"
   | "form-input" | "bell" | "key" | "plug" | "trash" | "scroll" | "sliders"
-  | "bar-chart" | "search" | "user" | "more" | "layout-grid";
+  | "bar-chart" | "search" | "user" | "more" | "layout-grid" | "phone";
 
 /** Badge slots for urgent counts (§4). Counts are injected at render time. */
 export type AdminBadgeKey =
@@ -53,6 +53,10 @@ export const adminSidebar: AdminNavGroup[] = [
     { label: "Payment Methods", href: "/admin/accounting/payment-methods", icon: "credit-card" },
     { label: "Expenses", href: "/admin/accounting/expenses", icon: "banknote" },
     { label: "P&L", href: "/admin/accounting/pnl", icon: "trending-up" },
+  ] },
+  { label: "Reports", items: [
+    { label: "Reports", href: "/admin/reports", icon: "bar-chart" },
+    { label: "Call Center", href: "/admin/reports/call-center", icon: "phone" },
   ] },
   { label: "Platform", items: [
     { label: "Exhibition Floor", href: "/admin/slots", icon: "layout-grid" },

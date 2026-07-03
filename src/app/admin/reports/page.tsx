@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { RegionalReportsView } from "@/components/regional/RegionalReportsView";
 import { adminGlobalData } from "@/lib/admin/global-data";
 import { countryPerformance, leadConversionFunnel, revenueReceipts } from "@/lib/regional/regional-reports";
@@ -11,7 +13,10 @@ export default async function AdminReportsPage() {
   const now = new Date();
   return (
     <div className="grid gap-5">
-      <div><h1 className="text-xl font-bold tracking-tight">Reports</h1><p className="text-sm text-[var(--muted)]">Global platform performance — visual first, export to CSV</p></div>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div><h1 className="text-xl font-bold tracking-tight">Reports</h1><p className="text-sm text-[var(--muted)]">Global platform performance — visual first, export to CSV</p></div>
+        <Link href="/admin/reports/call-center" className="inline-flex h-9 items-center rounded-lg border border-[var(--border)] px-3 text-xs font-semibold text-[var(--brand)] hover:bg-[var(--background)]">Call Center KPIs →</Link>
+      </div>
       <RegionalReportsView
         scopeLabel="All countries · global"
         country={countryPerformance(d.leads, d.invoices, d.receipts, d.commissions, now)}

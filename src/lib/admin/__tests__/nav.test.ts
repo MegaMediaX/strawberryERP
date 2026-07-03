@@ -9,9 +9,9 @@ import {
 } from "@/lib/admin/nav";
 
 describe("admin nav model (spec §4)", () => {
-  it("has the 5 sidebar groups in order", () => {
+  it("has the 6 sidebar groups in order", () => {
     expect(adminSidebar.map((g) => g.label)).toEqual([
-      "Dashboard", "Operations", "Partners", "Accounting", "Platform",
+      "Dashboard", "Operations", "Partners", "Accounting", "Reports", "Platform",
     ]);
   });
 
@@ -20,6 +20,7 @@ describe("admin nav model (spec §4)", () => {
     expect(byGroup.Operations).toEqual(["Leads", "Customers", "Invoices", "Receipts", "Calendar"]);
     expect(byGroup.Partners).toEqual(["Countries", "Resellers", "Users", "Commissions"]);
     expect(byGroup.Accounting).toEqual(["Invoicing", "Currencies", "Payment Methods", "Expenses", "P&L"]);
+    expect(byGroup.Reports).toEqual(["Reports", "Call Center"]);
     expect(byGroup.Platform).toEqual([
       "Exhibition Floor", "White Label", "Branding", "Custom Fields", "Notifications",
       "API Developer Center", "Integrations", "Delete Queue", "Audit Logs", "Settings",

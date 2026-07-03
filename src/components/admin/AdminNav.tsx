@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   BarChart3, Banknote, Bell, CalendarClock, Coins, CreditCard, FileCog, FileText,
-  FormInput, Globe, Home, Key, LayoutGrid, MoreHorizontal, Palette, Percent, Plug, Receipt,
-  ScrollText, Search, Shield, Sliders, Store, Trash2, TrendingUp, User, UserCheck,
+  FormInput, Globe, Home, Key, LayoutGrid, MoreHorizontal, Palette, Percent, Phone, Plug,
+  Receipt, ScrollText, Search, Shield, Sliders, Store, Trash2, TrendingUp, User, UserCheck,
   UserCog, Users,
 } from "lucide-react";
 import type { ComponentType } from "react";
@@ -24,6 +24,7 @@ const ICONS: Record<AdminIcon, ComponentType<{ className?: string }>> = {
   "trending-up": TrendingUp, shield: Shield, palette: Palette, "form-input": FormInput,
   bell: Bell, key: Key, plug: Plug, trash: Trash2, scroll: ScrollText, sliders: Sliders,
   "bar-chart": BarChart3, search: Search, user: User, more: MoreHorizontal, "layout-grid": LayoutGrid,
+  phone: Phone,
 };
 
 export type AdminBadgeCounts = Partial<Record<AdminBadgeKey, number>>;
