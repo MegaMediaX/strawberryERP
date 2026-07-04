@@ -31,6 +31,13 @@
       "search_index": true
     },
     {
+      "fieldname": "assigned_user",
+      "fieldtype": "Link",
+      "label": "Assigned User",
+      "options": "User",
+      "search_index": true
+    },
+    {
       "fieldname": "email",
       "fieldtype": "Data",
       "label": "Email"

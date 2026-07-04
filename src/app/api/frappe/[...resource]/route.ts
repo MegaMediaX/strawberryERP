@@ -56,6 +56,7 @@ import {
   validateCustomerImportCsv,
   validateCountry,
   validateImportCsv,
+  type ApiKeyRecord,
   type ApiScope,
   type CommissionEntry,
   type CommissionStatus,
@@ -72,6 +73,7 @@ import {
   roleHeadersFromSession,
 } from "@/lib/portal-security";
 import { authorizeApiRequest, logSuccessfulApiRequest } from "@/lib/security/permissions";
+import { scopePayloadForOutgoingWrite } from "@/lib/security/scope-override";
 
 type RouteContext = {
   params: Promise<{ resource: string[] }>;
@@ -146,7 +148,7 @@ export async function GET(request: Request, context: RouteContext) {
   }
 
   if (contextKey === "settings/api" || contextKey === "settings/api/keys") {
-    return sampleResponse(store.apiKeys);
+    return sampleResponse(store.apiKeys.map(stripKeyHash));
   }
 
   if (contextKey === "settings/api/logs") {
@@ -233,7 +235,7 @@ export async function POST(request: Request, context: RouteContext) {
     return denied;
   }
 
-  const proxied = await maybeRouteToFrappe(contextKey, "post", payload);
+  const proxied = await maybeRouteToFrappe(contextKey, "post", scopePayloadForOutgoingWrite(contextKey, session, objectPayload));
   if (proxied) {
     logSuccessfulApiRequest(request, contextKey, "POST", 200);
     return proxied;
@@ -506,7 +508,7 @@ export async function POST(request: Request, context: RouteContext) {
       newValue: record.prefix,
       performedBy: session.auditLabel,
     });
-    return sampleResponse(record, {
+    return sampleResponse(stripKeyHash(record), {
       status: 201,
       plainTextKey,
       audit,
@@ -639,7 +641,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     return denied;
   }
 
-  const proxied = await maybeRouteToFrappe(contextKey, "patch", payload);
+  const proxied = await maybeRouteToFrappe(contextKey, "patch", scopePayloadForOutgoingWrite(contextKey, session, objectPayload));
   if (proxied) {
     logSuccessfulApiRequest(request, contextKey, "PATCH", 200);
     return proxied;
@@ -650,7 +652,10 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   if (contextKey === "invoices") {
-    const target = store.invoices.find((invoice) => invoice.id === objectPayload.id) ?? store.invoices[0];
+    const target = store.invoices.find((invoice) => invoice.id === objectPayload.id);
+    if (!target) {
+      return jsonError("Invoice not found.", 404);
+    }
     const updated = { ...target, ...objectPayload, updatedAt: new Date().toISOString() };
     store.invoices = store.invoices.map((invoice) => (invoice.id === target.id ? (updated as Invoice) : invoice));
     appendAudit({
@@ -665,7 +670,10 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   if (contextKey === "receipts") {
-    const target = store.receipts.find((receipt) => receipt.id === objectPayload.id) ?? store.receipts[0];
+    const target = store.receipts.find((receipt) => receipt.id === objectPayload.id);
+    if (!target) {
+      return jsonError("Receipt not found.", 404);
+    }
     return sampleResponse({ ...target, ...objectPayload, updatedAt: new Date().toISOString() });
   }
 
@@ -675,7 +683,10 @@ export async function PATCH(request: Request, context: RouteContext) {
       return jsonError("Unsupported commission status.");
     }
 
-    const target = store.commissionEntries.find((entry) => entry.id === objectPayload.id) ?? store.commissionEntries[0];
+    const target = store.commissionEntries.find((entry) => entry.id === objectPayload.id);
+    if (!target) {
+      return jsonError("Commission entry not found.", 404);
+    }
 
     // Approval flow: authorize + validate the status transition (Phase 2 slice 1).
     if (status) {
@@ -712,7 +723,12 @@ export async function PATCH(request: Request, context: RouteContext) {
       return jsonError(countryError);
     }
 
-    return sampleResponse({ ...customers[0], ...objectPayload, updatedAt: new Date().toISOString() });
+    const target = getCustomers().find((customer) => customer.id === objectPayload.id);
+    if (!target) {
+      return jsonError("Customer not found.", 404);
+    }
+
+    return sampleResponse({ ...target, ...objectPayload, updatedAt: new Date().toISOString() });
   }
 
   if (contextKey === "settings/invoice-numbering") {
@@ -809,12 +825,33 @@ export async function PATCH(request: Request, context: RouteContext) {
       return jsonError(countryError);
     }
 
-    return sampleResponse({ reseller: resellers[0], active: true, ...objectPayload, updatedAt: new Date().toISOString() });
+    const targetName = String(objectPayload.name ?? objectPayload.reseller ?? "");
+    const target = resellers.find((reseller) => reseller === targetName);
+    if (!target) {
+      return jsonError("Reseller not found.", 404);
+    }
+
+    return sampleResponse({ reseller: target, active: true, ...objectPayload, updatedAt: new Date().toISOString() });
   }
 
   if (contextKey === "settings/api/keys") {
-    const target = store.apiKeys.find((key) => key.id === objectPayload.id) ?? store.apiKeys[0];
-    return sampleResponse({ ...target, ...objectPayload, updatedAt: new Date().toISOString() });
+    const target = store.apiKeys.find((key) => key.id === objectPayload.id);
+    if (!target) {
+      return jsonError("API key not found.", 404);
+    }
+
+    const allowedPatch = pickAllowedApiKeyFields(objectPayload);
+    const updated: ApiKeyRecord = { ...target, ...allowedPatch };
+    store.apiKeys = store.apiKeys.map((key) => (key.id === target.id ? updated : key));
+    const audit = appendAudit({
+      entityType: "API Key",
+      entityId: target.id,
+      action: "update",
+      oldValue: String(target.isActive),
+      newValue: String(updated.isActive),
+      performedBy: session.auditLabel,
+    });
+    return sampleResponse({ ...stripKeyHash(updated), updatedAt: new Date().toISOString() }, { audit });
   }
 
   if (contextKey === "delete-queue" || contextKey === "settings/delete-queue") {
@@ -955,6 +992,43 @@ function normalizePaymentMethod(payload: Record<string, unknown>): PaymentMethod
 
 function sampleResponse(data: unknown, extra?: { status?: number } & Record<string, unknown>) {
   return devStoreResponse(data, extra);
+}
+
+/**
+ * P1-3: the salted key hash must never leave the server. Strip it before any
+ * API key record is returned to a client (list, create, or update).
+ */
+function stripKeyHash<T extends { keyHash?: unknown }>(record: T): Omit<T, "keyHash"> {
+  const safe = { ...record };
+  delete (safe as { keyHash?: unknown }).keyHash;
+  return safe;
+}
+
+/**
+ * P1-3: field allowlist for PATCH settings/api/keys, mirroring the Python
+ * `update_api_key` "allowed" set. `keyHash`, `prefix`, and `id` can NEVER be
+ * updated through this endpoint.
+ */
+const API_KEY_PATCHABLE_FIELDS = [
+  "keyName",
+  "description",
+  "scopes",
+  "readAccess",
+  "writeAccess",
+  "expiresAt",
+  "ipWhitelist",
+  "rateLimitPerMinute",
+  "isActive",
+] as const;
+
+function pickAllowedApiKeyFields(payload: Record<string, unknown>): Partial<ApiKeyRecord> {
+  const allowed: Partial<ApiKeyRecord> = {};
+  for (const field of API_KEY_PATCHABLE_FIELDS) {
+    if (field in payload) {
+      (allowed as Record<string, unknown>)[field] = payload[field];
+    }
+  }
+  return allowed;
 }
 
 /**

@@ -24,7 +24,7 @@ ALLOWED_API_SCOPES = {
 
 SCOPED_DOCTYPE_FIELDS = {
     "Partner Lead": {"country": "country", "reseller": "reseller", "assigned_user": "assigned_user"},
-    "Partner Customer": {"country": "country", "reseller": "reseller"},
+    "Partner Customer": {"country": "country", "reseller": "reseller", "assigned_user": "assigned_user"},
     "Partner Invoice": {"country": "country", "reseller": "reseller"},
     "Partner Receipt": {"country": "country", "reseller": "reseller"},
     "Invoice": {"country": "country", "reseller": "reseller"},
