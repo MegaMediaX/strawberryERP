@@ -110,7 +110,25 @@ jobs:
           MARIADB_IMAGE: mariadb:10.6.27@sha256:daacc2f260f8ec999daa5e03a017a23a7e6fa3fb982aaf26e8b72f24daf03bc9
           REDIS_IMAGE: redis:7-alpine@sha256:8b81dd37ff027bec4e516d41acfbe9fe2460070dc6d4a4570a2ac5b9d59df065
           NGINX_IMAGE: nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10
-        run: npm run preflight:production
+          MARIADB_DATABASE: lebtech
+          MARIADB_USER: lebtech
+        run: |
+          # docker-compose.yml declares `env_file: - .env` on every service, so
+          # `docker compose config` (run by the preflight) errors out if .env is
+          # missing. Production always has one; materialize an equivalent here
+          # from the CI env above so the compose validation reflects a real
+          # deployment. .env is gitignored, so this is never committed.
+          {
+            for var in PUBLIC_BASE_URL FRAPPE_BASE_URL FRAPPE_HOST_HEADER \
+              FRAPPE_API_KEY FRAPPE_API_SECRET PORTAL_SESSION_SECRET \
+              PORTAL_API_KEY_SECRET API_KEY_HASH_SECRET MARIADB_ROOT_PASSWORD \
+              MARIADB_PASSWORD MARIADB_DATABASE MARIADB_USER SITE_NAME \
+              BACKUP_EXPORT_DIR BACKUP_RETENTION_DAYS ERPNEXT_IMAGE \
+              MARIADB_IMAGE REDIS_IMAGE NGINX_IMAGE; do
+              printf '%s=%s\n' "$var" "${!var}"
+            done
+          } > .env
+          npm run preflight:production
 
   frappe-live-smoke:
     name: Optional live Frappe smoke
