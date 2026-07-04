@@ -183,6 +183,27 @@ describe("P1-4: outgoing write payload scope is overridden (not merged) by sessi
     expect(outgoing.amount).toBe(500);
   });
 
+  it("assigns a Sales Team User's converted customer to them (Partner Customer scoping)", () => {
+    // The frontend lead->customer path (buildCustomerFromLead) POSTs to
+    // /api/frappe/customers; without this, the created Partner Customer has no
+    // assigned_user and is invisible to the Sales Team User who created it.
+    const session = {
+      effectiveUser: {
+        role: "Sales Team User",
+        countries: [],
+        reseller: undefined,
+        name: "Rami K.",
+      },
+    } as never;
+
+    const outgoing = scopePayloadForOutgoingWrite("customers", session, {
+      customer_name: "Cedar Cloud Services",
+      assigned_user: "",
+    });
+
+    expect(outgoing.assigned_user).toBe("Rami K.");
+  });
+
   it("does not override scope for Super Admin (unrestricted)", () => {
     const session = {
       effectiveUser: {

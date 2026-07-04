@@ -27,11 +27,19 @@ export interface CustomerDraft {
   source: string;
   customer_status: string;
   convertedFromLead: string;
+  /**
+   * The sales user who owns the originating lead, carried so the converted
+   * Partner Customer stays visible under P1-2 assigned_user scoping. Empty when
+   * the lead is unassigned (the `assignedTo` "Unassigned" sentinel is normalized
+   * away rather than persisted as a bogus user id).
+   */
+  assigned_user: string;
 }
 
 /** Map a lead (+ optional field overrides) to a customer create payload. */
 export function buildCustomerFromLead(lead: PortalLead, overrides: ConversionOverrides = {}): CustomerDraft {
   const customerName = (overrides.customerName ?? lead.company).trim();
+  const assignedTo = (lead.assignedTo ?? "").trim();
   return {
     customer_name: customerName,
     name: customerName,
@@ -43,6 +51,7 @@ export function buildCustomerFromLead(lead: PortalLead, overrides: ConversionOve
     source: lead.source,
     customer_status: "Active",
     convertedFromLead: lead.id,
+    assigned_user: assignedTo === "Unassigned" ? "" : assignedTo,
   };
 }
 

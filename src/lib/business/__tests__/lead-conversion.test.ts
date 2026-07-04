@@ -42,6 +42,18 @@ describe("buildCustomerFromLead", () => {
     // unspecified fields fall back to the lead
     expect(draft.phone).toBe("+961 70 144 221");
   });
+
+  it("carries the lead's assigned user onto the customer draft (P1-2 scoping)", () => {
+    // Without this, a Sales Team User converting their own lead would create a
+    // customer with no assigned_user and never see it under Partner Customer scoping.
+    const draft = buildCustomerFromLead(lead({ assignedTo: "rami@beirutdigital.example" }));
+    expect(draft.assigned_user).toBe("rami@beirutdigital.example");
+  });
+
+  it("normalizes the Unassigned sentinel to an empty assigned_user", () => {
+    const draft = buildCustomerFromLead(lead({ assignedTo: "Unassigned" }));
+    expect(draft.assigned_user).toBe("");
+  });
 });
 
 describe("validateConversion", () => {
