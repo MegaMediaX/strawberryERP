@@ -830,18 +830,43 @@ export function calculateInvoiceTotals(lineItems: LineItem[], discount: number, 
   };
 }
 
-export function createInvoiceFromPayload(payload: Partial<Invoice>) {
+/** Stored invoice-numbering settings (spec §18) — mode/prefix/nextSequence. */
+export type InvoiceNumberingSettings = {
+  mode: string;
+  prefix?: string;
+  nextSequence?: number;
+};
+
+/**
+ * Context for deriving the next invoice sequence (P0-2 fix).
+ * Defaults to the static seed array so existing callers/tests (which never
+ * pass a context) keep their prior behavior. Real callers should pass the
+ * live dev-store collection so the sequence keeps growing across creates —
+ * using the static seed's `.length` here was the bug: it never changes, so
+ * every 2nd invoice created in a process collided on id + invoiceNumber.
+ */
+export function createInvoiceFromPayload(
+  payload: Partial<Invoice>,
+  context?: { existingInvoices?: Invoice[]; numbering?: InvoiceNumberingSettings },
+) {
   const countryError = validateCountry(payload.country);
   if (countryError) {
     return { error: countryError };
   }
 
+  const existingInvoices = context?.existingInvoices ?? invoices;
+  const numbering = context?.numbering;
   const lineItems = payload.lineItems?.length
     ? payload.lineItems
     : [{ description: "Platform service", quantity: 1, unitPrice: Number(payload.total ?? 0) || 0 }];
   const totals = calculateInvoiceTotals(lineItems, Number(payload.discount ?? 0), Number(payload.taxAmount ?? 0));
-  const sequence = String(invoices.length + 42).padStart(4, "0");
-  const prefix = (payload.country ?? "Lebanon").slice(0, 2).toUpperCase();
+  const nextSequence = numbering?.nextSequence ?? existingInvoices.length + 42;
+  const sequence = String(nextSequence).padStart(4, "0");
+  const prefix = (
+    numbering?.mode === "Country Prefix" && numbering.prefix
+      ? numbering.prefix
+      : (payload.country ?? "Lebanon").slice(0, 2)
+  ).toUpperCase();
   const invoiceNumber = `${prefix}-2026-${sequence}`;
   const invoice: Invoice = {
     id: `INV-2026-${prefix}-${sequence}`,
@@ -869,15 +894,25 @@ export function createInvoiceFromPayload(payload: Partial<Invoice>) {
   };
 }
 
-export function createReceiptFromPayload(payload: Partial<Receipt>) {
+/**
+ * Context for deriving the next receipt sequence (P0-2 fix). Defaults to the
+ * static seed array so existing callers/tests (which never pass a context)
+ * keep their prior behavior — see createInvoiceFromPayload for the full
+ * rationale (the seed's `.length` never changes, so it caused collisions).
+ */
+export function createReceiptFromPayload(
+  payload: Partial<Receipt>,
+  context?: { existingReceipts?: Receipt[] },
+) {
   const countryError = validateCountry(payload.country);
   if (countryError) {
     return { error: countryError };
   }
 
+  const existingReceipts = context?.existingReceipts ?? receipts;
   const invoice = invoices.find((item) => item.id === payload.invoice || item.invoiceNumber === payload.invoice) ?? invoices[0];
   const amount = Math.max(0, Number(payload.amount ?? 0));
-  const receiptNumber = `RCPT-2026-${String(receipts.length + 33).padStart(4, "0")}`;
+  const receiptNumber = `RCPT-2026-${String(existingReceipts.length + 33).padStart(4, "0")}`;
   const receipt: Receipt = {
     id: receiptNumber,
     receiptNumber,
@@ -894,7 +929,7 @@ export function createReceiptFromPayload(payload: Partial<Receipt>) {
     issuedBy: payload.issuedBy ?? "Super Admin",
     issuedAt: payload.issuedAt ?? new Date().toISOString(),
   };
-  const paidSoFar = receipts.filter((item) => item.invoice === invoice.id).reduce((sum, item) => sum + item.amount, 0) + amount;
+  const paidSoFar = existingReceipts.filter((item) => item.invoice === invoice.id).reduce((sum, item) => sum + item.amount, 0) + amount;
   const updatedInvoice: Invoice = {
     ...invoice,
     paymentStatus: paidSoFar >= invoice.total ? "Fully Paid" : "Partially Paid",

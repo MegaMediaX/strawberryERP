@@ -61,4 +61,29 @@ describe("createReceiptFromPayload", () => {
     const result = createReceiptFromPayload({ invoice: clean?.id, country: "Israel" as never, amount: 100 });
     expect("error" in result).toBe(true);
   });
+
+  // P0-2: sequence must be derived from the growing store, not the static seed
+  // array length — otherwise every 2nd receipt created in a process collides.
+  it("gives two back-to-back receipts distinct ids/receiptNumbers when the running store grows", () => {
+    if (!clean) return;
+    const created: typeof receipts = [];
+    const first = createReceiptFromPayload(
+      { invoice: clean.id, country: clean.country, amount: 10 },
+      { existingReceipts: created },
+    );
+    expect("error" in first).toBe(false);
+    if ("error" in first) return;
+    created.push(first.data);
+
+    const second = createReceiptFromPayload(
+      { invoice: clean.id, country: clean.country, amount: 10 },
+      { existingReceipts: created },
+    );
+    expect("error" in second).toBe(false);
+    if ("error" in second) return;
+    created.push(second.data);
+
+    expect(second.data.id).not.toBe(first.data.id);
+    expect(second.data.receiptNumber).not.toBe(first.data.receiptNumber);
+  });
 });

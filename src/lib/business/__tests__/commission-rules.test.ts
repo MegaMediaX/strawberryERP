@@ -61,8 +61,12 @@ function post(body: Record<string, unknown>) {
 }
 
 describe("POST commissions/rules", () => {
-  it("creates a rule for a valid payload", async () => {
-    expect((await post(valid)).status).toBe(201);
+  it("accepts a valid payload but is honest that it isn't persisted (no structured dev-store yet, P0-1)", async () => {
+    const res = await post(valid);
+    expect(res.status).toBe(202);
+    const body = (await res.json()) as { persisted: boolean; note: string };
+    expect(body.persisted).toBe(false);
+    expect(body.note).toMatch(/mock until Frappe migration/i);
   });
 
   it("rejects an invalid percentage (400)", async () => {

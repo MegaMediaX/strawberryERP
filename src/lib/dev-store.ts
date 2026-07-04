@@ -6,6 +6,7 @@ import {
   commissionEntries,
   contracts,
   currencySettings,
+  customers,
   invoices,
   integrationSettings,
   notificationRules,
@@ -23,6 +24,7 @@ import {
   type PaymentMethod,
   type Receipt,
 } from "@/lib/phase2-data";
+import type { Country } from "@/lib/sample-data";
 import { portalUsers, type DeleteQueueRecord, type PortalUser } from "@/lib/portal-security";
 import { defaultReminderRules, type FollowUpReminderRule } from "@/lib/business/followup-reminder-rules";
 import type { InvoiceNumberingConfig } from "@/lib/business/billing-settings";
@@ -64,6 +66,7 @@ type DevStore = {
   invoiceNumbering: InvoiceNumberingConfig;
   userPreferences: UserNotificationPreference[];
   resellerRecords: Reseller[];
+  customerRecords: CustomerRecord[];
   importantDetails: ImportantDetailEntry[];
   importantDetailLocks: Record<string, boolean>;
   contracts: Contract[];
@@ -128,6 +131,20 @@ export type LeadOverride = { assignedTo?: string; status?: string; convertedAt?:
 /** Admin mutations applied over the static customer seed (spec §15/§16). */
 export type CustomerOverride = { archived?: boolean; notes?: string[] };
 
+/**
+ * Structured customer record (P0-1 fix). Customers is the primary CRM entity,
+ * so — unlike the legacy `resellers` string list and `commissionRules` array —
+ * it gets a real dev-store collection: POST must persist so a later GET
+ * reflects the new record. Mirrors the seed shape from phase2-data plus
+ * whatever extra fields a caller sends (kept as an open record).
+ */
+export type CustomerRecord = {
+  id: string;
+  name: string;
+  country?: Country;
+  reseller?: string;
+} & Record<string, unknown>;
+
 const globalStore = globalThis as typeof globalThis & {
   __lebtechDevStore?: DevStore;
 };
@@ -178,6 +195,7 @@ export function getDevStore() {
       invoiceNumbering: { mode: "Global", nextSequence: 1 },
       userPreferences: [],
       resellerRecords: [...defaultResellers],
+      customerRecords: customers.map((c) => ({ ...c })),
       importantDetails: seedImportantDetails(),
       importantDetailLocks: seedImportantDetailLocks(),
       contracts: [...contracts],
@@ -205,6 +223,7 @@ export function getDevStore() {
   // Backfill collections added after a long-lived dev process first cached the
   // store, so new fields are never undefined on an already-running server.
   const store = globalStore.__lebtechDevStore;
+  store.customerRecords ??= customers.map((c) => ({ ...c }));
   store.importantDetails ??= seedImportantDetails();
   store.importantDetailLocks ??= seedImportantDetailLocks();
   store.contracts ??= [...contracts];
@@ -543,6 +562,17 @@ export function upsertReseller(reseller: Reseller) {
     ? store.resellerRecords.map((r) => (r.name === reseller.name ? reseller : r))
     : [...store.resellerRecords, reseller];
   return reseller;
+}
+
+/** All customers (seed + any created via the API this session). */
+export function getCustomers(): CustomerRecord[] {
+  return getDevStore().customerRecords;
+}
+
+/** Append a newly-created customer (P0-1: POST customers must persist). */
+export function appendCustomer(record: CustomerRecord): CustomerRecord {
+  getDevStore().customerRecords.push(record);
+  return record;
 }
 
 /** Replace the singleton invoice-numbering config. */

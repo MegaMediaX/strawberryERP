@@ -4,9 +4,11 @@ import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
 import {
   appendApiKey,
   appendAudit,
+  appendCustomer,
   appendInvoice,
   appendReceipt,
   enqueueDelete,
+  getCustomers,
   getDevStore,
   resolveDeleteQueue,
   upsertIntegrationSetting,
@@ -14,6 +16,7 @@ import {
   upsertCurrency,
   upsertPaymentMethod,
   upsertReseller,
+  type CustomerRecord,
 } from "@/lib/dev-store";
 import { devStoreResponse, maybeRouteToFrappe } from "@/lib/backend/backend-router";
 import { paginate } from "@/lib/query/scoped-page";
@@ -127,7 +130,7 @@ export async function GET(request: Request, context: RouteContext) {
   }
 
   if (contextKey === "customers") {
-    return paginateList(request, filterByPermission(customers, permissionContext));
+    return paginateList(request, filterByPermission(getCustomers(), permissionContext));
   }
 
   if (contextKey === "resellers") {
@@ -372,7 +375,13 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   if (contextKey === "invoices") {
-    const result = createInvoiceFromPayload(objectPayload as Partial<Invoice>);
+    // P0-2: derive the sequence from the live dev-store (not the static seed
+    // array, which never grows) and honor any configured numbering settings.
+    const store = getDevStore();
+    const result = createInvoiceFromPayload(objectPayload as Partial<Invoice>, {
+      existingInvoices: store.invoices,
+      numbering: store.invoiceNumbering,
+    });
     if ("error" in result) {
       return jsonError(String(result.error));
     }
@@ -390,7 +399,11 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   if (contextKey === "receipts") {
-    const result = createReceiptFromPayload(objectPayload as Partial<Receipt>);
+    // P0-2: derive the sequence from the live dev-store, same rationale as invoices above.
+    const store = getDevStore();
+    const result = createReceiptFromPayload(objectPayload as Partial<Receipt>, {
+      existingReceipts: store.receipts,
+    });
     if ("error" in result) {
       return jsonError(String(result.error));
     }
@@ -413,13 +426,21 @@ export async function POST(request: Request, context: RouteContext) {
       return jsonError(countryError);
     }
 
-    return sampleResponse(
-      {
-        id: `CUST-${Date.now()}`,
-        ...objectPayload,
-      },
-      { status: 201 },
-    );
+    const customer: CustomerRecord = {
+      id: `CUST-${Date.now()}`,
+      name: String(objectPayload.name ?? ""),
+      ...objectPayload,
+    };
+    appendCustomer(customer);
+    const audit = appendAudit({
+      entityType: "Customer",
+      entityId: customer.id,
+      action: "create",
+      oldValue: "",
+      newValue: customer.name,
+      performedBy: session.auditLabel,
+    });
+    return sampleResponse(customer, { status: 201, audit });
   }
 
   if (contextKey === "resellers") {
@@ -428,12 +449,15 @@ export async function POST(request: Request, context: RouteContext) {
       return jsonError(countryError);
     }
 
+    // Legacy resellers list has no structured dev-store collection (unlike
+    // `settings/resellers`, see upsertReseller). 202 + persisted:false so
+    // clients never mistake this for a real write (P0-1).
     return sampleResponse(
       {
         id: `RES-${Date.now()}`,
         ...objectPayload,
       },
-      { status: 201 },
+      { status: 202, persisted: false, note: "mock until Frappe migration" },
     );
   }
 
@@ -443,6 +467,8 @@ export async function POST(request: Request, context: RouteContext) {
       return jsonError(ruleError);
     }
 
+    // No structured dev-store collection for commission rules yet. 202 +
+    // persisted:false so clients never mistake this for a real write (P0-1).
     return sampleResponse(
       {
         id: `CRULE-${Date.now()}`,
@@ -450,7 +476,7 @@ export async function POST(request: Request, context: RouteContext) {
         isActive: true,
         createdBy: "Super Admin",
       },
-      { status: 201 },
+      { status: 202, persisted: false, note: "mock until Frappe migration" },
     );
   }
 

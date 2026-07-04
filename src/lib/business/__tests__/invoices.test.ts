@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { createInvoiceFromPayload } from "@/lib/phase2-data";
+import type { Invoice } from "@/lib/phase2-data";
 
 /**
  * Invoice creation + numbering — CLAUDE_HANDOFF.md §3:
@@ -66,5 +67,34 @@ describe("createInvoiceFromPayload", () => {
       expect(result.data.invoiceStatus).toBe("Issued");
       expect(Array.isArray(result.commissions)).toBe(true);
     }
+  });
+
+  // P0-2: sequence must be derived from the growing store, not the static seed
+  // array length — otherwise every 2nd invoice created in a process collides.
+  it("gives two back-to-back invoices distinct ids/invoiceNumbers when the running store grows", () => {
+    const created: Invoice[] = [];
+    const first = createInvoiceFromPayload({ country: "Lebanon", total: 100 }, { existingInvoices: created });
+    expect("error" in first).toBe(false);
+    if ("error" in first) return;
+    created.push(first.data);
+
+    const second = createInvoiceFromPayload({ country: "Lebanon", total: 100 }, { existingInvoices: created });
+    expect("error" in second).toBe(false);
+    if ("error" in second) return;
+    created.push(second.data);
+
+    expect(second.data.id).not.toBe(first.data.id);
+    expect(second.data.invoiceNumber).not.toBe(first.data.invoiceNumber);
+  });
+
+  it("honors a configured invoice-numbering prefix and nextSequence", () => {
+    const result = createInvoiceFromPayload(
+      { country: "Lebanon", total: 250 },
+      { existingInvoices: [], numbering: { mode: "Country Prefix", prefix: "ZZ", nextSequence: 777 } },
+    );
+    expect("error" in result).toBe(false);
+    if ("error" in result) return;
+    expect(result.data.invoiceNumber).toBe("ZZ-2026-0777");
+    expect(result.data.id).toBe("INV-2026-ZZ-0777");
   });
 });
