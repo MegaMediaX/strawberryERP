@@ -17,7 +17,17 @@ const files = {
   ci: existsSync(".github/workflows/ci.yml") ? readFileSync(".github/workflows/ci.yml", "utf8") : "",
   dockerignore: existsSync(".dockerignore") ? readFileSync(".dockerignore", "utf8") : "",
   packageJson: readFileSync("package.json", "utf8"),
-  calendarPage: readFileSync("src/app/[...slug]/page.tsx", "utf8"),
+  // The admin surfaces below used to be a single ~1,100-line src/app/[...slug]/page.tsx
+  // god-route. It was retired (commit 969bf5a, "review #13") and split into the real
+  // route-group pages under /admin/*, so these checks now read the relocated files.
+  googleCalendarPage: readFileSync("src/app/admin/integrations/google-calendar/page.tsx", "utf8"),
+  googleDrivePage: readFileSync("src/app/admin/integrations/google-drive/page.tsx", "utf8"),
+  integrationsCatalog: readFileSync("src/lib/admin/integrations.ts", "utf8"),
+  invoiceDetailPage: readFileSync("src/app/admin/invoices/[id]/page.tsx", "utf8"),
+  receiptDetailPage: readFileSync("src/app/admin/receipts/[id]/page.tsx", "utf8"),
+  salesLeadsPage: readFileSync("src/app/sales/leads/page.tsx", "utf8"),
+  salesLeadsView: readFileSync("src/components/sales/SalesLeadsView.tsx", "utf8"),
+  resellerInvoicesPage: readFileSync("src/app/reseller/invoices/page.tsx", "utf8"),
   portalSecurity: readFileSync("src/lib/portal-security.ts", "utf8"),
   devStore: readFileSync("src/lib/dev-store.ts", "utf8"),
   securityApi: readFileSync("frappe_app/lebtech_partner_platform/lebtech_partner_platform/api/security.py", "utf8"),
@@ -48,7 +58,6 @@ const files = {
   protectedRoute: readFileSync("src/components/security/ProtectedRoute.tsx", "utf8"),
   portalNavigation: readFileSync("src/components/platform/PortalNavigation.tsx", "utf8"),
   uiData: readFileSync("src/lib/ui-data.ts", "utf8"),
-  leadsWorkspace: readFileSync("src/components/platform/LeadsWorkspace.tsx", "utf8"),
   operationsApi: readFileSync("frappe_app/lebtech_partner_platform/lebtech_partner_platform/api/operations.py", "utf8"),
 };
 
@@ -60,8 +69,8 @@ const checks = [
   ["no DELETE API access", files.apiRoute.includes("deleteNotAllowed") && files.leadsRoute.includes("deleteNotAllowed") && !files.openapi.includes("\n    delete:")],
   ["blocked Israel validation", files.phase2Data.includes("blockedCountries") && files.phase2Data.includes("Country is not enabled")],
   ["WhatsApp provider config", files.whatsappRoute.includes("Meta WhatsApp Cloud API") && files.whatsappRoute.includes("WasenderAPI.com")],
-  ["Google Calendar config page", files.calendarPage.includes("/settings/integrations/calendar") && files.calendarPage.includes("Default Calendar ID")],
-  ["Google Drive config page", files.calendarPage.includes("/settings/integrations/google-drive") && files.calendarPage.includes("Default Drive Folder ID")],
+  ["Google Calendar config page", files.googleCalendarPage.includes('IntegrationType = "Google Calendar"') && files.integrationsCatalog.includes('label: "Default Calendar ID"') && files.integrationsCatalog.includes("defaultCalendarId")],
+  ["Google Drive config page", files.googleDrivePage.includes('IntegrationType = "Google Drive"') && files.integrationsCatalog.includes("defaultDriveFolderId")],
   ["CSV import validation", files.phase2Data.includes("validateImportCsv") && files.apiRoute.includes('contextKey === "import/leads"')],
   ["portal session model", files.portalSecurity.includes("resolvePortalSession") && files.portalSecurity.includes("impersonatedBy")],
   ["impersonation audit", files.apiRoute.includes("session/impersonation") && files.securityApi.includes("impersonation_started")],
@@ -112,9 +121,9 @@ const checks = [
   ["phase9 dependency register", files.dependencyRisk.includes("GHSA-qx2v-qp2m-jg93") && files.dependencyRisk.includes("Do not downgrade")],
   ["phase9 launch checklist", files.launchChecklist.includes("## Go/No-Go") && files.domainTls.includes("certbot renew --dry-run")],
   ["phase9a protected UI routes", files.routeAccess.includes("requiresTrueSuperAdmin") && files.routeAccess.includes("blockedWhenImpersonating") && files.protectedRoute.includes("Login required")],
-  ["phase9a detail 404 handling", files.calendarPage.includes('MissingRecord entity="Invoice"') && files.calendarPage.includes('MissingRecord entity="Receipt"') && !files.calendarPage.includes("?? invoices[0]") && !files.calendarPage.includes("?? receipts[0]")],
-  ["phase9a Frappe-backed UI", files.uiData.includes("isFrappeConfigured") && files.uiData.includes("frappeBackendClient.handle") && files.calendarPage.includes("getUiRows") && files.operationsApi.includes("list_resellers") && files.operationsApi.includes("list_contracts")],
-  ["phase9a leads workspace", files.calendarPage.includes('path === "/leads"') && files.leadsWorkspace.includes("Lead filters") && files.leadsWorkspace.includes("Source: {source}")],
+  ["phase9a detail 404 handling", files.invoiceDetailPage.includes('title="Invoice not found"') && files.receiptDetailPage.includes('title="Receipt not found"') && !files.invoiceDetailPage.includes("?? invoices[0]") && !files.receiptDetailPage.includes("?? receipts[0]")],
+  ["phase9a Frappe-backed UI", files.uiData.includes("isFrappeConfigured") && files.uiData.includes("frappeBackendClient.handle") && files.resellerInvoicesPage.includes("getUiRows") && files.operationsApi.includes("list_resellers") && files.operationsApi.includes("list_contracts")],
+  ["phase9a leads workspace", existsSync("src/app/sales/leads/page.tsx") && files.salesLeadsPage.includes("getUiLeads") && files.salesLeadsPage.includes("SalesLeadsView") && files.salesLeadsView.includes('label="Source"') && files.salesLeadsView.includes("LeadFilters")],
   ["phase9a grouped mobile navigation", files.portalNavigation.includes('label: "Accounting"') && files.portalNavigation.includes('label: "Integrations"') && files.portalNavigation.includes('label: "Admin"') && files.portalNavigation.includes("Open navigation menu")],
 ];
 
