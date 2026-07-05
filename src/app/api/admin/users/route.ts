@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse } from "@/lib/backend/backend-router";
+import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, appendUser, getDevStore } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { buildUser, validateAdminUser, type AdminUserFormInput } from "@/lib/admin/users";
@@ -19,6 +19,9 @@ export async function POST(request: Request) {
   const store = getDevStore();
   const invalid = validateAdminUser(input, { existingEmails: store.users.map((u) => u.email), isEdit: false });
   if (invalid) return jsonError(invalid);
+
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
 
   const built = buildUser(input, String(Date.now()));
   appendUser({ id: built.id, name: built.name, email: built.email, role: built.role, reseller: built.reseller, countries: built.countries as never, active: true });

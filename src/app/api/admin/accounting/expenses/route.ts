@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse } from "@/lib/backend/backend-router";
+import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, appendExpense, getExpenses } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { validateExpense, type ExpenseFormInput, type ExpenseRecord } from "@/lib/admin/pnl";
@@ -14,6 +14,9 @@ export async function POST(request: Request) {
 
   const invalid = validateExpense({ ...input, amount: Number(input.amount) });
   if (invalid) return jsonError(invalid);
+
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
 
   const record: ExpenseRecord = {
     id: `EXP-${Date.now()}`,

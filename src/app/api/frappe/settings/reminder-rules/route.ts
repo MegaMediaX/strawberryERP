@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse } from "@/lib/backend/backend-router";
+import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, appendReminderRule, getDevStore, updateReminderRule } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { authorizeApiRequest, logSuccessfulApiRequest } from "@/lib/security/permissions";
@@ -30,6 +30,9 @@ export async function POST(request: Request) {
 
   const validation = validateFollowUpReminderRule(payload);
   if (validation) return jsonError(validation);
+
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
 
   const rule: FollowUpReminderRule = {
     id: `RMD-${Date.now()}`,
@@ -69,6 +72,9 @@ export async function PATCH(request: Request) {
   const merged = { ...current, ...payload, id: current.id };
   const validation = validateFollowUpReminderRule(merged);
   if (validation) return jsonError(validation);
+
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
 
   const updated = updateReminderRule(payload.id, merged);
   const audit = appendAudit({

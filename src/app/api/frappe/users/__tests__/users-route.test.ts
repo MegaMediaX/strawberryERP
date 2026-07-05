@@ -20,12 +20,11 @@ describe("POST /api/frappe/users (spec §22 — roles strictly below)", () => {
     s.users = s.users.filter((u) => !u.email.endsWith("@bdp.example") || u.id.startsWith("USR-"));
   });
 
-  it("Reseller Admin creates a Sales Team User in their reseller", async () => {
+  it("returns 501 BACKEND_NOT_CONFIGURED when Frappe is unconfigured (validation already passed)", async () => {
     const res = await POST(req("USR-RESELLER-BDP", { ...valid, email: `r${Date.now()}@bdp.example` }));
-    expect(res.status).toBe(201);
+    expect(res.status).toBe(501);
     const json = await res.json();
-    expect(json.data.user.role).toBe("Sales Team User");
-    expect(json.data.user.reseller).toBe("Beirut Digital Partners");
+    expect(json.error.code).toBe("BACKEND_NOT_CONFIGURED");
   });
 
   it("REJECTS a Reseller Admin creating a peer/higher role (403)", async () => {

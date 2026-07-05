@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse } from "@/lib/backend/backend-router";
+import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, getDevStore, getUserPreference, upsertUserPreference } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { authorizeApiRequest, logSuccessfulApiRequest } from "@/lib/security/permissions";
@@ -59,6 +59,9 @@ async function write(request: Request, action: "create" | "update") {
   };
   const validation = validateUserNotificationPreferences(candidate);
   if (validation) return jsonError(validation);
+
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
 
   const saved = upsertUserPreference(candidate as UserNotificationPreference);
   const audit = appendAudit({

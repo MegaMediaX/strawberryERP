@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
+import { writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, upsertIntegrationSetting } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { hasRuntimeValue } from "@/lib/secret-env";
@@ -105,6 +106,9 @@ export async function PATCH(request: Request) {
   if (!providers[provider]) {
     return jsonError("Unsupported WhatsApp provider.");
   }
+
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
 
   const session = resolvePortalSession(request);
   const setting = upsertIntegrationSetting({

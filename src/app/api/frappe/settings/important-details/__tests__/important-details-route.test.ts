@@ -22,16 +22,15 @@ describe("/api/frappe/settings/important-details (§14)", () => {
     setImportantDetails(BDP, []);
   });
 
-  it("Reseller Admin reads + writes their own reseller's entries", async () => {
+  it("returns 501 BACKEND_NOT_CONFIGURED for a Reseller Admin write when Frappe is unconfigured, and does not persist", async () => {
     const patch = await PATCH(req("PATCH", "USR-RESELLER-BDP", { entries: [goodEntry] }));
-    expect(patch.status).toBe(200);
-    const saved = await patch.json();
-    expect(saved.data.entries).toHaveLength(1);
-    expect(saved.data.entries[0].reseller).toBe(BDP);
+    expect(patch.status).toBe(501);
+    const body = await patch.json();
+    expect(body.error.code).toBe("BACKEND_NOT_CONFIGURED");
 
     const get = await GET(req("GET", "USR-RESELLER-BDP"));
     const read = await get.json();
-    expect(read.data.entries[0].title).toBe("Guide");
+    expect(read.data.entries).toHaveLength(0);
   });
 
   it("rejects an invalid entry", async () => {

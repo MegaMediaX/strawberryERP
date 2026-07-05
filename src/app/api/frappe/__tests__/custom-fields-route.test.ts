@@ -29,12 +29,12 @@ function post(body: Record<string, unknown>, opts: { userId?: string; impersonat
 const validDef = { target: "leads", fieldName: "account_tier", label: "Account Tier", fieldType: "text" };
 
 describe("POST settings/custom-fields", () => {
-  it("creates a custom field for a Super Admin with a valid definition", async () => {
+  it("returns 501 BACKEND_NOT_CONFIGURED for a Super Admin with a valid definition when Frappe is unconfigured", async () => {
     const res = await post(validDef);
-    expect(res.status).toBe(201);
-    const body = (await res.json()) as { ok: boolean; data: { id: string } };
-    expect(body.ok).toBe(true);
-    expect(body.data.id).toMatch(/^CFD-/);
+    expect(res.status).toBe(501);
+    const body = (await res.json()) as { ok: boolean; error: { code: string } };
+    expect(body.ok).toBe(false);
+    expect(body.error.code).toBe("BACKEND_NOT_CONFIGURED");
   });
 
   it("rejects an invalid definition with 400", async () => {

@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse } from "@/lib/backend/backend-router";
+import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendApiKey, appendAudit, getApiKey, getDevStore, revokeApiKey } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { generateApiKeyRecord, validateApiKeyPayload, type ApiScope } from "@/lib/phase2-data";
@@ -27,6 +27,9 @@ export async function POST(request: Request) {
   const invalid = validateApiKeyPayload(payload);
   if (invalid) return jsonError(invalid);
 
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
+
   const { record, plainTextKey } = generateApiKeyRecord({ ...payload, createdBy: session.auditLabel });
   // Unique id from the live store (the generator counts the static seed only).
   record.id = `APIK-${getDevStore().apiKeys.length + 1}-${record.prefix.slice(-4)}`;
@@ -51,6 +54,9 @@ export async function PATCH(request: Request) {
   const existing = getApiKey(payload.id);
   if (!existing) return jsonError("API key not found.", 404);
   if (existing.revokedAt) return jsonError("API key is already revoked.");
+
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
 
   const updated = revokeApiKey(payload.id, new Date().toISOString());
   const audit = appendAudit({ entityType: "ApiKey", entityId: payload.id, action: "revoke", oldValue: "active", newValue: "revoked", performedBy: session.auditLabel });
