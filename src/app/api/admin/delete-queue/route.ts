@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
+import { devStoreResponse, maybeRouteToFrappe, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, clearDeleteQueue, getDeleteQueueRecord, resolveDeleteQueue } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { isClearAllConfirmed, type DeleteQueueAction } from "@/lib/admin/delete-queue";
@@ -19,10 +19,15 @@ export async function PATCH(request: Request) {
   if (!existing) return jsonError("Delete-queue record not found.", 404);
   if (existing.status !== "Pending") return jsonError("Only pending requests can be resolved.");
 
+  const nextStatus = payload.action === "restore" ? "Restored" : "Permanently Deleted";
+
+  // Resolve the queued record in Frappe when configured; otherwise fail loud (501).
+  const proxied = await maybeRouteToFrappe("delete-queue", "patch", { name: payload.id, status: nextStatus });
+  if (proxied) return proxied;
+
   const gated = writeRequiresBackend();
   if (gated) return gated;
 
-  const nextStatus = payload.action === "restore" ? "Restored" : "Permanently Deleted";
   const updated = resolveDeleteQueue(payload.id, nextStatus);
   const audit = appendAudit({ entityType: "DeleteQueue", entityId: `${existing.entityType}:${existing.entityId}`, action: payload.action === "restore" ? "restore" : "permanent_delete", oldValue: "Pending", newValue: nextStatus, performedBy: session.auditLabel });
   return devStoreResponse({ record: updated, message: payload.action === "restore" ? "Record restored." : "Record permanently deleted." }, { audit });
@@ -37,6 +42,10 @@ export async function POST(request: Request) {
   try { payload = (await request.json()) as typeof payload; } catch { return jsonError("Invalid request body."); }
   if (payload.action !== "clear-all") return jsonError("Unsupported action.");
   if (!isClearAllConfirmed(payload.confirm ?? "")) return jsonError("Type \"CLEAR ALL\" to confirm permanent deletion of every pending request.");
+
+  // Clear-all maps to resolve_delete_request(action="clear_all") in Frappe.
+  const proxied = await maybeRouteToFrappe("delete-queue/resolve", "post", { action: "clear_all" });
+  if (proxied) return proxied;
 
   const gated = writeRequiresBackend();
   if (gated) return gated;

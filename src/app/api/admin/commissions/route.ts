@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
+import { devStoreResponse, maybeRouteToFrappe, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, getCommissionEntry, updateCommissionEntry } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { evaluateCommissionApproval } from "@/lib/business/commission-approval";
@@ -44,6 +44,11 @@ export async function PATCH(request: Request) {
     nextStatus,
   );
   if (!verdict.ok) return jsonError(verdict.error, verdict.status);
+
+  // Status changes (approve / mark-paid / cancel) persist via the Frappe entry
+  // method when configured. `recalculate` has no backing method and stays gated.
+  const proxied = await maybeRouteToFrappe("commissions/entries", "patch", { name: id, status: nextStatus });
+  if (proxied) return proxied;
 
   const gate = writeRequiresBackend();
   if (gate) return gate;

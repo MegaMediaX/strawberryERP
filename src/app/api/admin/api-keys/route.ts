@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
+import { devStoreResponse, maybeRouteToFrappe, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendApiKey, appendAudit, getApiKey, getDevStore, revokeApiKey } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { generateApiKeyRecord, validateApiKeyPayload, type ApiScope } from "@/lib/phase2-data";
@@ -26,6 +26,20 @@ export async function POST(request: Request) {
   if (!payload.keyName?.trim()) return jsonError("Key name is required.");
   const invalid = validateApiKeyPayload(payload);
   if (invalid) return jsonError(invalid);
+
+  // Persist to Frappe when configured (generate_api_key returns the plaintext key
+  // ONCE, mirroring the dev-store contract); otherwise fail loud with 501.
+  const proxied = await maybeRouteToFrappe("settings/api/keys", "post", {
+    key_name: payload.keyName,
+    description: payload.description,
+    scopes: payload.scopes,
+    read_access: payload.readAccess,
+    write_access: payload.writeAccess,
+    expires_at: payload.expiresAt,
+    ip_whitelist: payload.ipWhitelist,
+    rate_limit_per_minute: payload.rateLimitPerMinute,
+  });
+  if (proxied) return proxied;
 
   const gate = writeRequiresBackend();
   if (gate) return gate;
@@ -54,6 +68,10 @@ export async function PATCH(request: Request) {
   const existing = getApiKey(payload.id);
   if (!existing) return jsonError("API key not found.", 404);
   if (existing.revokedAt) return jsonError("API key is already revoked.");
+
+  // Revoke = clear is_active on the Frappe API Key doc (stamps revoked_at server-side).
+  const proxied = await maybeRouteToFrappe("settings/api/keys", "patch", { name: payload.id, is_active: 0 });
+  if (proxied) return proxied;
 
   const gate = writeRequiresBackend();
   if (gate) return gate;
