@@ -130,6 +130,13 @@ export async function PATCH(request: Request) {
     } else if (payload.status === "Scheduled Follow-Up" && !payload.followUpDate) {
       return jsonError("followUpDate is required for Scheduled Follow-Up.");
     }
+  } else if (payload.followUpDate !== undefined) {
+    // Date-only PATCH (auto-save): no status change, but a lead already in
+    // "Scheduled Follow-Up" must not lose its required follow-up date.
+    const current = leads.find((lead) => lead.id === payload.id);
+    if (current?.status === "Scheduled Follow-Up" && !payload.followUpDate) {
+      return jsonError("followUpDate is required for Scheduled Follow-Up.");
+    }
   }
 
   const proxied = await maybeRouteToFrappe("leads", "patch", { name: payload.id, ...mapLeadToFrappe(payload) });

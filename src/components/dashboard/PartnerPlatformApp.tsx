@@ -99,6 +99,9 @@ export function PartnerPlatformApp({ initialLeads, loadError, session, source }:
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
   const savedOutcomeRef = useRef<LeadOutcome | null>(null);
+  // Tracks the currently-selected lead so a slow save that resolves after the
+  // user switched leads can bail out instead of clobbering the new lead's state.
+  const activeLeadIdRef = useRef(activeLeadId);
 
   const visibleLeads = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -158,6 +161,7 @@ export function PartnerPlatformApp({ initialLeads, loadError, session, source }:
   // Re-seed the editable outcome (and the saved baseline) whenever the active
   // lead changes, so switching leads never triggers a phantom save.
   useEffect(() => {
+    activeLeadIdRef.current = activeLeadId;
     if (!activeLead) return;
     const followUp = activeLead.followUp === "Unscheduled" ? "" : activeLead.followUp;
     setFollowUpDraft(followUp);
@@ -178,7 +182,8 @@ export function PartnerPlatformApp({ initialLeads, loadError, session, source }:
       followUpDate: followUpDraft,
       notes: notesDraft,
     };
-    const patch = buildLeadOutcomePatch(activeLead.id, savedOutcomeRef.current, next);
+    const leadId = activeLead.id;
+    const patch = buildLeadOutcomePatch(leadId, savedOutcomeRef.current, next);
     if (!patch) return;
 
     const timer = setTimeout(async () => {
@@ -191,6 +196,10 @@ export function PartnerPlatformApp({ initialLeads, loadError, session, source }:
           body: JSON.stringify(patch),
         });
         const body = (await res.json().catch(() => ({}))) as { error?: { message?: string } | string };
+        // The user may have switched leads while this was in flight — if so, this
+        // save's result belongs to the previous lead; don't touch the new one's
+        // baseline or status card.
+        if (activeLeadIdRef.current !== leadId) return;
         if (!res.ok) {
           setSaveState("error");
           setSaveError(typeof body.error === "string" ? body.error : body.error?.message ?? "Could not save changes.");
@@ -199,6 +208,7 @@ export function PartnerPlatformApp({ initialLeads, loadError, session, source }:
         savedOutcomeRef.current = next;
         setSaveState("saved");
       } catch {
+        if (activeLeadIdRef.current !== leadId) return;
         setSaveState("error");
         setSaveError("Network error — changes not saved.");
       }
