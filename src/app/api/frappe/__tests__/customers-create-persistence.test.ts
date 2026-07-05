@@ -25,21 +25,20 @@ function request(method: "GET" | "POST", resource: string[], body?: Record<strin
 }
 
 describe("POST customers persists to the dev-store", () => {
-  it("creates a customer that a subsequent GET customers returns", async () => {
+  it("returns 501 BACKEND_NOT_CONFIGURED and does not persist when Frappe is unconfigured", async () => {
     const name = `Persistence Test Co ${Date.now()}`;
     const createReq = request("POST", ["customers"], { name, country: "Lebanon", reseller: "Beirut Digital Partners" });
     const createRes = await POST(createReq.request, { params: createReq.params });
-    expect(createRes.status).toBe(201);
-    const createBody = (await createRes.json()) as { ok: boolean; data: { id: string; name: string } };
-    expect(createBody.ok).toBe(true);
-    expect(createBody.data.name).toBe(name);
-    expect(createBody.data.id).toBeTruthy();
+    expect(createRes.status).toBe(501);
+    const createBody = (await createRes.json()) as { ok: boolean; error: { code: string } };
+    expect(createBody.ok).toBe(false);
+    expect(createBody.error.code).toBe("BACKEND_NOT_CONFIGURED");
 
     const getReq = request("GET", ["customers"]);
     const getRes = await GET(getReq.request, { params: getReq.params });
     expect(getRes.status).toBe(200);
     const getBody = (await getRes.json()) as { ok: boolean; data: Array<{ id: string; name: string }> };
-    expect(getBody.data.some((c) => c.id === createBody.data.id && c.name === name)).toBe(true);
+    expect(getBody.data.some((c) => c.name === name)).toBe(false);
   });
 
   it("rejects an invalid country and does not persist anything", async () => {

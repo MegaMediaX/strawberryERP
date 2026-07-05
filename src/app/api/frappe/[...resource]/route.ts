@@ -18,7 +18,7 @@ import {
   upsertReseller,
   type CustomerRecord,
 } from "@/lib/dev-store";
-import { devStoreResponse, maybeRouteToFrappe } from "@/lib/backend/backend-router";
+import { devStoreResponse, maybeRouteToFrappe, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { paginate } from "@/lib/query/scoped-page";
 import { frappePaginationParams } from "@/lib/query/frappe-pagination";
 import { validateCustomFieldDefinition, type CustomFieldDefinition } from "@/lib/business/custom-fields";
@@ -273,6 +273,9 @@ export async function POST(request: Request, context: RouteContext) {
       return jsonError(definitionError);
     }
 
+    const customFieldGate = writeRequiresBackend();
+    if (customFieldGate) return customFieldGate;
+
     const audit = appendAudit({
       entityType: "Custom Field Definition",
       entityId: String(objectPayload.fieldName ?? ""),
@@ -289,6 +292,9 @@ export async function POST(request: Request, context: RouteContext) {
     if (settingError) {
       return jsonError(settingError);
     }
+
+    const currencyPostGate = writeRequiresBackend();
+    if (currencyPostGate) return currencyPostGate;
 
     const setting = normalizeCurrency(objectPayload);
     upsertCurrency(setting);
@@ -309,6 +315,9 @@ export async function POST(request: Request, context: RouteContext) {
       return jsonError(methodError);
     }
 
+    const paymentMethodPostGate = writeRequiresBackend();
+    if (paymentMethodPostGate) return paymentMethodPostGate;
+
     const method = normalizePaymentMethod(objectPayload);
     upsertPaymentMethod(method);
     const audit = appendAudit({
@@ -327,6 +336,9 @@ export async function POST(request: Request, context: RouteContext) {
     if (resellerError) {
       return jsonError(resellerError);
     }
+    const resellerPostGate = writeRequiresBackend();
+    if (resellerPostGate) return resellerPostGate;
+
     const reseller = normalizeReseller(objectPayload);
     upsertReseller(reseller);
     const audit = appendAudit({
@@ -346,6 +358,9 @@ export async function POST(request: Request, context: RouteContext) {
       return jsonError(ruleError);
     }
 
+    const notificationPostGate = writeRequiresBackend();
+    if (notificationPostGate) return notificationPostGate;
+
     const audit = appendAudit({
       entityType: "Notification Rule",
       entityId: String(objectPayload.eventType ?? ""),
@@ -362,6 +377,9 @@ export async function POST(request: Request, context: RouteContext) {
     if (numberingError) {
       return jsonError(numberingError);
     }
+
+    const invoiceNumberingPostGate = writeRequiresBackend();
+    if (invoiceNumberingPostGate) return invoiceNumberingPostGate;
 
     const config = normalizeInvoiceNumbering(objectPayload);
     setInvoiceNumbering(config);
@@ -388,6 +406,9 @@ export async function POST(request: Request, context: RouteContext) {
       return jsonError(String(result.error));
     }
 
+    const invoicePostGate = writeRequiresBackend();
+    if (invoicePostGate) return invoicePostGate;
+
     appendInvoice(result.data, result.commissions);
     const audit = appendAudit({
       entityType: "Invoice",
@@ -410,6 +431,9 @@ export async function POST(request: Request, context: RouteContext) {
       return jsonError(String(result.error));
     }
 
+    const receiptPostGate = writeRequiresBackend();
+    if (receiptPostGate) return receiptPostGate;
+
     appendReceipt(result.data, result.invoice, result.commissions);
     const audit = appendAudit({
       entityType: "Receipt",
@@ -427,6 +451,9 @@ export async function POST(request: Request, context: RouteContext) {
     if (countryError) {
       return jsonError(countryError);
     }
+
+    const customerPostGate = writeRequiresBackend();
+    if (customerPostGate) return customerPostGate;
 
     const customer: CustomerRecord = {
       id: `CUST-${Date.now()}`,
@@ -498,6 +525,9 @@ export async function POST(request: Request, context: RouteContext) {
       return jsonError(validation);
     }
 
+    const apiKeyPostGate = writeRequiresBackend();
+    if (apiKeyPostGate) return apiKeyPostGate;
+
     const { record, plainTextKey } = generateApiKeyRecord({ ...apiKeyPayload, createdBy: session.effectiveUser.name });
     appendApiKey(record);
     const audit = appendAudit({
@@ -517,6 +547,9 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   if (contextKey === "settings/integrations") {
+    const integrationPostGate = writeRequiresBackend();
+    if (integrationPostGate) return integrationPostGate;
+
     const integration = upsertIntegrationSetting({
       integrationType: String(objectPayload.integrationType ?? objectPayload.integration_type ?? "WhatsApp") as IntegrationType,
       provider: String(objectPayload.provider ?? "Not configured"),
@@ -565,6 +598,9 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   if (contextKey === "delete-queue" || contextKey === "delete-queue/request" || contextKey === "settings/delete-queue") {
+    const deleteQueuePostGate = writeRequiresBackend();
+    if (deleteQueuePostGate) return deleteQueuePostGate;
+
     const queued = enqueueDelete({
       entityType: String(objectPayload.entityType ?? objectPayload.target_doctype ?? "Record"),
       entityId: String(objectPayload.entityId ?? objectPayload.target_name ?? ""),
@@ -592,6 +628,9 @@ export async function POST(request: Request, context: RouteContext) {
     if (!status) {
       return jsonError("Unsupported delete queue action.");
     }
+
+    const deleteQueueResolveGate = writeRequiresBackend();
+    if (deleteQueueResolveGate) return deleteQueueResolveGate;
 
     if (status === "Cleared" && objectPayload.action === "clear_all") {
       const resolved = store.deleteQueue
@@ -656,6 +695,10 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (!target) {
       return jsonError("Invoice not found.", 404);
     }
+
+    const invoicePatchGate = writeRequiresBackend();
+    if (invoicePatchGate) return invoicePatchGate;
+
     const updated = { ...target, ...objectPayload, updatedAt: new Date().toISOString() };
     store.invoices = store.invoices.map((invoice) => (invoice.id === target.id ? (updated as Invoice) : invoice));
     appendAudit({
@@ -674,6 +717,10 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (!target) {
       return jsonError("Receipt not found.", 404);
     }
+
+    const receiptPatchGate = writeRequiresBackend();
+    if (receiptPatchGate) return receiptPatchGate;
+
     return sampleResponse({ ...target, ...objectPayload, updatedAt: new Date().toISOString() });
   }
 
@@ -704,6 +751,9 @@ export async function PATCH(request: Request, context: RouteContext) {
       }
     }
 
+    const commissionEntryPatchGate = writeRequiresBackend();
+    if (commissionEntryPatchGate) return commissionEntryPatchGate;
+
     const updated = { ...target, ...objectPayload, updatedAt: new Date().toISOString() };
     store.commissionEntries = store.commissionEntries.map((entry) => (entry.id === target.id ? (updated as CommissionEntry) : entry));
     appendAudit({
@@ -728,6 +778,9 @@ export async function PATCH(request: Request, context: RouteContext) {
       return jsonError("Customer not found.", 404);
     }
 
+    const customerPatchGate = writeRequiresBackend();
+    if (customerPatchGate) return customerPatchGate;
+
     return sampleResponse({ ...target, ...objectPayload, updatedAt: new Date().toISOString() });
   }
 
@@ -737,6 +790,10 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (numberingError) {
       return jsonError(numberingError);
     }
+
+    const invoiceNumberingPatchGate = writeRequiresBackend();
+    if (invoiceNumberingPatchGate) return invoiceNumberingPatchGate;
+
     const config = normalizeInvoiceNumbering(merged);
     setInvoiceNumbering(config);
     const audit = appendAudit({
@@ -760,6 +817,10 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (settingError) {
       return jsonError(settingError);
     }
+
+    const currencyPatchGate = writeRequiresBackend();
+    if (currencyPatchGate) return currencyPatchGate;
+
     const setting = normalizeCurrency(merged);
     upsertCurrency(setting);
     const audit = appendAudit({
@@ -783,6 +844,10 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (resellerError) {
       return jsonError(resellerError);
     }
+
+    const resellerPatchGate = writeRequiresBackend();
+    if (resellerPatchGate) return resellerPatchGate;
+
     const reseller = normalizeReseller(merged);
     upsertReseller(reseller);
     const audit = appendAudit({
@@ -806,6 +871,10 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (methodError) {
       return jsonError(methodError);
     }
+
+    const paymentMethodPatchGate = writeRequiresBackend();
+    if (paymentMethodPatchGate) return paymentMethodPatchGate;
+
     const method = normalizePaymentMethod(merged);
     upsertPaymentMethod(method);
     const audit = appendAudit({
@@ -841,6 +910,10 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
 
     const allowedPatch = pickAllowedApiKeyFields(objectPayload);
+
+    const apiKeyPatchGate = writeRequiresBackend();
+    if (apiKeyPatchGate) return apiKeyPatchGate;
+
     const updated: ApiKeyRecord = { ...target, ...allowedPatch };
     store.apiKeys = store.apiKeys.map((key) => (key.id === target.id ? updated : key));
     const audit = appendAudit({
@@ -864,6 +937,9 @@ export async function PATCH(request: Request, context: RouteContext) {
       return jsonError("Unsupported delete queue status.");
     }
 
+    const deleteQueuePatchGate = writeRequiresBackend();
+    if (deleteQueuePatchGate) return deleteQueuePatchGate;
+
     const updated = resolveDeleteQueue(String(objectPayload.id), status as "Restored" | "Permanently Deleted" | "Cleared");
     if (!updated) {
       return jsonError("Delete queue record was not found.", 404);
@@ -881,6 +957,9 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   if (contextKey === "settings/integrations") {
+    const integrationPatchGate = writeRequiresBackend();
+    if (integrationPatchGate) return integrationPatchGate;
+
     const integration = upsertIntegrationSetting({
       integrationType: String(objectPayload.integrationType ?? objectPayload.integration_type ?? "WhatsApp") as IntegrationType,
       provider: String(objectPayload.provider ?? "Not configured"),

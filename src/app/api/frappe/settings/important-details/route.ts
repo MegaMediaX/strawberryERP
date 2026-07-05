@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse } from "@/lib/backend/backend-router";
+import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, getImportantDetails, isImportantDetailsLocked, setImportantDetails } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { authorizeApiRequest, logSuccessfulApiRequest } from "@/lib/security/permissions";
@@ -80,6 +80,9 @@ async function write(request: Request) {
       updatedAt: now,
     });
   }
+
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
 
   const saved = setImportantDetails(reseller, normalized);
   const audit = appendAudit({

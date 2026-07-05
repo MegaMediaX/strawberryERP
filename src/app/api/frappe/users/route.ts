@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse } from "@/lib/backend/backend-router";
+import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, appendUser, getDevStore } from "@/lib/dev-store";
 import { resolvePortalSession, type PortalUser } from "@/lib/portal-security";
 import { authorizeApiRequest, logSuccessfulApiRequest } from "@/lib/security/permissions";
@@ -44,6 +44,9 @@ export async function POST(request: Request) {
   if (getDevStore().users.some((u) => u.email.toLowerCase() === input.email.trim().toLowerCase())) {
     return jsonError("A user with that email already exists.");
   }
+
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
 
   const created: PortalUser = {
     id: `USR-${Date.now()}`,
