@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse } from "@/lib/backend/backend-router";
+import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, getDevStore, setInvoiceDocSettings, setInvoiceNumbering } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { validateInvoiceNumbering, type InvoiceNumberingConfig } from "@/lib/business/billing-settings";
@@ -15,6 +15,9 @@ export async function PATCH(request: Request) {
 
   const numberingError = validateInvoiceNumbering({ mode: payload.mode, prefix: payload.prefix });
   if (numberingError) return jsonError(numberingError);
+
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
 
   const store = getDevStore();
   const prev = store.invoiceNumbering;

@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse } from "@/lib/backend/backend-router";
+import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, appendNotificationRule, getNotificationRule, updateNotificationRule } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { validateNotificationRule } from "@/lib/business/notifications";
@@ -15,6 +15,9 @@ export async function POST(request: Request) {
 
   const invalid = validateNotificationRule(input);
   if (invalid) return jsonError(invalid);
+
+  const gated = writeRequiresBackend();
+  if (gated) return gated;
 
   const rule: NotificationRule = {
     id: `NRULE-${Date.now()}`,
@@ -51,6 +54,9 @@ export async function PATCH(request: Request) {
   };
   const invalid = validateNotificationRule(merged);
   if (invalid) return jsonError(invalid);
+
+  const gated = writeRequiresBackend();
+  if (gated) return gated;
 
   const updated = updateNotificationRule(payload.id, { isActive: merged.isActive, channels: merged.channels, templateMessage: merged.templateMessage });
   const audit = appendAudit({ entityType: "NotificationRule", entityId: payload.id, action: "update", oldValue: `${current.isActive ? "on" : "off"} · ${current.channels.join("/")}`, newValue: `${merged.isActive ? "on" : "off"} · ${merged.channels.join("/")}`, performedBy: session.auditLabel });

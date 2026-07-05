@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse } from "@/lib/backend/backend-router";
+import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, getDevStore, upsertIntegrationSetting } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import {
@@ -33,6 +33,9 @@ export async function PATCH(request: Request) {
 
   const invalid = validateIntegrationConfig(payload.integrationType, provider, mergedConfig);
   // Allow saving an incomplete draft, but reflect status. Only block on totally absent type (handled above).
+  const gated = writeRequiresBackend();
+  if (gated) return gated;
+
   const updated = upsertIntegrationSetting({
     integrationType: payload.integrationType,
     provider,

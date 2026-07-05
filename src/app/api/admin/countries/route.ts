@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse } from "@/lib/backend/backend-router";
+import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, getCountries, setCountryActive, upsertCountry } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { validateCountryForm, type CountryFormInput, type CountryRecord } from "@/lib/admin/countries";
@@ -40,6 +40,9 @@ export async function POST(request: Request) {
   });
   if (invalid) return jsonError(invalid);
 
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
+
   const record: CountryRecord = {
     name: String(payload.name).trim(),
     currency: String(payload.currency),
@@ -68,6 +71,10 @@ export async function PATCH(request: Request) {
   // Deactivate / reactivate toggle.
   if (typeof payload.active === "boolean" || payload.deactivate) {
     const active = payload.deactivate ? false : Boolean(payload.active);
+
+    const gate = writeRequiresBackend();
+    if (gate) return gate;
+
     const updated = setCountryActive(name, active);
     const audit = appendAudit({ entityType: "Country", entityId: name, action: active ? "activate" : "deactivate", oldValue: String(current.active), newValue: String(active), performedBy: session.auditLabel });
     return devStoreResponse({ country: updated, message: `Country "${name}" ${active ? "activated" : "deactivated"}.` }, { audit });
@@ -80,6 +87,9 @@ export async function PATCH(request: Request) {
     isEdit: true,
   });
   if (invalid) return jsonError(invalid);
+
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
 
   const updated: CountryRecord = {
     ...current,

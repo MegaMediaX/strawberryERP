@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse } from "@/lib/backend/backend-router";
+import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, getDevStore, upsertPaymentMethod } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { validatePaymentMethod } from "@/lib/business/payment-methods";
@@ -28,6 +28,9 @@ export async function PATCH(request: Request) {
   };
   const invalid = validatePaymentMethod(merged);
   if (invalid) return jsonError(invalid);
+
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
 
   upsertPaymentMethod(merged);
   const audit = appendAudit({ entityType: "PaymentMethod", entityId: merged.methodName, action: current.isActive !== merged.isActive ? (merged.isActive ? "enable" : "disable") : "update", oldValue: String(current.isActive), newValue: String(merged.isActive), performedBy: session.auditLabel });
