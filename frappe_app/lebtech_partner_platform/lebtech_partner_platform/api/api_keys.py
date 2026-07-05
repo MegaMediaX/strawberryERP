@@ -48,7 +48,7 @@ def generate_api_key(**payload):
         frappe.throw(_("At least one of read_access or write_access is required."), frappe.ValidationError)
 
     plain_key = "ltp_live_" + secrets.token_hex(24)
-    salt = frappe.conf.get("api_key_hash_secret") or frappe.conf.get("encryption_key") or "change-me"
+    salt = _resolve_api_key_salt()
     key_hash = "sha256:" + hashlib.sha256(f"{plain_key}:{salt}".encode()).hexdigest()
 
     doc = frappe.get_doc(
@@ -127,6 +127,27 @@ def _scope_list(raw_value):
     from lebtech_partner_platform.validators import parse_list
 
     return parse_list(raw_value)
+
+
+def _resolve_api_key_salt() -> str:
+    """Resolve the salt used to hash/verify Portal API keys.
+
+    Fails CLOSED: a real Frappe site always has an auto-generated
+    ``encryption_key`` in site config, so reaching the ``frappe.throw`` below
+    means the site is genuinely misconfigured. We must never silently fall
+    back to a public literal salt (e.g. "change-me"), since that would let an
+    attacker who knows the fallback precompute/forge valid key hashes.
+
+    Both the create (generate_api_key) and verify paths MUST call this helper
+    so salt resolution can never diverge between them.
+    """
+    salt = frappe.conf.get("api_key_hash_secret") or frappe.conf.get("encryption_key")
+    if not salt:
+        frappe.throw(
+            _("API key hashing salt is not configured (api_key_hash_secret/encryption_key missing)."),
+            frappe.ValidationError,
+        )
+    return salt
 
 
 def require_super_admin(action: str):
