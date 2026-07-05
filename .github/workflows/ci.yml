@@ -45,6 +45,14 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Unit tests
+        env:
+          SEED_ADMIN_PW: LebTech!Admin#2026
+          SEED_REGIONAL_PW: LebTech!Regional#2026
+          SEED_RESELLER_PW: LebTech!Reseller#2026
+          SEED_SALES_PW: LebTech!Sales#2026
+        run: npm test
+
       - name: Local smoke
         run: npm run smoke
 
