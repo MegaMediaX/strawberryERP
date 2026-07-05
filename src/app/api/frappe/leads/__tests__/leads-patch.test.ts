@@ -41,4 +41,13 @@ describe("PATCH /api/frappe/leads — transition enforcement", () => {
     const res = await patch({ status: "Contacted (Interested)" });
     expect(res.status).toBe(400);
   });
+
+  it("rejects clearing the follow-up date on a Scheduled Follow-Up lead (date-only PATCH)", async () => {
+    // Auto-save sends followUpDate-only patches; without a status change the
+    // transition guard must still refuse to leave a scheduled lead date-less.
+    const res = await patch({ id: scheduled.id, followUpDate: "" });
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as { error: { message: string } };
+    expect(body.error.message).toMatch(/required for Scheduled Follow-Up/i);
+  });
 });

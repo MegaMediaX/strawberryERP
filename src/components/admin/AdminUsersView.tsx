@@ -31,6 +31,7 @@ export function AdminUsersView({ rows }: { rows: AdminUserRow[] }) {
   const [reset, setReset] = useState<AdminUserRow | null>(null);
   const [pw, setPw] = useState("");
   const [resetMsg, setResetMsg] = useState("");
+  const [resetBusy, setResetBusy] = useState(false);
 
   async function toggleActive(u: AdminUserRow) {
     setBusy(u.id);
@@ -49,8 +50,8 @@ export function AdminUsersView({ rows }: { rows: AdminUserRow[] }) {
   }
 
   async function doReset() {
-    if (!reset) return;
-    setResetMsg("");
+    if (!reset || resetBusy) return;
+    setResetBusy(true); setResetMsg("");
     try {
       const res = await fetch(`/api/admin/users/${reset.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "reset_password", password: pw }) });
       const data = (await res.json().catch(() => ({}))) as { error?: string; data?: { message?: string } };
@@ -58,7 +59,7 @@ export function AdminUsersView({ rows }: { rows: AdminUserRow[] }) {
       setReset(null); setPw(""); router.refresh();
     } catch {
       setResetMsg("Network error. Please try again.");
-    }
+    } finally { setResetBusy(false); }
   }
 
   return (
@@ -139,7 +140,7 @@ export function AdminUsersView({ rows }: { rows: AdminUserRow[] }) {
               {resetMsg && <p className="text-xs font-semibold text-rose-600 dark:text-rose-400">{resetMsg}</p>}
               <div className="flex gap-2">
                 <Button variant="secondary" className="flex-1" onClick={() => setReset(null)}>Cancel</Button>
-                <Button className="flex-1" onClick={doReset} disabled={pw.length < 8}>Reset</Button>
+                <Button className="flex-1" onClick={doReset} disabled={pw.length < 8 || resetBusy}>{resetBusy ? "Resetting…" : "Reset"}</Button>
               </div>
             </div>
           </div>

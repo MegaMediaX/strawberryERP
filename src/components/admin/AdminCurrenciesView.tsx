@@ -14,6 +14,7 @@ export function AdminCurrenciesView({ currencies, usage }: { currencies: Currenc
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const [addBusy, setAddBusy] = useState(false);
   const [n, setN] = useState({ currencyCode: "", currencyName: "", symbol: "", decimalPrecision: "2" });
   const [err, setErr] = useState("");
 
@@ -24,11 +25,16 @@ export function AdminCurrenciesView({ currencies, usage }: { currencies: Currenc
     finally { setBusy(null); }
   }
   async function add() {
-    setErr("");
-    const res = await fetch("/api/admin/accounting/currencies", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...n, decimalPrecision: Number(n.decimalPrecision), isActive: true }) });
-    const data = (await res.json()) as { error?: string };
-    if (!res.ok) { setErr(data.error ?? "Add failed."); return; }
-    setAdding(false); setN({ currencyCode: "", currencyName: "", symbol: "", decimalPrecision: "2" }); router.refresh();
+    if (addBusy) return;
+    setAddBusy(true); setErr("");
+    try {
+      const res = await fetch("/api/admin/accounting/currencies", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...n, decimalPrecision: Number(n.decimalPrecision), isActive: true }) });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) { setErr(data.error ?? "Add failed."); return; }
+      setAdding(false); setN({ currencyCode: "", currencyName: "", symbol: "", decimalPrecision: "2" }); router.refresh();
+    } catch {
+      setErr("Network error. Please try again.");
+    } finally { setAddBusy(false); }
   }
 
   return (
@@ -62,7 +68,7 @@ export function AdminCurrenciesView({ currencies, usage }: { currencies: Currenc
               <Field label="Decimal precision"><Input aria-label="Decimal precision" type="number" min={0} max={4} value={n.decimalPrecision} onChange={(e) => setN((s) => ({ ...s, decimalPrecision: e.target.value }))} /></Field>
             </div>
             {err && <p className="mt-2 text-xs font-semibold text-rose-600 dark:text-rose-400">{err}</p>}
-            <div className="mt-4 flex gap-2"><Button variant="secondary" className="flex-1" onClick={() => setAdding(false)}>Cancel</Button><Button className="flex-1" onClick={add}>Add currency</Button></div>
+            <div className="mt-4 flex gap-2"><Button variant="secondary" className="flex-1" onClick={() => setAdding(false)}>Cancel</Button><Button className="flex-1" onClick={add} disabled={addBusy}>{addBusy ? "Adding…" : "Add currency"}</Button></div>
           </div>
         </div>
       )}

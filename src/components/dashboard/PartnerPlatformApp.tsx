@@ -31,6 +31,7 @@ import {
   Upload,
 } from "lucide-react";
 
+import { buildLeadOutcomePatch, type LeadOutcome } from "@/lib/business/lead-outcome";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -90,6 +91,17 @@ export function PartnerPlatformApp({ initialLeads, loadError, session, source }:
     Object.fromEntries(initialLeads.map((lead) => [lead.id, lead.status])) as Record<string, LeadStatus>,
   );
   const [callLogged, setCallLogged] = useState(false);
+  // Auto-save state for the "Save outcome" card (follow-up + notes are now
+  // controlled; status lives in statusByLead). savedOutcomeRef holds the last
+  // persisted snapshot so the debounced saver only PATCHes changed fields.
+  const [followUpDraft, setFollowUpDraft] = useState("");
+  const [notesDraft, setNotesDraft] = useState("");
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const savedOutcomeRef = useRef<LeadOutcome | null>(null);
+  // Tracks the currently-selected lead so a slow save that resolves after the
+  // user switched leads can bail out instead of clobbering the new lead's state.
+  const activeLeadIdRef = useRef(activeLeadId);
 
   const visibleLeads = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -143,6 +155,80 @@ export function PartnerPlatformApp({ initialLeads, loadError, session, source }:
     }
     if (label.includes("Top reseller")) {
       setQuery("Beirut Digital Partners");
+    }
+  }
+
+  // Re-seed the editable outcome (and the saved baseline) whenever the active
+  // lead changes, so switching leads never triggers a phantom save.
+  useEffect(() => {
+    activeLeadIdRef.current = activeLeadId;
+    if (!activeLead) return;
+    const followUp = activeLead.followUp === "Unscheduled" ? "" : activeLead.followUp;
+    setFollowUpDraft(followUp);
+    setNotesDraft(activeLead.notes);
+    savedOutcomeRef.current = { status: activeLead.status, followUpDate: followUp, notes: activeLead.notes };
+    setSaveState("idle");
+    setSaveError(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeLeadId]);
+
+  // Debounced auto-save: persist only the fields that changed vs the last saved
+  // snapshot. Status comes from statusByLead (the Select), follow-up/notes from
+  // the controlled drafts.
+  useEffect(() => {
+    if (!activeLead || !savedOutcomeRef.current) return;
+    const next: LeadOutcome = {
+      status: activeLeadStatus ?? activeLead.status,
+      followUpDate: followUpDraft,
+      notes: notesDraft,
+    };
+    const leadId = activeLead.id;
+    const patch = buildLeadOutcomePatch(leadId, savedOutcomeRef.current, next);
+    if (!patch) return;
+
+    const timer = setTimeout(async () => {
+      setSaveState("saving");
+      setSaveError(null);
+      try {
+        const res = await fetch("/api/frappe/leads", {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(patch),
+        });
+        const body = (await res.json().catch(() => ({}))) as { error?: { message?: string } | string };
+        // The user may have switched leads while this was in flight — if so, this
+        // save's result belongs to the previous lead; don't touch the new one's
+        // baseline or status card.
+        if (activeLeadIdRef.current !== leadId) return;
+        if (!res.ok) {
+          setSaveState("error");
+          setSaveError(typeof body.error === "string" ? body.error : body.error?.message ?? "Could not save changes.");
+          return;
+        }
+        savedOutcomeRef.current = next;
+        setSaveState("saved");
+      } catch {
+        if (activeLeadIdRef.current !== leadId) return;
+        setSaveState("error");
+        setSaveError("Network error — changes not saved.");
+      }
+    }, 800);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeLeadId, activeLeadStatus, followUpDraft, notesDraft]);
+
+  async function logCall() {
+    if (!activeLead) return;
+    setCallLogged(false);
+    try {
+      const res = await fetch("/api/calls/dial", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ number: activeLead.phone, leadId: activeLead.id }),
+      });
+      if (res.ok) setCallLogged(true);
+    } catch {
+      // Leave the banner hidden if the dial request never reached the server.
     }
   }
 
@@ -491,7 +577,7 @@ export function PartnerPlatformApp({ initialLeads, loadError, session, source }:
 
                     <a
                       href={`tel:${activeLead.phone.replace(/[^\d+]/g, "")}`}
-                      onClick={() => setCallLogged(true)}
+                      onClick={() => void logCall()}
                       className="inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-[var(--brand)] text-base font-semibold text-white shadow-[var(--shadow-sm)] transition-colors hover:bg-[var(--brand-hover)]"
                     >
                       <PhoneCall data-icon="inline-start" />
@@ -521,15 +607,31 @@ export function PartnerPlatformApp({ initialLeads, loadError, session, source }:
 
                     <Field label="Follow-up date">
                       <Input
-                        defaultValue={activeLead.followUp === "Unscheduled" ? "" : activeLead.followUp}
-                        key={`${activeLead.id}-follow-up`}
+                        onChange={(event) => setFollowUpDraft(event.target.value)}
                         placeholder="Required for scheduled follow-up"
+                        value={followUpDraft}
                       />
                     </Field>
 
                     <Field label="Important details">
-                      <Textarea defaultValue={activeLead.notes} key={`${activeLead.id}-notes`} />
+                      <Textarea onChange={(event) => setNotesDraft(event.target.value)} value={notesDraft} />
                     </Field>
+
+                    <p
+                      aria-live="polite"
+                      className={cn(
+                        "text-xs",
+                        saveState === "error" ? "text-rose-600 dark:text-rose-400" : "text-slate-500 dark:text-slate-400",
+                      )}
+                    >
+                      {saveState === "saving"
+                        ? "Saving…"
+                        : saveState === "saved"
+                          ? "All changes saved."
+                          : saveState === "error"
+                            ? (saveError ?? "Could not save changes.")
+                            : "Changes save automatically."}
+                    </p>
 
                     <div className="grid gap-2 sm:grid-cols-2">
                       <a

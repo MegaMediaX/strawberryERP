@@ -23,6 +23,7 @@ import {
   type ImportSummary,
   type ParsedCsv,
 } from "@/lib/reseller/csv-import";
+import { parseImportResponse } from "@/lib/reseller/import-response";
 import { leadSources } from "@/lib/business/new-lead";
 
 const POLICY_LABEL: Record<DuplicatePolicy, string> = {
@@ -56,6 +57,7 @@ export function ResellerCsvImport({
   const [policy, setPolicy] = useState<DuplicatePolicy>("skip");
   const [result, setResult] = useState<ImportSummary | null>(null);
   const [busy, setBusy] = useState(false);
+  const [importErr, setImportErr] = useState("");
 
   const records = useMemo<ImportRecord[]>(() => {
     if (!parsed) return [];
@@ -83,7 +85,8 @@ export function ResellerCsvImport({
   }
 
   async function runImport() {
-    setBusy(true);
+    if (busy) return;
+    setBusy(true); setImportErr("");
     try {
       const res = await fetch("/api/frappe/leads/import", {
         method: "POST",
@@ -91,7 +94,14 @@ export function ResellerCsvImport({
         body: JSON.stringify({ records, duplicatePolicy: policy }),
       });
       const body = await res.json().catch(() => ({}));
-      if (res.ok) { setResult(body.data.summary as ImportSummary); setStep(4); }
+      const parsed = parseImportResponse(body);
+      if (res.ok && parsed.ok && parsed.summary) {
+        setResult(parsed.summary); setStep(4);
+      } else {
+        setImportErr(parsed.error ?? "Import failed. Please try again.");
+      }
+    } catch {
+      setImportErr("Network error. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -204,6 +214,7 @@ export function ResellerCsvImport({
               <Upload className="size-4" /> {busy ? "Importing…" : `Import ${counts.valid} lead${counts.valid === 1 ? "" : "s"}`}
             </button>
           </div>
+          {importErr ? <p role="alert" className="text-sm font-semibold text-rose-600 dark:text-rose-400">{importErr}</p> : null}
         </>
       ) : null}
 

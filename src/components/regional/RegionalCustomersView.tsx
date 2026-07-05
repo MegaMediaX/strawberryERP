@@ -63,7 +63,7 @@ export function RegionalCustomersView({
         {stuck > 0 && (
           <button
             type="button"
-            onClick={() => set("progress", "Contract Not Signed")}
+            onClick={() => set("stuck", true)}
             className="inline-flex h-9 items-center rounded-lg border border-amber-300 px-3 text-xs font-semibold text-amber-700 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-300 dark:hover:bg-amber-950/40"
           >
             {stuck} stuck before payment
