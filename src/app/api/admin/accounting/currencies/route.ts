@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse } from "@/lib/backend/backend-router";
+import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, getDevStore, upsertCurrency } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { validateCurrencySetting } from "@/lib/business/billing-settings";
@@ -21,6 +21,9 @@ export async function POST(request: Request) {
   if (getDevStore().currencySettings.some((c) => c.currencyCode === payload.currencyCode)) return jsonError("A currency with this code already exists.");
   const invalid = validateCurrencySetting(payload);
   if (invalid) return jsonError(invalid);
+
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
 
   const record: CurrencySetting = {
     currencyCode: payload.currencyCode!, currencyName: payload.currencyName!, symbol: payload.symbol!,
@@ -55,6 +58,9 @@ export async function PATCH(request: Request) {
   };
   const invalid = validateCurrencySetting(merged);
   if (invalid) return jsonError(invalid);
+
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
 
   upsertCurrency(merged);
   const audit = appendAudit({ entityType: "Currency", entityId: merged.currencyCode, action: current.isActive !== merged.isActive ? (merged.isActive ? "enable" : "disable") : "update", oldValue: String(current.isActive), newValue: String(merged.isActive), performedBy: session.auditLabel });

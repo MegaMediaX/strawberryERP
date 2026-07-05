@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse } from "@/lib/backend/backend-router";
+import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, appendCustomField, getCustomFields, removeCustomField } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { validateNewCustomField, type CustomFieldRecord } from "@/lib/admin/custom-fields";
@@ -27,6 +27,9 @@ export async function POST(request: Request) {
   const invalid = validateNewCustomField(def, getCustomFields());
   if (invalid) return jsonError(invalid);
 
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
+
   const record: CustomFieldRecord = {
     id: `CF-${Date.now()}`,
     target: input.target!,
@@ -50,6 +53,9 @@ export async function PATCH(request: Request) {
   let payload: { id?: string; action?: string };
   try { payload = (await request.json()) as typeof payload; } catch { return jsonError("Invalid request body."); }
   if (!payload.id || payload.action !== "remove") return jsonError("A valid field id and action 'remove' are required.");
+
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
 
   const removed = removeCustomField(payload.id);
   if (!removed) return jsonError("Custom field not found.", 404);

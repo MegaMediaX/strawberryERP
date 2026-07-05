@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse } from "@/lib/backend/backend-router";
+import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, appendUser, getDevStore, upsertReseller, upsertResellerMetadata } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { currencySettings } from "@/lib/phase2-data";
@@ -29,6 +29,9 @@ export async function POST(request: Request) {
 
   const bad = firstInvalidStep(state, ctx);
   if (bad !== -1) return jsonError(`Step "${WIZARD_STEPS[bad]}" is incomplete. Please review it.`, 400, "WIZARD_STEP_INVALID");
+
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
 
   const built = buildResellerFromWizard(state, String(Date.now()));
   upsertReseller(built.reseller);

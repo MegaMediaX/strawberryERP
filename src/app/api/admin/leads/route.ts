@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse } from "@/lib/backend/backend-router";
+import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, applyLeadOverride, enqueueDelete } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { leads as seedLeads } from "@/lib/sample-data";
@@ -24,6 +24,8 @@ export async function PATCH(request: Request) {
   if (action === "reassign") {
     const invalid = validateReassign(payload.assignedTo);
     if (invalid) return jsonError(invalid);
+    const gated = writeRequiresBackend();
+    if (gated) return gated;
     applyLeadOverride(lead.id, { assignedTo: payload.assignedTo });
     const a = leadActionAudit("reassign", `${lead.company}: ${lead.assignedTo} → ${payload.assignedTo}`);
     const audit = appendAudit({ entityType: "Lead", entityId: lead.id, action: a.action, oldValue: lead.assignedTo, newValue: a.newValue, performedBy: session.auditLabel });
@@ -31,6 +33,8 @@ export async function PATCH(request: Request) {
   }
 
   if (action === "convert") {
+    const gated = writeRequiresBackend();
+    if (gated) return gated;
     applyLeadOverride(lead.id, { convertedAt: new Date().toISOString() });
     const a = leadActionAudit("convert", `${lead.company} marked converted to customer`);
     const audit = appendAudit({ entityType: "Lead", entityId: lead.id, action: a.action, oldValue: lead.status, newValue: a.newValue, performedBy: session.auditLabel });
@@ -38,6 +42,8 @@ export async function PATCH(request: Request) {
   }
 
   if (action === "archive" || action === "delete") {
+    const gated = writeRequiresBackend();
+    if (gated) return gated;
     applyLeadOverride(lead.id, { archived: true });
     enqueueDelete({ entityType: "Lead", entityId: lead.id, label: `${lead.company} (${lead.reseller})`, requestedBy: session.auditLabel, reason: payload.reason?.trim() || (action === "archive" ? "Archived by Super Admin" : "Permanent delete requested by Super Admin") });
     const a = leadActionAudit(action, `${lead.company} → delete queue`);

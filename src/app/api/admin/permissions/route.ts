@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse } from "@/lib/backend/backend-router";
+import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, setPermissionMatrix } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { validatePermissionMatrix, type PermissionMatrix } from "@/lib/admin/permission-matrix";
@@ -14,6 +14,9 @@ export async function PATCH(request: Request) {
 
   const invalid = validatePermissionMatrix(matrix);
   if (invalid) return jsonError(invalid);
+
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
 
   const saved = setPermissionMatrix(matrix);
   const audit = appendAudit({ entityType: "Permissions", entityId: "matrix", action: "update", oldValue: "", newValue: "role permissions updated", performedBy: session.auditLabel });

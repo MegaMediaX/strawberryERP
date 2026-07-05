@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse } from "@/lib/backend/backend-router";
+import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, getCommissionEntry, updateCommissionEntry } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { evaluateCommissionApproval } from "@/lib/business/commission-approval";
@@ -28,6 +28,10 @@ export async function PATCH(request: Request) {
   if (action === "recalculate") {
     const oldAmount = entry.commissionAmount;
     const newAmount = recalculateCommissionAmount(entry);
+
+    const gate = writeRequiresBackend();
+    if (gate) return gate;
+
     const updated = updateCommissionEntry(id, { commissionAmount: newAmount });
     const audit = appendAudit({ entityType: "Commission", entityId: id, action: "recalculate", oldValue: String(oldAmount), newValue: String(newAmount), performedBy: session.auditLabel });
     return devStoreResponse({ commission: updated, message: `Commission recalculated to ${newAmount.toLocaleString()}.` }, { audit });
@@ -40,6 +44,9 @@ export async function PATCH(request: Request) {
     nextStatus,
   );
   if (!verdict.ok) return jsonError(verdict.error, verdict.status);
+
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
 
   const updated = updateCommissionEntry(id, { status: nextStatus });
   const audit = appendAudit({ entityType: "Commission", entityId: id, action: action === "approve" ? "approve" : action === "mark-paid" ? "mark-paid" : "cancel", oldValue: entry.status, newValue: nextStatus, performedBy: session.auditLabel });

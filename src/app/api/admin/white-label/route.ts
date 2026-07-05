@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse } from "@/lib/backend/backend-router";
+import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, getWhiteLabel, setWhiteLabel } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { mergeWhiteLabel, validateWhiteLabel, type WhiteLabelSettings } from "@/lib/admin/white-label";
@@ -15,6 +15,9 @@ export async function PATCH(request: Request) {
   const merged = mergeWhiteLabel(getWhiteLabel(), patch);
   const invalid = validateWhiteLabel(merged);
   if (invalid) return jsonError(invalid);
+
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
 
   const updated = setWhiteLabel(patch);
   const audit = appendAudit({ entityType: "WhiteLabel", entityId: "platform", action: "update", oldValue: "", newValue: `${updated.platformName} · ${updated.enabledModules.length} modules`, performedBy: session.auditLabel });

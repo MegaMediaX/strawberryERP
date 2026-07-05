@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse } from "@/lib/backend/backend-router";
+import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, getPlatformSettings, setPlatformSettingsSection } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { validateSettingsSection, type PlatformSettings, type SettingsSection } from "@/lib/admin/platform-settings";
@@ -20,6 +20,9 @@ export async function PATCH(request: Request) {
   const merged: PlatformSettings = { ...getPlatformSettings(), [payload.section]: payload.value };
   const invalid = validateSettingsSection(payload.section, merged);
   if (invalid) return jsonError(invalid);
+
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
 
   const saved = setPlatformSettingsSection(payload.section, payload.value);
   const audit = appendAudit({ entityType: "Settings", entityId: payload.section, action: "update", oldValue: "", newValue: `${payload.section} settings updated`, performedBy: session.auditLabel });
