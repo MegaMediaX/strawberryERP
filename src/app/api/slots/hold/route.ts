@@ -14,6 +14,12 @@ const RESELLER_ACTIONS: SlotAction[] = ["requestHold", "cancel"];
 
 export async function POST(request: Request) {
   const session = resolvePortalSession(request);
+  // Fail-closed transport gate (SEC-1): an unauthenticated request must never
+  // reach the state machine, even though canActOnSlot would also deny the
+  // anonymous role for most actions. Checked before any body parsing or state
+  // mutation.
+  if (session.authenticated !== true) return jsonError("Authentication required.", 401);
+
   let p: { label?: string; action?: SlotAction };
   try { p = (await request.json()) as typeof p; } catch { return jsonError("Invalid request body."); }
   if (!p.label || !p.action || !RESELLER_ACTIONS.includes(p.action)) return jsonError("A valid slot label and action are required.");
