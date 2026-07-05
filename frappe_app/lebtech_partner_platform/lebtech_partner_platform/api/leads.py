@@ -136,6 +136,46 @@ def update_lead(name: str, **payload):
     return doc.as_dict()
 
 
+def build_partner_customer_payload(lead):
+    """Map a Partner Lead to a Partner Customer create payload.
+
+    Carries over the scope fields (``assigned_user``, ``country``, ``reseller``)
+    plus ``converted_from_lead`` so the converted account stays visible under the
+    same portal scope as the source lead. Without ``assigned_user`` a Sales Team
+    User would see zero customers once Partner Customer scoping is enforced (P1-2),
+    since the native ERPNext Customer doctype is not portal-scoped.
+    """
+    return {
+        "doctype": "Partner Customer",
+        "customer_name": lead.company_name,
+        "country": lead.country,
+        "reseller": lead.reseller,
+        "assigned_user": lead.assigned_user,
+        "email": lead.email,
+        "phone": lead.phone,
+        "converted_from_lead": lead.name,
+    }
+
+
+def _upsert_partner_customer(lead):
+    """Insert (or update if the lead was already converted) the platform-scoped
+    Partner Customer mirror. Returns the Partner Customer name."""
+    payload = build_partner_customer_payload(lead)
+    existing = frappe.db.get_value("Partner Customer", {"converted_from_lead": lead.name}, "name")
+    if existing:
+        doc = frappe.get_doc("Partner Customer", existing)
+        for field, value in payload.items():
+            if field == "doctype":
+                continue
+            doc.set(field, value)
+        doc.save()
+    else:
+        doc = frappe.get_doc(payload)
+        doc.insert()
+    write_activity("Partner Customer", doc.name, "convert_from_lead", "", doc.customer_name)
+    return doc.name
+
+
 @frappe.whitelist(methods=["POST"])
 def convert_to_customer(lead_name: str):
     lead = frappe.get_doc("Partner Lead", lead_name)
@@ -149,11 +189,17 @@ def convert_to_customer(lead_name: str):
     )
     customer.insert()
 
+    # Mirror into the platform-scoped Partner Customer so the converted account
+    # stays visible under the same assigned_user / reseller / country scope. The
+    # native ERPNext Customer above is not portal-scoped, so on its own the
+    # conversion would vanish from the partner customer list (P1-2).
+    partner_customer = _upsert_partner_customer(lead)
+
     lead.status = "Contacted (Interested)"
     lead.customer = customer.name
     lead.save()
     frappe.db.commit()
-    return {"customer": customer.name, "lead": lead.name}
+    return {"customer": customer.name, "partner_customer": partner_customer, "lead": lead.name}
 
 
 def validate_lead_payload(payload, partial: bool = False):
