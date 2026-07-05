@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse } from "@/lib/backend/backend-router";
+import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, getDevStore, upsertReseller } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { currencySettings } from "@/lib/phase2-data";
@@ -36,6 +36,9 @@ export async function POST(request: Request) {
   const invalid = validateReseller(payload, validCurrencies());
   if (invalid) return jsonError(invalid);
 
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
+
   const record: Reseller = {
     name: String(payload.name).trim(),
     countries: payload.countries!,
@@ -62,6 +65,8 @@ export async function PATCH(request: Request) {
 
   // Deactivate / reactivate toggle.
   if (typeof payload.active === "boolean") {
+    const gate = writeRequiresBackend();
+    if (gate) return gate;
     const updated: Reseller = { ...current, isActive: payload.active };
     upsertReseller(updated);
     const audit = appendAudit({ entityType: "Reseller", entityId: name, action: payload.active ? "activate" : "deactivate", oldValue: String(current.isActive), newValue: String(payload.active), performedBy: session.auditLabel });
@@ -78,6 +83,8 @@ export async function PATCH(request: Request) {
   };
   const invalid = validateReseller(candidate, validCurrencies());
   if (invalid) return jsonError(invalid);
+  const gate = writeRequiresBackend();
+  if (gate) return gate;
   upsertReseller(candidate);
   const audit = appendAudit({ entityType: "Reseller", entityId: name, action: "update", oldValue: `${current.defaultCommissionPercentage}% · ${current.defaultCurrency}`, newValue: `${candidate.defaultCommissionPercentage}% · ${candidate.defaultCurrency}`, performedBy: session.auditLabel });
   return devStoreResponse({ reseller: candidate, message: `Reseller "${name}" updated.` }, { audit });

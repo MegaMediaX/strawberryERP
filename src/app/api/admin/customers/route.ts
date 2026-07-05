@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse } from "@/lib/backend/backend-router";
+import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, applyCustomerOverride, enqueueDelete } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { customers as seedCustomers } from "@/lib/phase2-data";
@@ -23,6 +23,8 @@ export async function PATCH(request: Request) {
   if (payload.action === "add_note") {
     const invalid = validateCustomerNote(payload.note);
     if (invalid) return jsonError(invalid);
+    const gate = writeRequiresBackend();
+    if (gate) return gate;
     applyCustomerOverride(customer.id, { notes: [payload.note!.trim()] });
     const a = customerActionAudit("add_note", `${customer.name}: ${payload.note!.trim().slice(0, 80)}`);
     const audit = appendAudit({ entityType: "Customer", entityId: customer.id, action: a.action, oldValue: "", newValue: a.newValue, performedBy: session.auditLabel });
@@ -30,6 +32,8 @@ export async function PATCH(request: Request) {
   }
 
   if (payload.action === "delete") {
+    const gate = writeRequiresBackend();
+    if (gate) return gate;
     applyCustomerOverride(customer.id, { archived: true });
     enqueueDelete({ entityType: "Customer", entityId: customer.id, label: `${customer.name} (${customer.reseller})`, requestedBy: session.auditLabel, reason: payload.reason?.trim() || "Permanent delete requested by Super Admin" });
     const a = customerActionAudit("delete", `${customer.name} → delete queue`);

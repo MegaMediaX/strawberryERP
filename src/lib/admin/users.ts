@@ -52,16 +52,24 @@ export function emptyAdminUserForm(): AdminUserFormInput {
 
 /** Validate the add/edit user form. Returns an error string or null. */
 export function validateAdminUser(input: AdminUserFormInput, ctx: AdminUserFormContext): string | null {
-  if (!input.firstName.trim() || !input.lastName.trim()) return "Enter a first and last name.";
-  if (!EMAIL_RE.test(input.email.trim())) return "Enter a valid email address.";
-  if (!ctx.isEdit && ctx.existingEmails.map((e) => e.toLowerCase()).includes(input.email.trim().toLowerCase())) {
+  // Tolerate partial/empty request bodies: a missing string field must surface
+  // the normal validation message, not a TypeError from calling .trim() on undefined.
+  const firstName = typeof input?.firstName === "string" ? input.firstName.trim() : "";
+  const lastName = typeof input?.lastName === "string" ? input.lastName.trim() : "";
+  const email = typeof input?.email === "string" ? input.email.trim() : "";
+
+  if (!firstName || !lastName) return "Enter a first and last name.";
+  if (!EMAIL_RE.test(email)) return "Enter a valid email address.";
+  if (!ctx.isEdit && ctx.existingEmails.map((e) => e.toLowerCase()).includes(email.toLowerCase())) {
     return "A user with this email already exists.";
   }
   if (!input.role) return "Select a role.";
   if (!adminCreatableRoles().includes(input.role)) return "That role can't be created here.";
   if (roleRequiresReseller(input.role) && !input.reseller) return `${input.role} must be assigned to a reseller.`;
-  if (roleRequiresCountry(input.role) && input.countries.length === 0) return `${input.role} must have at least one country.`;
-  if (!ctx.isEdit && input.password.length < MIN_PASSWORD) return `Password must be at least ${MIN_PASSWORD} characters.`;
+  if (roleRequiresCountry(input.role) && (!Array.isArray(input.countries) || input.countries.length === 0)) {
+    return `${input.role} must have at least one country.`;
+  }
+  if (!ctx.isEdit && (input.password?.length ?? 0) < MIN_PASSWORD) return `Password must be at least ${MIN_PASSWORD} characters.`;
   return null;
 }
 

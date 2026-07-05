@@ -25,6 +25,8 @@ export type RegionalCustomerFilters = {
   balanceDue?: boolean;
   /** §17 "Fully paid" — progress reached Fully Paid. */
   fullyPaid?: boolean;
+  /** §17 "Stuck before payment" — mirrors {@link stuckCustomerCount}. */
+  stuck?: boolean;
 };
 
 export function regionalCustomerRows(
@@ -50,11 +52,17 @@ export function filterRegionalCustomers(
     if (filters.progress && r.progress !== filters.progress) return false;
     if (filters.balanceDue && r.balance <= 0) return false;
     if (filters.fullyPaid && r.progress !== "Fully Paid") return false;
+    if (filters.stuck && !isStuck(r)) return false;
     return true;
   });
 }
 
+/** "Stuck before payment": signed-or-unsigned but no payment reached yet. */
+function isStuck(r: CustomerRollup): boolean {
+  return r.progress === "Contract Not Signed" || r.progress === "Contract Signed";
+}
+
 /** Count of customers "stuck" before any payment (the §17 monitoring focus). */
 export function stuckCustomerCount(rows: readonly CustomerRollup[]): number {
-  return rows.filter((r) => r.progress === "Contract Not Signed" || r.progress === "Contract Signed").length;
+  return rows.filter(isStuck).length;
 }

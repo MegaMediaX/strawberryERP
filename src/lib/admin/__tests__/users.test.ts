@@ -41,6 +41,14 @@ describe("validateAdminUser", () => {
   it("accepts a complete regional director", () => {
     expect(validateAdminUser(base, ctx())).toBeNull();
   });
+  it("returns a validation message (never throws) for a partial/empty body", () => {
+    // A POST with `{}` reaches here with every field undefined — must yield the
+    // name message, not a TypeError from .trim() on undefined.
+    expect(() => validateAdminUser({} as AdminUserFormInput, ctx())).not.toThrow();
+    expect(validateAdminUser({} as AdminUserFormInput, ctx())).toMatch(/first and last name/);
+    expect(validateAdminUser({ firstName: "Lina" } as AdminUserFormInput, ctx())).toMatch(/first and last name/);
+    expect(validateAdminUser({ firstName: "Lina", lastName: "Saad" } as AdminUserFormInput, ctx())).toMatch(/valid email/);
+  });
   it("requires name, valid+unique email, role", () => {
     expect(validateAdminUser({ ...base, firstName: "" }, ctx())).toMatch(/first and last name/);
     expect(validateAdminUser({ ...base, email: "bad" }, ctx())).toMatch(/valid email/);

@@ -91,7 +91,9 @@ export async function POST(request: Request) {
     return jsonError(validation);
   }
 
-  const proxied = await maybeRouteToFrappe("leads", "post", mapLeadToFrappe(payload));
+  // A new lead genuinely needs a starting status; updates must not (see mapLeadToFrappe).
+  const createPayload = mapLeadToFrappe({ ...payload, status: payload.status ?? "New Lead (Uncontacted)" });
+  const proxied = await maybeRouteToFrappe("leads", "post", createPayload);
   if (proxied) {
     logSuccessfulApiRequest(request, "leads", "POST", 201);
     return proxied;
@@ -126,6 +128,13 @@ export async function PATCH(request: Request) {
         return jsonError(transitionError);
       }
     } else if (payload.status === "Scheduled Follow-Up" && !payload.followUpDate) {
+      return jsonError("followUpDate is required for Scheduled Follow-Up.");
+    }
+  } else if (payload.followUpDate !== undefined) {
+    // Date-only PATCH (auto-save): no status change, but a lead already in
+    // "Scheduled Follow-Up" must not lose its required follow-up date.
+    const current = leads.find((lead) => lead.id === payload.id);
+    if (current?.status === "Scheduled Follow-Up" && !payload.followUpDate) {
       return jsonError("followUpDate is required for Scheduled Follow-Up.");
     }
   }
@@ -181,19 +190,34 @@ function validateLeadPayload(payload: LeadPayload) {
   return null;
 }
 
-function mapLeadToFrappe(payload: LeadPayload) {
-  return {
-    company_name: payload.companyName,
-    country: payload.country,
-    assigned_user: payload.assignedUser,
-    contact_first_name: payload.contactFirstName,
-    contact_last_name: payload.contactLastName,
-    gender: payload.gender,
-    phone: payload.phone,
-    email: payload.email,
-    status: payload.status ?? "New Lead (Uncontacted)",
-    follow_up_date: payload.followUpDate,
-    notes: payload.notes,
-    source: payload.source,
-  };
+const LEAD_FIELD_MAP: ReadonlyArray<readonly [keyof LeadPayload, string]> = [
+  ["companyName", "company_name"],
+  ["country", "country"],
+  ["assignedUser", "assigned_user"],
+  ["contactFirstName", "contact_first_name"],
+  ["contactLastName", "contact_last_name"],
+  ["gender", "gender"],
+  ["phone", "phone"],
+  ["email", "email"],
+  ["status", "status"],
+  ["followUpDate", "follow_up_date"],
+  ["notes", "notes"],
+  ["source", "source"],
+];
+
+/**
+ * Map the client lead payload to Frappe field names, sending ONLY the keys the
+ * caller actually provided. Never invent a `status` here — a note-save or
+ * reassign PATCH omits status, and defaulting it would silently reset the
+ * lead's pipeline status on the proxied Frappe write. The create-time default
+ * is applied at the POST call site, where a status is genuinely expected.
+ */
+export function mapLeadToFrappe(payload: LeadPayload): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [from, to] of LEAD_FIELD_MAP) {
+    if (payload[from] !== undefined) {
+      out[to] = payload[from];
+    }
+  }
+  return out;
 }

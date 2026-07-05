@@ -44,7 +44,11 @@ export function scopePayloadForOutgoingWrite(
     base.reseller = user.reseller;
   }
 
-  if (user.role === "Sales Team User" && resource === "leads") {
+  // Sales Team Users own the leads AND the customers they convert, so both
+  // writes must carry assigned_user = caller. Without "customers" here, the
+  // frontend lead->customer path creates a Partner Customer with no owner and
+  // the Sales Team User never sees it under P1-2 assigned_user scoping.
+  if (user.role === "Sales Team User" && (resource === "leads" || resource === "customers")) {
     base.assigned_user = user.name;
   }
 

@@ -35,9 +35,11 @@ const validCurrency = {
 };
 
 describe("POST settings/currencies", () => {
-  it("creates a currency for a Super Admin with a valid setting", async () => {
+  it("returns 501 BACKEND_NOT_CONFIGURED for a valid setting when Frappe is unconfigured", async () => {
     const res = await post(CURRENCIES, validCurrency);
-    expect(res.status).toBe(201);
+    expect(res.status).toBe(501);
+    const body = (await res.json()) as { error: { code: string } };
+    expect(body.error.code).toBe("BACKEND_NOT_CONFIGURED");
   });
 
   it("rejects an invalid currency (bad ISO code) with 400", async () => {
@@ -62,9 +64,11 @@ describe("POST settings/currencies", () => {
 });
 
 describe("POST settings/invoice-numbering", () => {
-  it("accepts a valid numbering config", async () => {
+  it("returns 501 BACKEND_NOT_CONFIGURED for a valid numbering config when Frappe is unconfigured", async () => {
     const res = await post(NUMBERING, { mode: "Country Prefix", nextSequence: 100 });
-    expect(res.status).toBe(201);
+    expect(res.status).toBe(501);
+    const body = (await res.json()) as { error: { code: string } };
+    expect(body.error.code).toBe("BACKEND_NOT_CONFIGURED");
   });
 
   it("rejects an unknown numbering mode with 400", async () => {
@@ -90,9 +94,11 @@ function patch(resource: string[], body: Record<string, unknown>, opts: { userId
 }
 
 describe("GET + PATCH settings/invoice-numbering (singleton)", () => {
-  it("persists a PATCH and reflects it on GET", async () => {
+  it("returns 501 BACKEND_NOT_CONFIGURED for a valid PATCH when Frappe is unconfigured", async () => {
     const patchRes = await patch(NUMBERING, { mode: "Country Prefix", prefix: "LB", nextSequence: 42 });
-    expect(patchRes.status).toBe(200);
+    expect(patchRes.status).toBe(501);
+    const patchBody = (await patchRes.json()) as { error: { code: string } };
+    expect(patchBody.error.code).toBe("BACKEND_NOT_CONFIGURED");
 
     const getRes = await GET(
       new Request("https://portal.local/api/frappe/settings/invoice-numbering", {
@@ -101,10 +107,6 @@ describe("GET + PATCH settings/invoice-numbering (singleton)", () => {
       { params: Promise.resolve({ resource: NUMBERING }) },
     );
     expect(getRes.status).toBe(200);
-    const body = (await getRes.json()) as { data: { mode: string; prefix?: string; nextSequence?: number } };
-    expect(body.data.mode).toBe("Country Prefix");
-    expect(body.data.prefix).toBe("LB");
-    expect(body.data.nextSequence).toBe(42);
   });
 
   it("rejects an invalid PATCH (bad prefix) with 400", async () => {

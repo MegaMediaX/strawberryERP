@@ -39,9 +39,18 @@ export function AdminNotificationsView({ rules, inbox }: { rules: NotificationRu
   const visibleInbox = useMemo(() => filterAdminNotifications(inbox, filter.category), [inbox, filter.category]);
 
   async function patchRule(id: string, patch: Partial<NotificationRule>) {
-    setBusy(true);
-    try { await fetch("/api/admin/notifications", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, ...patch }) }); router.refresh(); }
-    finally { setBusy(false); }
+    setBusy(true); setErr("");
+    try {
+      const res = await fetch("/api/admin/notifications", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, ...patch }) });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        setErr(data.error ?? "Could not update rule.");
+        return;
+      }
+      router.refresh();
+    } catch {
+      setErr("Network error. Please try again.");
+    } finally { setBusy(false); }
   }
   function toggleRuleChannel(r: NotificationRule, ch: NotificationChannelName) {
     const next = r.channels.includes(ch) ? r.channels.filter((c) => c !== ch) : [...r.channels, ch];
@@ -86,6 +95,7 @@ export function AdminNotificationsView({ rules, inbox }: { rules: NotificationRu
             </CardContent>
           </Card>
 
+          {err && <p role="alert" className="text-xs font-semibold text-rose-600 dark:text-rose-400">{err}</p>}
           <Card><CardContent className="overflow-x-auto pt-5">
             <table className="w-full min-w-[860px] border-collapse text-left text-sm">
               <thead><tr className="border-b border-[var(--border)] text-[11px] uppercase tracking-[0.08em] text-[var(--muted)]">

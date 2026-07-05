@@ -120,19 +120,19 @@ describe("P1-3: settings/api/keys never leaks keyHash, and PATCH allowlists fiel
     }
   });
 
-  it("POST (create) response contains no keyHash", async () => {
+  it("POST (create) returns 501 BACKEND_NOT_CONFIGURED when Frappe is unconfigured (validation already passed)", async () => {
     const res = await postReq(["settings", "api", "keys"], {
       keyName: "Test Key",
       scopes: ["read:leads"],
       readAccess: true,
       writeAccess: false,
     });
-    expect(res.status).toBe(201);
-    const body = (await res.json()) as { data: Record<string, unknown> };
-    expect(body.data).not.toHaveProperty("keyHash");
+    expect(res.status).toBe(501);
+    const body = (await res.json()) as { error: { code: string } };
+    expect(body.error.code).toBe("BACKEND_NOT_CONFIGURED");
   });
 
-  it("PATCH with a disallowed field (keyHash) ignores it and does not change the stored hash", async () => {
+  it("PATCH with a disallowed field (keyHash) is gated 501 before any allowlist merge, and the stored hash is unchanged", async () => {
     const listRes = await getReq(["settings", "api", "keys"]);
     const listBody = (await listRes.json()) as { data: Array<{ id: string }> };
     const targetId = listBody.data[0].id;
@@ -143,20 +143,16 @@ describe("P1-3: settings/api/keys never leaks keyHash, and PATCH allowlists fiel
       prefix: "ltp_live_hijacked",
       keyName: "Renamed Legitimately",
     });
-    expect(res.status).toBe(200);
-    const body = (await res.json()) as { data: Record<string, unknown> };
-
-    // Allowed field applied.
-    expect(body.data.keyName).toBe("Renamed Legitimately");
-    // Disallowed fields never echoed / never applied.
-    expect(body.data).not.toHaveProperty("keyHash");
-    expect(body.data.prefix).not.toBe("ltp_live_hijacked");
+    expect(res.status).toBe(501);
+    const body = (await res.json()) as { error: { code: string } };
+    expect(body.error.code).toBe("BACKEND_NOT_CONFIGURED");
 
     // Confirm the underlying store wasn't mutated with the attacker hash either.
     const afterList = await getReq(["settings", "api", "keys"]);
     const afterBody = (await afterList.json()) as { data: Array<Record<string, unknown>> };
     const stored = afterBody.data.find((r) => r.id === targetId)!;
     expect(stored.prefix).not.toBe("ltp_live_hijacked");
+    expect(stored.keyName).not.toBe("Renamed Legitimately");
     expect(stored).not.toHaveProperty("keyHash");
   });
 });
@@ -181,6 +177,27 @@ describe("P1-4: outgoing write payload scope is overridden (not merged) by sessi
     expect(outgoing.country).toBe("Lebanon");
     expect(outgoing.reseller).toBe("Beirut Digital Partners");
     expect(outgoing.amount).toBe(500);
+  });
+
+  it("assigns a Sales Team User's converted customer to them (Partner Customer scoping)", () => {
+    // The frontend lead->customer path (buildCustomerFromLead) POSTs to
+    // /api/frappe/customers; without this, the created Partner Customer has no
+    // assigned_user and is invisible to the Sales Team User who created it.
+    const session = {
+      effectiveUser: {
+        role: "Sales Team User",
+        countries: [],
+        reseller: undefined,
+        name: "Rami K.",
+      },
+    } as never;
+
+    const outgoing = scopePayloadForOutgoingWrite("customers", session, {
+      customer_name: "Cedar Cloud Services",
+      assigned_user: "",
+    });
+
+    expect(outgoing.assigned_user).toBe("Rami K.");
   });
 
   it("does not override scope for Super Admin (unrestricted)", () => {

@@ -10,6 +10,26 @@ export function activeBackendSource() {
   return isFrappeConfigured() ? frappeBackendClient.source : devStoreBackendClient.source;
 }
 
+export const BACKEND_NOT_CONFIGURED_CODE = "BACKEND_NOT_CONFIGURED";
+
+/**
+ * Write-path guard. When Frappe is NOT configured, returns a 501
+ * { ok:false, code:"BACKEND_NOT_CONFIGURED" } response so a write never falls
+ * through to a fake-success dev-store response. Returns null when Frappe IS
+ * configured (caller proceeds with its normal proxy/local logic).
+ */
+export function writeRequiresBackend(): NextResponse | null {
+  if (!isFrappeConfigured()) {
+    return jsonError(
+      "This write requires a configured Frappe backend.",
+      501,
+      BACKEND_NOT_CONFIGURED_CODE,
+    );
+  }
+
+  return null;
+}
+
 export async function maybeRouteToFrappe(resource: string, method: BackendMethod, payload?: unknown) {
   if (!isFrappeConfigured()) {
     return null;

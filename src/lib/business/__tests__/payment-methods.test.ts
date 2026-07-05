@@ -57,8 +57,11 @@ function post(body: Record<string, unknown>, opts: { userId?: string; impersonat
 }
 
 describe("POST settings/payment-methods", () => {
-  it("creates a method for a Super Admin", async () => {
-    expect((await post(valid)).status).toBe(201);
+  it("returns 501 BACKEND_NOT_CONFIGURED for a Super Admin when Frappe is unconfigured", async () => {
+    const res = await post(valid);
+    expect(res.status).toBe(501);
+    const body = (await res.json()) as { error: { code: string } };
+    expect(body.error.code).toBe("BACKEND_NOT_CONFIGURED");
   });
 
   it("rejects an invalid method (400)", async () => {

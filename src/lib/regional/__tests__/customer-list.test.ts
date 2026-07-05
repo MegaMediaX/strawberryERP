@@ -11,10 +11,14 @@ const customers: CustomerLike[] = [
   { id: "C1", name: "Cedar Cloud Services", country: "Lebanon", reseller: "Beirut Digital Partners" },
   { id: "C2", name: "Amman Logistics Hub", country: "Jordan", reseller: "Levant Growth Systems" },
   { id: "C3", name: "Beirut Bistro", country: "Lebanon", reseller: "Beirut Digital Partners" },
+  // Signed contract, no invoice/receipt yet → progress "Contract Signed": also
+  // "stuck before payment", so stuckCustomerCount includes it.
+  { id: "C4", name: "Tyre Textiles", country: "Lebanon", reseller: "Beirut Digital Partners" },
 ];
 const contracts: ContractLike[] = [
   { customer: "Cedar Cloud Services", reseller: "Beirut Digital Partners", contractStatus: "Signed" },
   { customer: "Amman Logistics Hub", reseller: "Levant Growth Systems", contractStatus: "Signed" },
+  { customer: "Tyre Textiles", reseller: "Beirut Digital Partners", contractStatus: "Signed" },
 ];
 const invoices: InvoiceLike[] = [
   { customer: "Cedar Cloud Services", reseller: "Beirut Digital Partners", total: 1000 },
@@ -53,10 +57,19 @@ describe("filterRegionalCustomers", () => {
     expect(filterRegionalCustomers(rows, { country: "Jordan" }).map((r) => r.name)).toEqual(["Amman Logistics Hub"]);
     expect(filterRegionalCustomers(rows, { search: "cedar" }).map((r) => r.name)).toEqual(["Cedar Cloud Services"]);
   });
+
+  it("stuck:true matches every customer stuckCustomerCount counts (not just Contract Not Signed)", () => {
+    // Regression: the 'N stuck before payment' shortcut set progress:'Contract Not
+    // Signed', which excluded the 'Contract Signed / unpaid' customers the count
+    // includes — so the filtered list was smaller than the button's number.
+    const stuckRows = filterRegionalCustomers(rows, { stuck: true });
+    expect(stuckRows.map((r) => r.name).sort()).toEqual(["Beirut Bistro", "Tyre Textiles"]);
+    expect(stuckRows.length).toBe(stuckCustomerCount(rows));
+  });
 });
 
 describe("stuckCustomerCount", () => {
   it("counts customers that have not reached a payment", () => {
-    expect(stuckCustomerCount(rows)).toBe(1); // Beirut Bistro
+    expect(stuckCustomerCount(rows)).toBe(2); // Beirut Bistro + Tyre Textiles
   });
 });

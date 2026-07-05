@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse } from "@/lib/backend/backend-router";
+import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, enqueueDelete } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 
@@ -12,6 +12,9 @@ export async function POST(request: Request) {
   try { p = (await request.json()) as typeof p; } catch { return jsonError("Invalid request body."); }
   if (!p.entityType || !p.entityId) return jsonError("entityType and entityId are required.");
   if (!p.reason?.trim()) return jsonError("A reason is required.");
+
+  const gated = writeRequiresBackend();
+  if (gated) return gated;
 
   const queued = enqueueDelete({
     entityType: p.entityType,
