@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
+import { devStoreResponse, maybeRouteToFrappe, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, applyLeadOverride, enqueueDelete } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { leads as seedLeads } from "@/lib/sample-data";
@@ -24,6 +24,8 @@ export async function PATCH(request: Request) {
   if (action === "reassign") {
     const invalid = validateReassign(payload.assignedTo);
     if (invalid) return jsonError(invalid);
+    const proxied = await maybeRouteToFrappe("leads", "patch", { name: lead.id, assigned_user: payload.assignedTo });
+    if (proxied) return proxied;
     const gated = writeRequiresBackend();
     if (gated) return gated;
     applyLeadOverride(lead.id, { assignedTo: payload.assignedTo });
@@ -33,6 +35,8 @@ export async function PATCH(request: Request) {
   }
 
   if (action === "convert") {
+    const proxied = await maybeRouteToFrappe("leads/convert", "post", { lead_name: lead.id });
+    if (proxied) return proxied;
     const gated = writeRequiresBackend();
     if (gated) return gated;
     applyLeadOverride(lead.id, { convertedAt: new Date().toISOString() });
@@ -42,6 +46,16 @@ export async function PATCH(request: Request) {
   }
 
   if (action === "archive" || action === "delete") {
+    // `delete` routes through the Frappe soft-delete queue when configured;
+    // `archive` has no backing method and stays gated (dev-store only).
+    if (action === "delete") {
+      const proxied = await maybeRouteToFrappe("delete-queue/request", "post", {
+        target_doctype: "Lead",
+        target_name: lead.id,
+        reason: payload.reason?.trim() || "Permanent delete requested by Super Admin",
+      });
+      if (proxied) return proxied;
+    }
     const gated = writeRequiresBackend();
     if (gated) return gated;
     applyLeadOverride(lead.id, { archived: true });

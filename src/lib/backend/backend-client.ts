@@ -25,6 +25,9 @@ export const frappeMethodMap: Record<string, { get?: string; post?: string; patc
     post: "lebtech_partner_platform.api.leads.create_lead",
     patch: "lebtech_partner_platform.api.leads.update_lead",
   },
+  "leads/convert": {
+    post: "lebtech_partner_platform.api.leads.convert_to_customer",
+  },
   customers: {
     get: "lebtech_partner_platform.api.customers.list_customers",
     post: "lebtech_partner_platform.api.customers.create_customer",

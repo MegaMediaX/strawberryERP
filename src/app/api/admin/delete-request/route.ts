@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
+import { devStoreResponse, maybeRouteToFrappe, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, enqueueDelete } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 
@@ -12,6 +12,15 @@ export async function POST(request: Request) {
   try { p = (await request.json()) as typeof p; } catch { return jsonError("Invalid request body."); }
   if (!p.entityType || !p.entityId) return jsonError("entityType and entityId are required.");
   if (!p.reason?.trim()) return jsonError("A reason is required.");
+
+  // Queue the soft-delete in Frappe when configured (field names map to the
+  // Pending Delete Queue doctype); otherwise fail loud (501).
+  const proxied = await maybeRouteToFrappe("delete-queue/request", "post", {
+    target_doctype: p.entityType,
+    target_name: p.entityId,
+    reason: p.reason.trim(),
+  });
+  if (proxied) return proxied;
 
   const gated = writeRequiresBackend();
   if (gated) return gated;

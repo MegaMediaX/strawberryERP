@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
+import { devStoreResponse, maybeRouteToFrappe, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, getDevStore, upsertIntegrationSetting } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import {
@@ -33,6 +33,18 @@ export async function PATCH(request: Request) {
 
   const invalid = validateIntegrationConfig(payload.integrationType, provider, mergedConfig);
   // Allow saving an incomplete draft, but reflect status. Only block on totally absent type (handled above).
+
+  // Persist to the Frappe Integration Setting doctype when configured (send the
+  // merged config so a partial patch never clobbers stored keys); else 501.
+  const proxied = await maybeRouteToFrappe("settings/integrations", "patch", {
+    integration_type: payload.integrationType,
+    provider,
+    config_json: mergedConfig,
+    is_enabled: payload.isEnabled,
+    connection_status: invalid ? "Not configured" : "Needs test",
+  });
+  if (proxied) return proxied;
+
   const gated = writeRequiresBackend();
   if (gated) return gated;
 
