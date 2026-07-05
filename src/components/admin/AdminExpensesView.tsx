@@ -14,16 +14,22 @@ import { EXPENSE_CATEGORIES, type ExpenseRecord } from "@/lib/admin/pnl";
 export function AdminExpensesView({ expenses, currencies }: { expenses: ExpenseRecord[]; currencies: string[] }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [f, setF] = useState({ category: "Software", amount: "", currency: currencies[0] ?? "USD", country: "", date: "", notes: "", attachmentName: "" });
   const [err, setErr] = useState("");
   const set = (k: keyof typeof f, v: string) => setF((s) => ({ ...s, [k]: v }));
 
   async function add() {
-    setErr("");
-    const res = await fetch("/api/admin/accounting/expenses", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...f, amount: Number(f.amount) }) });
-    const data = (await res.json()) as { error?: string };
-    if (!res.ok) { setErr(data.error ?? "Save failed."); return; }
-    setOpen(false); setF({ category: "Software", amount: "", currency: currencies[0] ?? "USD", country: "", date: "", notes: "", attachmentName: "" }); router.refresh();
+    if (busy) return;
+    setBusy(true); setErr("");
+    try {
+      const res = await fetch("/api/admin/accounting/expenses", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...f, amount: Number(f.amount) }) });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) { setErr(data.error ?? "Save failed."); return; }
+      setOpen(false); setF({ category: "Software", amount: "", currency: currencies[0] ?? "USD", country: "", date: "", notes: "", attachmentName: "" }); router.refresh();
+    } catch {
+      setErr("Network error. Please try again.");
+    } finally { setBusy(false); }
   }
 
   return (
@@ -68,7 +74,7 @@ export function AdminExpensesView({ expenses, currencies }: { expenses: ExpenseR
               <div className="sm:col-span-2"><Field label="Attachment (filename, optional)"><Input aria-label="Attachment" value={f.attachmentName} placeholder="receipt.pdf" onChange={(e) => set("attachmentName", e.target.value)} /></Field></div>
             </div>
             {err && <p className="mt-2 text-xs font-semibold text-rose-600 dark:text-rose-400">{err}</p>}
-            <div className="mt-4 flex gap-2"><Button variant="secondary" className="flex-1" onClick={() => setOpen(false)}>Cancel</Button><Button className="flex-1" onClick={add}>Add expense</Button></div>
+            <div className="mt-4 flex gap-2"><Button variant="secondary" className="flex-1" onClick={() => setOpen(false)}>Cancel</Button><Button className="flex-1" onClick={add} disabled={busy}>{busy ? "Adding…" : "Add expense"}</Button></div>
           </div>
         </div>
       )}

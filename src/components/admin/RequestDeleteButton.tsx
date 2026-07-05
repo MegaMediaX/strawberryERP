@@ -17,12 +17,15 @@ export function RequestDeleteButton({ entityType, entityId, label, country, rese
 
   async function submit() {
     if (!reason.trim()) { setErr("A reason is required."); return; }
+    if (busy) return;
     setBusy(true); setErr("");
     try {
       const res = await fetch("/api/admin/delete-request", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ entityType, entityId, label, reason, country, reseller }) });
-      const data = (await res.json()) as { error?: string };
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) { setErr(data.error ?? "Request failed."); return; }
       setDone(true); setOpen(false); router.refresh();
+    } catch {
+      setErr("Network error. Please try again.");
     } finally { setBusy(false); }
   }
 
