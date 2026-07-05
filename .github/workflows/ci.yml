@@ -62,6 +62,20 @@ jobs:
       - name: Compile Frappe app Python
         run: python -m compileall frappe_app/lebtech_partner_platform
 
+      - name: Frappe Python unit tests
+        working-directory: frappe_app/lebtech_partner_platform
+        run: |
+          python -m pip install --quiet pytest
+          # Each test file injects its own fake `frappe` into sys.modules, so a
+          # combined pytest collection clashes — run every test file in its own
+          # process and fail the step if any file fails.
+          failed=0
+          for t in $(find lebtech_partner_platform -name 'test_*.py' -not -path '*__pycache__*'); do
+            echo "== pytest $t =="
+            python -m pytest "$t" -q || failed=1
+          done
+          exit $failed
+
       - name: Check live smoke script syntax
         run: |
           node --check scripts/frappe-live-smoke.mjs
