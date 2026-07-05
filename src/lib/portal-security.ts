@@ -132,11 +132,18 @@ export function resolvePortalSession(request: Request): PortalSession {
   const bearerToken = authHeader?.toLowerCase().startsWith("bearer ") ? authHeader.slice(7) : undefined;
   const sessionToken = request.headers.get("x-portal-session-token") ?? bearerToken;
   const expiresAt = request.headers.get("x-platform-session-expires-at") ?? undefined;
-  const userId = allowDevHeaders ? (request.headers.get("x-platform-user-id") ?? "USR-SUPER") : null;
+  // SEC-3: the missing-header "auto Super Admin" default is local-dev-only
+  // ergonomics. In production-proxy mode (ALLOW_DEV_IDENTITY_HEADERS=true), a
+  // trusted reverse proxy is expected to inject x-platform-user-id itself — if
+  // it's missing there, that's an anomaly, not a signal to grant Super Admin.
+  const devDefaultUserId = process.env.NODE_ENV !== "production" ? "USR-SUPER" : null;
+  const userId = allowDevHeaders ? (request.headers.get("x-platform-user-id") ?? devDefaultUserId) : null;
   // Unauthenticated production (userId === null) → anonymous, NOT the Super-Admin
   // default. Dev/proxy header mode still resolves a real user as before.
+  // An UNKNOWN/inactive id must also fail closed to ANONYMOUS_USER — it must
+  // NEVER fall back to portalUsers[0] (Super Admin).
   const user = userId
-    ? (portalUsers.find((item) => item.id === userId && item.active) ?? portalUsers[0])
+    ? (portalUsers.find((item) => item.id === userId && item.active) ?? ANONYMOUS_USER)
     : ANONYMOUS_USER;
 
   const impersonatedUserId = allowDevHeaders ? request.headers.get("x-platform-impersonate-user-id") : null;
