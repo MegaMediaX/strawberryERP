@@ -84,10 +84,16 @@ async function main() {
   const l3 = await login({ email: EMAIL, password: PASSWORD, totp: totp(secret) });
   check("login with valid 2FA code -> 200", l3.status === 200);
 
-  // 7. disable -> 200 (use a fresh authed cookie)
+  // 7. disable requires a current code (SEC-6 step-up).
   const disableCookie = cookieOf(l3) || cookie;
-  const dis = await fetch(`${BASE}/api/auth/2fa/disable`, { method: "POST", headers: { cookie: disableCookie } });
-  check("disable 2fa -> 200", dis.status === 200);
+  // 7a. no code while 2FA is active -> 400 (a hijacked session cannot strip it).
+  const disNoCode = await fetch(`${BASE}/api/auth/2fa/disable`, { method: "POST", headers: { cookie: disableCookie } });
+  check("disable 2fa w/o code -> 400", disNoCode.status === 400);
+  // 7b. valid current code -> 200.
+  const dis = await fetch(`${BASE}/api/auth/2fa/disable`, {
+    method: "POST", headers: { "content-type": "application/json", cookie: disableCookie }, body: JSON.stringify({ code: totp(secret) }),
+  });
+  check("disable 2fa w/ valid code -> 200", dis.status === 200);
 
   // 8. login without code works again -> 200
   const l4 = await login({ email: EMAIL, password: PASSWORD });

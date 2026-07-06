@@ -71,9 +71,14 @@ export default function SecurityPage() {
     setBusy(true);
     setError(null);
     try {
-      await call("/api/auth/2fa/disable");
+      // SEC-6: disabling requires proving current possession of the second
+      // factor. Send the code when one has been entered; the endpoint returns
+      // 400 TOTP_REQUIRED when 2FA is active and none is supplied, and no-ops
+      // to 200 when 2FA is not active (nothing to protect).
+      await call("/api/auth/2fa/disable", code ? { code } : undefined);
       setStatus("Two-factor authentication is disabled.");
       setEnrollment(null);
+      setCode("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not disable 2FA.");
     } finally {
@@ -92,13 +97,33 @@ export default function SecurityPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {!enrollment ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <button className={btnClass} onClick={startSetup} disabled={busy}>
                 {busy ? "Working…" : "Enable 2FA"}
               </button>
-              <button className={`${btnClass} bg-transparent text-slate-700 hover:bg-slate-100 dark:text-slate-300`} onClick={disable} disabled={busy}>
-                Disable 2FA
-              </button>
+              <div className="space-y-2 border-t border-[var(--border)] pt-4">
+                <p className="text-sm font-medium">Turn off two-factor authentication</p>
+                <p className="text-sm text-slate-600 dark:text-slate-300">
+                  If 2FA is enabled, enter your current 6-digit code to confirm. This proves the
+                  request comes from you and not a stolen session.
+                </p>
+                <input
+                  className={inputClass}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                  placeholder="123456"
+                />
+                <button
+                  className={`${btnClass} bg-transparent text-slate-700 hover:bg-slate-100 dark:text-slate-300`}
+                  onClick={disable}
+                  disabled={busy}
+                >
+                  Disable 2FA
+                </button>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
