@@ -1,19 +1,13 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
 import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, getDevStore, upsertCurrency } from "@/lib/dev-store";
-import { resolvePortalSession } from "@/lib/portal-security";
+import { requireSuperAdmin } from "@/lib/security/admin-guard";
 import { validateCurrencySetting } from "@/lib/business/billing-settings";
 import type { CurrencySetting } from "@/lib/phase2-data";
 
-function ensureSuperAdmin(request: Request) {
-  const session = resolvePortalSession(request);
-  if (session.user.role !== "Super Admin") return { denied: jsonError("Super Admin only.", 403), session };
-  return { denied: null, session };
-}
-
 /** §20 currencies — add new. Super-Admin-only + audited. */
 export async function POST(request: Request) {
-  const { denied, session } = ensureSuperAdmin(request);
+  const { denied, session } = requireSuperAdmin(request);
   if (denied) return denied;
   let payload: Partial<CurrencySetting>;
   try { payload = (await request.json()) as Partial<CurrencySetting>; } catch { return jsonError("Invalid request body."); }
@@ -38,7 +32,7 @@ export async function POST(request: Request) {
 
 /** Enable/disable or edit an existing currency. */
 export async function PATCH(request: Request) {
-  const { denied, session } = ensureSuperAdmin(request);
+  const { denied, session } = requireSuperAdmin(request);
   if (denied) return denied;
   let payload: Partial<CurrencySetting>;
   try { payload = (await request.json()) as Partial<CurrencySetting>; } catch { return jsonError("Invalid request body."); }

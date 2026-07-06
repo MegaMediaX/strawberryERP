@@ -1,7 +1,7 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
 import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, getDevStore, upsertReseller } from "@/lib/dev-store";
-import { resolvePortalSession } from "@/lib/portal-security";
+import { requireSuperAdmin } from "@/lib/security/admin-guard";
 import { currencySettings } from "@/lib/phase2-data";
 import { validateReseller, type Reseller } from "@/lib/business/reseller-defaults";
 
@@ -11,22 +11,16 @@ import { validateReseller, type Reseller } from "@/lib/business/reseller-default
  * never removed. dev-store only.
  */
 
-function ensureSuperAdmin(request: Request) {
-  const session = resolvePortalSession(request);
-  if (session.user.role !== "Super Admin") return { denied: jsonError("Super Admin only.", 403), session };
-  return { denied: null, session };
-}
-
 const validCurrencies = () => currencySettings.filter((c) => c.isActive).map((c) => c.currencyCode);
 
 export function GET(request: Request) {
-  const { denied } = ensureSuperAdmin(request);
+  const { denied } = requireSuperAdmin(request);
   if (denied) return denied;
   return devStoreResponse({ resellers: getDevStore().resellerRecords });
 }
 
 export async function POST(request: Request) {
-  const { denied, session } = ensureSuperAdmin(request);
+  const { denied, session } = requireSuperAdmin(request);
   if (denied) return denied;
   let payload: Partial<Reseller>;
   try { payload = (await request.json()) as Partial<Reseller>; } catch { return jsonError("Invalid request body."); }
@@ -54,7 +48,7 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const { denied, session } = ensureSuperAdmin(request);
+  const { denied, session } = requireSuperAdmin(request);
   if (denied) return denied;
   let payload: Partial<Reseller> & { active?: boolean };
   try { payload = (await request.json()) as typeof payload; } catch { return jsonError("Invalid request body."); }
