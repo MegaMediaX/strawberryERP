@@ -65,8 +65,14 @@ describe("2FA enrollment → enforced login → disable (full flow)", () => {
     const loginRes = await loginReq({ email: SUPER, password: PW, totp: totp(data.secret) });
     expect(loginRes.status).toBe(200);
 
-    // 5. disable -> back to password-only.
-    expect((await authed(disable, "USR-SUPER")).status).toBe(200);
+    // 5. SEC-6 step-up: disabling requires a current code. Without one → 400, still enabled.
+    expect((await authed(disable, "USR-SUPER")).status).toBe(400);
+    expect(await loginTwoFactorState("USR-SUPER", undefined)).toBe("required");
+    // A wrong code → 400, still enabled (a hijacked session cannot strip 2FA).
+    expect((await authed(disable, "USR-SUPER", { code: "000000" })).status).toBe(400);
+    expect(await loginTwoFactorState("USR-SUPER", undefined)).toBe("required");
+    // A valid current code → 200, back to password-only.
+    expect((await authed(disable, "USR-SUPER", { code: totp(data.secret) })).status).toBe(200);
     expect(await loginTwoFactorState("USR-SUPER", undefined)).toBe("ok");
     expect((await loginReq({ email: SUPER, password: PW })).status).toBe(200);
   });
