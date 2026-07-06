@@ -60,13 +60,21 @@ export function hasAcquiredInfo(record: Pick<CallRecord, "acquiredPhone" | "acqu
   return !!(record.acquiredPhone && record.acquiredPhone.trim()) || !!(record.acquiredEmail && record.acquiredEmail.trim());
 }
 
-/** Normalize captured acquired-info fields: trimmed phone (E.164-ish) + trimmed email, undefined when empty. */
+/** Basic email sanity check — enough to reject obvious non-emails, not RFC-complete. */
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * Normalize captured acquired-info fields: trimmed E.164-ish phone + a
+ * lowercased, sanity-checked email. A value that fails its check (or is empty)
+ * is dropped so garbage never gets stored or counted.
+ */
 export function normalizeAcquiredInfo(input: { acquiredPhone?: unknown; acquiredEmail?: unknown }): {
   acquiredPhone?: string;
   acquiredEmail?: string;
 } {
   const phone = normalizePhone(input.acquiredPhone);
-  const email = typeof input.acquiredEmail === "string" ? input.acquiredEmail.trim() : "";
+  const emailRaw = typeof input.acquiredEmail === "string" ? input.acquiredEmail.trim().toLowerCase() : "";
+  const email = EMAIL_RE.test(emailRaw) ? emailRaw : "";
   return {
     ...(phone ? { acquiredPhone: phone } : {}),
     ...(email ? { acquiredEmail: email } : {}),

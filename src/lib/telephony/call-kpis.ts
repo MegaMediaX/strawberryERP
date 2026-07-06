@@ -1,4 +1,4 @@
-import { hasAcquiredInfo, type CallRecord } from "@/lib/telephony/call-record";
+import type { CallRecord } from "@/lib/telephony/call-record";
 
 /**
  * Call-center KPI aggregation (pure + unit-tested). Turns raw CallRecords into
@@ -31,7 +31,11 @@ export interface AgentCallKpis {
   shortestTalkSeconds: number;
   /** callsMade / distinct active days in the data (0 when no calls). */
   callsPerDay: number;
-  /** Calls on which the agent captured a new phone and/or email (acquired info). */
+  /**
+   * Leads on which this agent captured a new phone and/or email (acquired info).
+   * Lead-level (not call-derived), so it survives without a logged call — filled
+   * by applyAcquiredInfo(), 0 until then.
+   */
   infoAcquired: number;
   unlinkedCount: number;
 }
@@ -44,7 +48,7 @@ export interface TeamCallKpis {
   answerRatePct: number;
   /** Answered calls whose TALK time exceeded 60s, across the whole team. */
   callsOverOneMinute: number;
-  /** Calls with acquired info (new phone/email), across the whole team. */
+  /** Leads with acquired info (new phone/email) across the team (lead-level). */
   infoAcquired: number;
   totalTalkSeconds: number;
   avgTalkSeconds: number;
@@ -129,7 +133,7 @@ function kpisForRecords(agent: string, records: readonly CallRecord[]): AgentCal
     longestTalkSeconds: talkTimes.length ? Math.max(...talkTimes) : 0,
     shortestTalkSeconds: talkTimes.length ? Math.min(...talkTimes) : 0,
     callsPerDay: days ? round((callsMade / days) * 10) / 10 : 0,
-    infoAcquired: records.filter(hasAcquiredInfo).length,
+    infoAcquired: 0, // lead-level; filled by applyAcquiredInfo()
     unlinkedCount: records.filter((r) => r.linkState === "unlinked").length,
   };
 }
@@ -165,9 +169,73 @@ export function teamCallKpis(records: readonly CallRecord[], window: KpiWindow =
     unanswered: callsMade - answered,
     answerRatePct: callsMade ? round((answered / callsMade) * 100) : 0,
     callsOverOneMinute: scoped.filter(isOverOneMinute).length,
-    infoAcquired: scoped.filter(hasAcquiredInfo).length,
+    infoAcquired: 0, // lead-level; filled by applyAcquiredInfo()
     totalTalkSeconds,
     avgTalkSeconds: answered ? round(totalTalkSeconds / answered) : 0,
     unlinkedCount: scoped.filter((r) => r.linkState === "unlinked").length,
   };
+}
+
+/**
+ * A lead-level "acquired information" event: an agent captured a new phone/email
+ * on a lead. Attribution is by the acting agent, independent of any call record —
+ * so it counts even when no call was logged (dev-store / simulation).
+ */
+export interface AcquisitionEvent {
+  agent: string;
+  /** ISO-8601; when set, respected by the report's date window. */
+  acquiredAt?: string;
+}
+
+function acquisitionInWindow(event: AcquisitionEvent, window: KpiWindow): boolean {
+  if (!event.acquiredAt) return true; // undated acquisitions are always in-scope
+  const t = Date.parse(event.acquiredAt);
+  if (Number.isNaN(t)) return true;
+  if (window.from && t < Date.parse(window.from)) return false;
+  if (window.to && t > Date.parse(window.to)) return false;
+  return true;
+}
+
+function emptyAgentRow(agent: string, infoAcquired: number): AgentCallKpis {
+  return {
+    agent,
+    callsMade: 0,
+    answered: 0,
+    unanswered: 0,
+    answerRatePct: 0,
+    callsOverOneMinute: 0,
+    totalTalkSeconds: 0,
+    avgTalkSeconds: 0,
+    longestTalkSeconds: 0,
+    shortestTalkSeconds: 0,
+    callsPerDay: 0,
+    infoAcquired,
+    unlinkedCount: 0,
+  };
+}
+
+/**
+ * Fill the `infoAcquired` metric from lead-level acquisitions (windowed) and
+ * merge it onto the agent rows + team roll-up. Agents that captured info but made
+ * no calls in the window get their own row — so acquired info is visible even
+ * with zero logged calls. Re-sorts most-calls-first, then most-acquired.
+ */
+export function applyAcquiredInfo(
+  agents: readonly AgentCallKpis[],
+  team: TeamCallKpis,
+  acquisitions: readonly AcquisitionEvent[],
+  window: KpiWindow = {},
+): { agents: AgentCallKpis[]; team: TeamCallKpis } {
+  const inWin = acquisitions.filter((a) => acquisitionInWindow(a, window));
+  const byAgent = new Map<string, number>();
+  for (const a of inWin) byAgent.set(a.agent, (byAgent.get(a.agent) ?? 0) + 1);
+
+  const rows: AgentCallKpis[] = agents.map((r) => ({ ...r, infoAcquired: byAgent.get(r.agent) ?? 0 }));
+  const seen = new Set(rows.map((r) => r.agent));
+  for (const [agent, count] of byAgent) {
+    if (!seen.has(agent)) rows.push(emptyAgentRow(agent, count));
+  }
+  rows.sort((a, b) => b.callsMade - a.callsMade || b.infoAcquired - a.infoAcquired || a.agent.localeCompare(b.agent));
+
+  return { agents: rows, team: { ...team, infoAcquired: inWin.length } };
 }

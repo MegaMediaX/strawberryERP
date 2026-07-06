@@ -87,8 +87,8 @@ describe("POST /api/calls/disposition — applies status + follow-up", () => {
   });
 });
 
-describe("POST /api/calls/disposition — acquired information", () => {
-  it("attaches a captured phone/email to the linked call and reports it saved", async () => {
+describe("POST /api/calls/disposition — acquired information (lead-level)", () => {
+  it("stores acquired info on the lead (attributed to the agent) and stamps the linked call too", async () => {
     const leadId = leads[3].id;
     const externalId = `acq-${leadId}`;
     seedCall(externalId, leadId);
@@ -98,22 +98,44 @@ describe("POST /api/calls/disposition — acquired information", () => {
       disposition: "Awaiting response",
       externalId,
       acquiredPhone: "03 999 000",
-      acquiredEmail: "new@lead.com",
+      acquiredEmail: "New@Lead.com",
     });
     expect(res.status).toBe(200);
-    const json = await res.json();
-    expect(json.acquiredInfoSaved).toBe(true);
+    expect((await res.json()).acquiredInfoSaved).toBe(true);
 
-    const call = getCallRecords().find((c) => c.externalId === externalId)!;
-    expect(call.acquiredPhone).toBe("03999000");
-    expect(call.acquiredEmail).toBe("new@lead.com");
+    // Lead-level: always saved, attributed to the acting agent.
+    const ov = getLeadOverrides()[leadId]!;
+    expect(ov.acquiredPhone).toBe("03999000");
+    expect(ov.acquiredEmail).toBe("new@lead.com"); // lowercased
+    expect(ov.acquiredBy).toBeTruthy();
+    expect(ov.acquiredAt).toBeTruthy();
+
+    // Bonus: the linked call is stamped for live-mode fidelity.
+    const callRec = getCallRecords().find((c) => c.externalId === externalId)!;
+    expect(callRec.acquiredPhone).toBe("03999000");
+    expect(callRec.acquiredEmail).toBe("new@lead.com");
   });
 
-  it("reports not-saved when no externalId links the disposition to a logged call", async () => {
-    const res = await post({ leadId: leads[0].id, disposition: "Awaiting response", acquiredEmail: "orphan@lead.com" });
+  it("still saves (lead-level) with NO externalId — no silent drop", async () => {
+    const leadId = leads[1].id;
+    const res = await post({ leadId, disposition: "Awaiting response", acquiredEmail: "orphan@lead.com" });
     expect(res.status).toBe(200);
-    const json = await res.json();
-    expect(json.acquiredInfoSaved).toBe(false);
+    expect((await res.json()).acquiredInfoSaved).toBe(true);
+    expect(getLeadOverrides()[leadId]?.acquiredEmail).toBe("orphan@lead.com");
+  });
+
+  it("ownership guard: a stale externalId pointing at another lead's call does NOT stamp that call", async () => {
+    const otherLead = leads[2].id;
+    const otherCall = `acq-other-${otherLead}`;
+    seedCall(otherCall, otherLead); // belongs to leads[2]
+
+    // Disposition on leads[0] but passing leads[2]'s call id.
+    const res = await post({ leadId: leads[0].id, disposition: "Awaiting response", externalId: otherCall, acquiredPhone: "03 555 000" });
+    expect(res.status).toBe(200);
+    expect((await res.json()).acquiredInfoSaved).toBe(true); // lead-level still saved on leads[0]
+    // The other lead's call is untouched.
+    expect(getCallRecords().find((c) => c.externalId === otherCall)!.acquiredPhone).toBeUndefined();
+    expect(getLeadOverrides()[leads[0].id]?.acquiredPhone).toBe("03555000");
   });
 });
 

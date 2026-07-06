@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { agentCallKpis, agentOf, filterByWindow, scopeCallRecords, teamCallKpis } from "@/lib/telephony/call-kpis";
+import { agentCallKpis, agentOf, applyAcquiredInfo, filterByWindow, scopeCallRecords, teamCallKpis } from "@/lib/telephony/call-kpis";
 import type { CallRecord } from "@/lib/telephony/call-record";
 
 function call(over: Partial<CallRecord> = {}): CallRecord {
@@ -71,15 +71,13 @@ describe("agentCallKpis", () => {
     expect(kpis[0].agent).toBe("rami");
   });
 
-  it("counts calls with acquired info (a new phone and/or email captured)", () => {
+  it("does NOT derive infoAcquired from call records (it is lead-level, filled by applyAcquiredInfo)", () => {
     const recs = [
-      call({ agent: "m", acquiredPhone: "03999000" }), // phone only
-      call({ agent: "m", acquiredEmail: "new@lead.com" }), // email only
-      call({ agent: "m", acquiredPhone: "03111222", acquiredEmail: "x@y.com" }), // both → still one call
-      call({ agent: "m" }), // neither
+      call({ agent: "m", acquiredPhone: "03999000" }),
+      call({ agent: "m", acquiredEmail: "new@lead.com" }),
     ];
     const [m] = agentCallKpis(recs);
-    expect(m.infoAcquired).toBe(3);
+    expect(m.infoAcquired).toBe(0);
   });
 
   it("counts only answered calls with talk time strictly over 60s (1m+ calls)", () => {
@@ -170,5 +168,38 @@ describe("teamCallKpis", () => {
 
   it("is safe with zero calls", () => {
     expect(teamCallKpis([])).toMatchObject({ activeAgents: 0, callsMade: 0, answerRatePct: 0, avgTalkSeconds: 0 });
+  });
+});
+
+describe("applyAcquiredInfo (lead-level infoAcquired)", () => {
+  it("fills per-agent infoAcquired onto existing call rows and updates the team total", () => {
+    const agents = agentCallKpis([call({ agent: "rami" }), call({ agent: "sara" })]);
+    const team = teamCallKpis([call({ agent: "rami" }), call({ agent: "sara" })]);
+    const { agents: out, team: t } = applyAcquiredInfo(agents, team, [
+      { agent: "rami" },
+      { agent: "rami" },
+      { agent: "sara" },
+    ]);
+    expect(out.find((a) => a.agent === "rami")!.infoAcquired).toBe(2);
+    expect(out.find((a) => a.agent === "sara")!.infoAcquired).toBe(1);
+    expect(t.infoAcquired).toBe(3);
+  });
+
+  it("adds a row for an agent who captured info but made no calls (union — visible with zero calls)", () => {
+    const { agents: out, team: t } = applyAcquiredInfo([], teamCallKpis([]), [{ agent: "omar" }]);
+    const omar = out.find((a) => a.agent === "omar")!;
+    expect(omar.infoAcquired).toBe(1);
+    expect(omar.callsMade).toBe(0); // no calls, still shown
+    expect(t.infoAcquired).toBe(1);
+    expect(t.callsMade).toBe(0);
+  });
+
+  it("respects the date window when acquisitions carry a timestamp", () => {
+    const { team: t } = applyAcquiredInfo([], teamCallKpis([]), [
+      { agent: "a", acquiredAt: "2026-07-01T09:00:00Z" },
+      { agent: "a", acquiredAt: "2026-07-09T09:00:00Z" },
+      { agent: "a" }, // undated → always counted
+    ], { from: "2026-07-05T00:00:00Z" });
+    expect(t.infoAcquired).toBe(2); // the 07-09 one + the undated one; 07-01 excluded
   });
 });

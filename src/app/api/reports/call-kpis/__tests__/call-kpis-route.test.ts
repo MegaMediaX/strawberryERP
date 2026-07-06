@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import { DELETE, GET } from "@/app/api/reports/call-kpis/route";
+import { POST as dispositionPost } from "@/app/api/calls/disposition/route";
 import { upsertCallRecord } from "@/lib/dev-store";
+import { leads } from "@/lib/sample-data";
 import type { CallRecord } from "@/lib/telephony/call-record";
 
 /**
@@ -70,6 +72,20 @@ describe("GET /api/reports/call-kpis — scoping", () => {
     expect(json.ok).toBe(true);
     expect(json.team.callsMade).toBeGreaterThanOrEqual(3);
     expect(json.window).toEqual({ from: null, to: null });
+  });
+
+  it("surfaces lead-level acquired info in the report", async () => {
+    // Capture acquired info on a lead via a disposition (lead-level, no call needed).
+    await dispositionPost(
+      new Request("https://portal.local/api/calls/disposition", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-platform-user-id": "USR-SUPER" },
+        body: JSON.stringify({ leadId: leads[0].id, disposition: "Awaiting response", acquiredEmail: "captured@lead.com" }),
+      }),
+    );
+    const json = await (await get("USR-SUPER")).json();
+    expect(json.team.infoAcquired).toBeGreaterThanOrEqual(1);
+    expect(json.agents.some((a: { infoAcquired: number }) => a.infoAcquired >= 1)).toBe(true);
   });
 
   it("DELETE is blocked (405)", () => {

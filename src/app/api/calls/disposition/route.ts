@@ -45,24 +45,31 @@ export async function POST(request: Request) {
 
   const performedBy = session.effectiveUser.name || session.effectiveUser.email || "sales";
 
-  // "Acquired information": persist a captured phone/email onto the linked call
-  // so it counts toward the agent's acquired-info KPI. Requires an externalId
-  // that resolves to a logged call; otherwise there is nothing to attach it to.
-  const { acquiredPhone, acquiredEmail } = parsed.value;
-  let acquiredCall: string | null = null;
-  if ((acquiredPhone || acquiredEmail) && parsed.value.externalId) {
-    const updated = setCallRecordAcquiredInfo(parsed.value.externalId, { acquiredPhone, acquiredEmail });
-    if (updated) {
-      acquiredCall = updated.externalId;
-      appendAudit({
-        entityType: "lead",
-        entityId: lead.id,
-        action: "info_acquired",
-        oldValue: "",
-        newValue: [acquiredPhone && `phone ${acquiredPhone}`, acquiredEmail && `email ${acquiredEmail}`].filter(Boolean).join(" · "),
-        performedBy,
-      });
+  // "Acquired information" (ADR 0001): store a captured phone/email on the LEAD,
+  // attributed to the acting agent. Lead-level so it ALWAYS persists — no
+  // dependency on a client-supplied call id (which is why this never silently
+  // drops). When a call is logged for this lead we also stamp it, ownership-
+  // guarded, for live-mode fidelity. The per-agent KPI counts from the lead.
+  const { acquiredPhone, acquiredEmail } = parsed.value; // already normalized/validated
+  const acquiredInfoSaved = Boolean(acquiredPhone || acquiredEmail);
+  if (acquiredInfoSaved) {
+    applyLeadOverride(lead.id, {
+      ...(acquiredPhone ? { acquiredPhone } : {}),
+      ...(acquiredEmail ? { acquiredEmail } : {}),
+      acquiredBy: performedBy,
+      acquiredAt: new Date().toISOString(),
+    });
+    if (parsed.value.externalId) {
+      setCallRecordAcquiredInfo(parsed.value.externalId, { acquiredPhone, acquiredEmail }, lead.id);
     }
+    appendAudit({
+      entityType: "lead",
+      entityId: lead.id,
+      action: "info_acquired",
+      oldValue: "",
+      newValue: [acquiredPhone && `phone ${acquiredPhone}`, acquiredEmail && `email ${acquiredEmail}`].filter(Boolean).join(" · "),
+      performedBy,
+    });
   }
 
   appendAudit({
@@ -80,7 +87,7 @@ export async function POST(request: Request) {
       leadId: lead.id,
       status: resolved.value.targetStatus,
       followUp: resolved.value.followUp ?? null,
-      acquiredInfoSaved: acquiredCall !== null,
+      acquiredInfoSaved,
     },
     { status: 200 },
   );

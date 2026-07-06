@@ -146,9 +146,17 @@ export function LeadCallScreen({
       setCurrentStatus(targetStatus);
       setNextStatus(targetStatus);
       setFollowUpDate("");
-      setAcquiredPhone("");
-      setAcquiredEmail("");
-      setSuccess("Lead updated.");
+      // Acquired info only rides the disposition path. If the rep entered some but
+      // this was a plain (non-disposition) update, keep the fields and tell them —
+      // never clear + claim success while dropping what they typed.
+      const enteredAcquired = Boolean(acquiredPhone.trim() || acquiredEmail.trim());
+      if (enteredAcquired && !disposition) {
+        setSuccess("Status saved — pick a call outcome to record the new phone/email.");
+      } else {
+        setAcquiredPhone("");
+        setAcquiredEmail("");
+        setSuccess("Lead updated.");
+      }
       router.refresh();
     } catch {
       setError("Network error. Please try again.");

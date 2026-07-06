@@ -108,13 +108,15 @@ describe("acquired information", () => {
     expect(hasAcquiredInfo({ acquiredPhone: "03123456", acquiredEmail: "a@b.com" })).toBe(true);
   });
 
-  it("normalizeAcquiredInfo trims/normalizes and drops empties", () => {
-    expect(normalizeAcquiredInfo({ acquiredPhone: "03 123-456", acquiredEmail: "  a@b.com " })).toEqual({
+  it("normalizeAcquiredInfo trims/normalizes phone, lowercases + validates email, drops junk", () => {
+    expect(normalizeAcquiredInfo({ acquiredPhone: "03 123-456", acquiredEmail: "  New@Lead.COM " })).toEqual({
       acquiredPhone: "03123456",
-      acquiredEmail: "a@b.com",
+      acquiredEmail: "new@lead.com", // trimmed + lowercased
     });
     expect(normalizeAcquiredInfo({ acquiredPhone: "", acquiredEmail: "" })).toEqual({});
     expect(normalizeAcquiredInfo({ acquiredPhone: 42 })).toEqual({}); // non-string phone
+    expect(normalizeAcquiredInfo({ acquiredEmail: "NotAnEmail" })).toEqual({}); // fails the sanity check → dropped
+    expect(normalizeAcquiredInfo({ acquiredEmail: "a@b" })).toEqual({}); // no TLD → dropped
   });
 
   it("parseCallPayload carries acquired_phone/acquired_email off the ingest contract", () => {
