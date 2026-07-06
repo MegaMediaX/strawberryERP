@@ -23,7 +23,7 @@ interface CallKpiReport {
 
 type SortKey = keyof Pick<
   AgentCallKpis,
-  "agent" | "callsMade" | "answered" | "answerRatePct" | "avgTalkSeconds" | "totalTalkSeconds" | "callsPerDay" | "unlinkedCount"
+  "agent" | "callsMade" | "answered" | "answerRatePct" | "callsOverOneMinute" | "infoAcquired" | "avgTalkSeconds" | "totalTalkSeconds" | "callsPerDay" | "unlinkedCount"
 >;
 
 const COLUMNS: { key: SortKey; label: string }[] = [
@@ -31,6 +31,8 @@ const COLUMNS: { key: SortKey; label: string }[] = [
   { key: "callsMade", label: "Calls" },
   { key: "answered", label: "Answered" },
   { key: "answerRatePct", label: "Answer rate" },
+  { key: "callsOverOneMinute", label: "1m+ calls" },
+  { key: "infoAcquired", label: "Acquired info" },
   { key: "avgTalkSeconds", label: "Avg talk" },
   { key: "totalTalkSeconds", label: "Total talk" },
   { key: "callsPerDay", label: "Calls/day" },
@@ -153,9 +155,11 @@ export function CallCenterView() {
         />
       ) : team ? (
         <>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             <SummaryCard label="Calls made" value={team.callsMade.toLocaleString()} hint={`${team.unanswered} unanswered`} />
             <SummaryCard label="Answer rate" value={`${team.answerRatePct}%`} hint={`${team.answered} answered`} />
+            <SummaryCard label="1m+ calls" value={team.callsOverOneMinute.toLocaleString()} hint="talk over 1 min" />
+            <SummaryCard label="Acquired info" value={team.infoAcquired.toLocaleString()} hint="new phone/email" />
             <SummaryCard label="Total talk" value={fmtTalk(team.totalTalkSeconds)} />
             <SummaryCard label="Avg talk" value={fmtTalk(team.avgTalkSeconds)} hint="per answered call" />
             <SummaryCard label="Active agents" value={team.activeAgents.toLocaleString()} hint={team.unlinkedCount > 0 ? `${team.unlinkedCount} unlinked calls` : undefined} />
@@ -170,13 +174,14 @@ export function CallCenterView() {
                     <p className="min-w-0 truncate font-semibold">{a.agent}</p>
                     <Badge tone={a.answerRatePct >= 50 ? "green" : "amber"}>{a.answerRatePct}% answered</Badge>
                   </div>
-                  <div className="grid grid-cols-4 gap-1 rounded-xl border border-[var(--border)] py-2 text-center">
+                  <div className="grid grid-cols-5 gap-1 rounded-xl border border-[var(--border)] py-2 text-center">
                     <div><p className="text-lg font-bold">{a.callsMade}</p><p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">Calls</p></div>
                     <div><p className="text-lg font-bold">{a.answered}</p><p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">Answered</p></div>
+                    <div><p className="text-lg font-bold">{a.callsOverOneMinute}</p><p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">1m+</p></div>
                     <div><p className="text-lg font-bold">{fmtTalk(a.avgTalkSeconds)}</p><p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">Avg talk</p></div>
                     <div><p className="text-lg font-bold">{a.callsPerDay}</p><p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">Per day</p></div>
                   </div>
-                  <p className="text-xs text-[var(--muted)]">{fmtTalk(a.totalTalkSeconds)} total talk{a.unlinkedCount > 0 ? ` · ${a.unlinkedCount} unlinked` : ""}</p>
+                  <p className="text-xs text-[var(--muted)]">{fmtTalk(a.totalTalkSeconds)} total talk · {a.infoAcquired} acquired{a.unlinkedCount > 0 ? ` · ${a.unlinkedCount} unlinked` : ""}</p>
                 </CardContent>
               </Card>
             ))}
@@ -185,7 +190,7 @@ export function CallCenterView() {
           {/* Desktop table */}
           <Card className="hidden md:block">
             <CardContent className="overflow-x-auto pt-5">
-              <table className="w-full min-w-[840px] border-collapse text-left text-sm">
+              <table className="w-full min-w-[1040px] border-collapse text-left text-sm">
                 <thead>
                   <tr className="border-b border-[var(--border)] text-[11px] uppercase tracking-[0.08em] text-[var(--muted)]">
                     {COLUMNS.map((c) => (
@@ -205,6 +210,8 @@ export function CallCenterView() {
                       <td className="py-3.5 pr-4 align-middle font-semibold">{a.callsMade}</td>
                       <td className="py-3.5 pr-4 align-middle">{a.answered}</td>
                       <td className="py-3.5 pr-4 align-middle"><Badge tone={a.answerRatePct >= 50 ? "green" : "amber"}>{a.answerRatePct}%</Badge></td>
+                      <td className="py-3.5 pr-4 align-middle font-semibold">{a.callsOverOneMinute}</td>
+                      <td className="py-3.5 pr-4 align-middle font-semibold">{a.infoAcquired}</td>
                       <td className="py-3.5 pr-4 align-middle">{fmtTalk(a.avgTalkSeconds)}</td>
                       <td className="py-3.5 pr-4 align-middle">{fmtTalk(a.totalTalkSeconds)}</td>
                       <td className="py-3.5 pr-4 align-middle">{a.callsPerDay}</td>

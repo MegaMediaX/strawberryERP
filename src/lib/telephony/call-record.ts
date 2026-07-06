@@ -43,8 +43,34 @@ export interface CallRecord {
    * Full per-agent fidelity needs per-user extensions (ADR Phase 5).
    */
   agent?: string;
+  /**
+   * "Acquired information": a new phone and/or email the agent captured from the
+   * contact during this call. Either or both may be set; a call with either
+   * populated counts toward the agent's acquired-info KPI. Captured via the
+   * disposition flow (or carried on the ingest payload for a live middleware).
+   */
+  acquiredPhone?: string;
+  acquiredEmail?: string;
   /** Ingest timestamp (server clock). */
   loggedAt: string;
+}
+
+/** True when the agent captured a new phone or email on this call (either fills it). */
+export function hasAcquiredInfo(record: Pick<CallRecord, "acquiredPhone" | "acquiredEmail">): boolean {
+  return !!(record.acquiredPhone && record.acquiredPhone.trim()) || !!(record.acquiredEmail && record.acquiredEmail.trim());
+}
+
+/** Normalize captured acquired-info fields: trimmed phone (E.164-ish) + trimmed email, undefined when empty. */
+export function normalizeAcquiredInfo(input: { acquiredPhone?: unknown; acquiredEmail?: unknown }): {
+  acquiredPhone?: string;
+  acquiredEmail?: string;
+} {
+  const phone = normalizePhone(input.acquiredPhone);
+  const email = typeof input.acquiredEmail === "string" ? input.acquiredEmail.trim() : "";
+  return {
+    ...(phone ? { acquiredPhone: phone } : {}),
+    ...(email ? { acquiredEmail: email } : {}),
+  };
 }
 
 /** Minimal shape needed to link a call to a lead/customer (kept decoupled). */
@@ -92,6 +118,8 @@ export interface ParsedCallPayload {
   durationSeconds: number;
   startedAt: string;
   recordingFile: string | null;
+  acquiredPhone?: string;
+  acquiredEmail?: string;
 }
 
 export type ParseResult =
@@ -159,6 +187,7 @@ export function parseCallPayload(body: unknown): ParseResult {
       durationSeconds: nonNegInt(b.duration_seconds),
       startedAt: new Date(startedMs).toISOString(),
       recordingFile,
+      ...normalizeAcquiredInfo({ acquiredPhone: b.acquired_phone, acquiredEmail: b.acquired_email }),
     },
   };
 }
@@ -246,6 +275,8 @@ export function buildCallRecord(
     ...(link.country ? { country: link.country } : {}),
     ...(link.assignedTo ? { assignedTo: link.assignedTo } : {}),
     ...((opts.agent ?? link.assignedTo) ? { agent: opts.agent ?? link.assignedTo } : {}),
+    ...(payload.acquiredPhone ? { acquiredPhone: payload.acquiredPhone } : {}),
+    ...(payload.acquiredEmail ? { acquiredEmail: payload.acquiredEmail } : {}),
     loggedAt: opts.loggedAt,
   };
 }

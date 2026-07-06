@@ -41,6 +41,7 @@ export function LeadCallScreen({
   importantDetails,
   enableQuickOutcomes = false,
   enableNotesCompose = false,
+  recentCallExternalId,
   timeline,
 }: {
   lead: PortalLead;
@@ -52,6 +53,8 @@ export function LeadCallScreen({
   enableQuickOutcomes?: boolean;
   /** Spec §11 — fast notes compose with quick templates (sales persona). */
   enableNotesCompose?: boolean;
+  /** Most-recent logged call for this lead; acquired info attaches to it (ADR 0001). */
+  recentCallExternalId?: string;
   /** Spec §12 — derived activity timeline (sales persona). */
   timeline?: TimelineEntry[];
 }) {
@@ -59,6 +62,8 @@ export function LeadCallScreen({
   const [currentStatus, setCurrentStatus] = useState<string>(lead.status);
   const [nextStatus, setNextStatus] = useState<string>(lead.status);
   const [followUpDate, setFollowUpDate] = useState("");
+  const [acquiredPhone, setAcquiredPhone] = useState("");
+  const [acquiredEmail, setAcquiredEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -119,7 +124,14 @@ export function LeadCallScreen({
         ? await fetch("/api/calls/disposition", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ leadId: lead.id, disposition, followUpDate: targetDate || undefined }),
+            body: JSON.stringify({
+              leadId: lead.id,
+              disposition,
+              followUpDate: targetDate || undefined,
+              acquiredPhone: acquiredPhone.trim() || undefined,
+              acquiredEmail: acquiredEmail.trim() || undefined,
+              externalId: recentCallExternalId,
+            }),
           })
         : await fetch("/api/frappe/leads", {
             method: "PATCH",
@@ -134,6 +146,8 @@ export function LeadCallScreen({
       setCurrentStatus(targetStatus);
       setNextStatus(targetStatus);
       setFollowUpDate("");
+      setAcquiredPhone("");
+      setAcquiredEmail("");
       setSuccess("Lead updated.");
       router.refresh();
     } catch {
@@ -408,6 +422,18 @@ export function LeadCallScreen({
                 />
               </Field>
             ) : null}
+
+            {/* Acquired information — a new phone/email captured on this call. Saved
+                with the outcome and attributed to the agent for the call KPIs. */}
+            <div className="sm:col-span-2 grid gap-3 rounded-xl border border-dashed border-[var(--border)] p-3 sm:grid-cols-2">
+              <p className="sm:col-span-2 text-xs font-medium text-[var(--muted)]">Acquired information (optional) — captured on this call</p>
+              <Field label="New phone">
+                <Input value={acquiredPhone} onChange={(e) => setAcquiredPhone(e.target.value)} inputMode="tel" placeholder="e.g. 03 123 456" />
+              </Field>
+              <Field label="New email">
+                <Input type="email" value={acquiredEmail} onChange={(e) => setAcquiredEmail(e.target.value)} placeholder="name@example.com" />
+              </Field>
+            </div>
 
             {error ? (
               <p role="alert" className="sm:col-span-2 rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">

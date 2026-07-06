@@ -1,8 +1,34 @@
 import { describe, expect, it } from "vitest";
 
 import { DELETE, POST } from "@/app/api/calls/disposition/route";
-import { getLeadOverrides } from "@/lib/dev-store";
+import { getCallRecords, getLeadOverrides, upsertCallRecord } from "@/lib/dev-store";
 import { leads } from "@/lib/sample-data";
+import type { CallRecord } from "@/lib/telephony/call-record";
+
+function seedCall(externalId: string, leadId: string): CallRecord {
+  const record: CallRecord = {
+    externalId,
+    direction: "outbound",
+    fromNumber: "1001",
+    toNumber: "03123456",
+    contactNumber: "03123456",
+    outcome: "answered",
+    answered: true,
+    ringSeconds: 4,
+    talkSeconds: 90,
+    durationSeconds: 94,
+    startedAt: "2026-07-02T09:00:00.000Z",
+    recordingFile: null,
+    account: "1001@x",
+    extension: "1001",
+    linkState: "linked",
+    leadId,
+    agent: "USR-SUPER",
+    loggedAt: "2026-07-02T09:01:00.000Z",
+  };
+  upsertCallRecord(record);
+  return record;
+}
 
 /**
  * Contract tests for POST /api/calls/disposition (ADR 0001, Phase 2). Runs as a
@@ -58,6 +84,36 @@ describe("POST /api/calls/disposition — applies status + follow-up", () => {
     await post({ leadId, disposition: "Awaiting response" });
     const res = await post({ leadId, disposition: "Callback scheduled" });
     expect(res.status).toBe(400);
+  });
+});
+
+describe("POST /api/calls/disposition — acquired information", () => {
+  it("attaches a captured phone/email to the linked call and reports it saved", async () => {
+    const leadId = leads[3].id;
+    const externalId = `acq-${leadId}`;
+    seedCall(externalId, leadId);
+
+    const res = await post({
+      leadId,
+      disposition: "Awaiting response",
+      externalId,
+      acquiredPhone: "03 999 000",
+      acquiredEmail: "new@lead.com",
+    });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.acquiredInfoSaved).toBe(true);
+
+    const call = getCallRecords().find((c) => c.externalId === externalId)!;
+    expect(call.acquiredPhone).toBe("03999000");
+    expect(call.acquiredEmail).toBe("new@lead.com");
+  });
+
+  it("reports not-saved when no externalId links the disposition to a logged call", async () => {
+    const res = await post({ leadId: leads[0].id, disposition: "Awaiting response", acquiredEmail: "orphan@lead.com" });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.acquiredInfoSaved).toBe(false);
   });
 });
 

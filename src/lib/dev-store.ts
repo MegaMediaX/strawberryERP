@@ -668,6 +668,28 @@ export function getCallRecords(): CallRecord[] {
   return getDevStore().callRecords;
 }
 
+/**
+ * Attach "acquired information" (a new phone/email captured on the call) to an
+ * existing call record, keyed by externalId. Merges — only the provided fields
+ * are set. Returns the updated record, or undefined when no such call exists
+ * (e.g. the disposition wasn't linked to a logged call).
+ */
+export function setCallRecordAcquiredInfo(
+  externalId: string,
+  info: { acquiredPhone?: string; acquiredEmail?: string },
+): CallRecord | undefined {
+  const store = getDevStore();
+  const idx = store.callRecords.findIndex((c) => c.externalId === externalId);
+  if (idx < 0) return undefined;
+  const updated: CallRecord = {
+    ...store.callRecords[idx],
+    ...(info.acquiredPhone ? { acquiredPhone: info.acquiredPhone } : {}),
+    ...(info.acquiredEmail ? { acquiredEmail: info.acquiredEmail } : {}),
+  };
+  store.callRecords[idx] = updated;
+  return updated;
+}
+
 /** Calls that matched no lead/customer — the triage bucket (ADR 0001 §F). */
 export function getUnlinkedCalls(): CallRecord[] {
   return getDevStore().callRecords.filter((c) => c.linkState === "unlinked");

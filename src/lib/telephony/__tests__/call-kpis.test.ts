@@ -65,8 +65,33 @@ describe("agentCallKpis", () => {
     expect(rami.longestTalkSeconds).toBe(120);
     expect(rami.shortestTalkSeconds).toBe(60);
     expect(rami.callsPerDay).toBe(1.5); // 3 calls / 2 distinct days
+    // Only the 120s call is "over one minute"; a 60s talk is NOT (> 60, strict).
+    expect(rami.callsOverOneMinute).toBe(1);
     // most-calls-first ordering
     expect(kpis[0].agent).toBe("rami");
+  });
+
+  it("counts calls with acquired info (a new phone and/or email captured)", () => {
+    const recs = [
+      call({ agent: "m", acquiredPhone: "03999000" }), // phone only
+      call({ agent: "m", acquiredEmail: "new@lead.com" }), // email only
+      call({ agent: "m", acquiredPhone: "03111222", acquiredEmail: "x@y.com" }), // both → still one call
+      call({ agent: "m" }), // neither
+    ];
+    const [m] = agentCallKpis(recs);
+    expect(m.infoAcquired).toBe(3);
+  });
+
+  it("counts only answered calls with talk time strictly over 60s (1m+ calls)", () => {
+    const recs = [
+      call({ agent: "z", answered: true, talkSeconds: 61 }), // counts
+      call({ agent: "z", answered: true, talkSeconds: 60 }), // boundary — excluded
+      call({ agent: "z", answered: true, talkSeconds: 600 }), // counts
+      // A long "talk" on an unanswered/short-call record must never count.
+      call({ agent: "z", answered: false, outcome: "rang_no_answer", talkSeconds: 999 }),
+    ];
+    const [z] = agentCallKpis(recs);
+    expect(z.callsOverOneMinute).toBe(2);
   });
 
   it("handles all-unanswered (avg/longest talk = 0)", () => {
@@ -140,6 +165,7 @@ describe("teamCallKpis", () => {
     expect(t.answered).toBe(1);
     expect(t.answerRatePct).toBe(50);
     expect(t.totalTalkSeconds).toBe(60);
+    expect(t.callsOverOneMinute).toBe(0); // the one answered call was exactly 60s
   });
 
   it("is safe with zero calls", () => {

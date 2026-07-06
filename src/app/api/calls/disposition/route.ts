@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { appendAudit, applyLeadOverride } from "@/lib/dev-store";
+import { appendAudit, applyLeadOverride, setCallRecordAcquiredInfo } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { authorizeApiRequest } from "@/lib/security/permissions";
 import { parseDispositionInput, resolveDisposition } from "@/lib/telephony/disposition";
@@ -43,13 +43,35 @@ export async function POST(request: Request) {
     ...(resolved.value.followUp ? { followUp: resolved.value.followUp } : {}),
   });
 
+  const performedBy = session.effectiveUser.name || session.effectiveUser.email || "sales";
+
+  // "Acquired information": persist a captured phone/email onto the linked call
+  // so it counts toward the agent's acquired-info KPI. Requires an externalId
+  // that resolves to a logged call; otherwise there is nothing to attach it to.
+  const { acquiredPhone, acquiredEmail } = parsed.value;
+  let acquiredCall: string | null = null;
+  if ((acquiredPhone || acquiredEmail) && parsed.value.externalId) {
+    const updated = setCallRecordAcquiredInfo(parsed.value.externalId, { acquiredPhone, acquiredEmail });
+    if (updated) {
+      acquiredCall = updated.externalId;
+      appendAudit({
+        entityType: "lead",
+        entityId: lead.id,
+        action: "info_acquired",
+        oldValue: "",
+        newValue: [acquiredPhone && `phone ${acquiredPhone}`, acquiredEmail && `email ${acquiredEmail}`].filter(Boolean).join(" · "),
+        performedBy,
+      });
+    }
+  }
+
   appendAudit({
     entityType: "lead",
     entityId: lead.id,
     action: "call_disposition",
     oldValue: lead.status,
     newValue: `${parsed.value.disposition}${parsed.value.notes ? `: ${parsed.value.notes}` : ""}`,
-    performedBy: session.effectiveUser.name || session.effectiveUser.email || "sales",
+    performedBy,
   });
 
   return NextResponse.json(
@@ -58,6 +80,7 @@ export async function POST(request: Request) {
       leadId: lead.id,
       status: resolved.value.targetStatus,
       followUp: resolved.value.followUp ?? null,
+      acquiredInfoSaved: acquiredCall !== null,
     },
     { status: 200 },
   );

@@ -1,4 +1,4 @@
-import type { CallRecord } from "@/lib/telephony/call-record";
+import { hasAcquiredInfo, type CallRecord } from "@/lib/telephony/call-record";
 
 /**
  * Call-center KPI aggregation (pure + unit-tested). Turns raw CallRecords into
@@ -22,6 +22,8 @@ export interface AgentCallKpis {
   unanswered: number;
   /** answered / callsMade, 0–100, rounded. */
   answerRatePct: number;
+  /** Answered calls whose TALK time exceeded 60s (real conversations, not ring). */
+  callsOverOneMinute: number;
   totalTalkSeconds: number;
   /** Mean talk time over ANSWERED calls (0 when none answered). */
   avgTalkSeconds: number;
@@ -29,6 +31,8 @@ export interface AgentCallKpis {
   shortestTalkSeconds: number;
   /** callsMade / distinct active days in the data (0 when no calls). */
   callsPerDay: number;
+  /** Calls on which the agent captured a new phone and/or email (acquired info). */
+  infoAcquired: number;
   unlinkedCount: number;
 }
 
@@ -38,9 +42,19 @@ export interface TeamCallKpis {
   answered: number;
   unanswered: number;
   answerRatePct: number;
+  /** Answered calls whose TALK time exceeded 60s, across the whole team. */
+  callsOverOneMinute: number;
+  /** Calls with acquired info (new phone/email), across the whole team. */
+  infoAcquired: number;
   totalTalkSeconds: number;
   avgTalkSeconds: number;
   unlinkedCount: number;
+}
+
+/** A "real conversation": connected AND talked for more than one minute (ring excluded). */
+const OVER_ONE_MINUTE_SECONDS = 60;
+function isOverOneMinute(record: CallRecord): boolean {
+  return record.answered && record.talkSeconds > OVER_ONE_MINUTE_SECONDS;
 }
 
 /** Attribution fallback chain: explicit agent → linked assignee → "Unassigned". */
@@ -109,11 +123,13 @@ function kpisForRecords(agent: string, records: readonly CallRecord[]): AgentCal
     answered,
     unanswered: callsMade - answered,
     answerRatePct: callsMade ? round((answered / callsMade) * 100) : 0,
+    callsOverOneMinute: records.filter(isOverOneMinute).length,
     totalTalkSeconds,
     avgTalkSeconds: answered ? round(totalTalkSeconds / answered) : 0,
     longestTalkSeconds: talkTimes.length ? Math.max(...talkTimes) : 0,
     shortestTalkSeconds: talkTimes.length ? Math.min(...talkTimes) : 0,
     callsPerDay: days ? round((callsMade / days) * 10) / 10 : 0,
+    infoAcquired: records.filter(hasAcquiredInfo).length,
     unlinkedCount: records.filter((r) => r.linkState === "unlinked").length,
   };
 }
@@ -148,6 +164,8 @@ export function teamCallKpis(records: readonly CallRecord[], window: KpiWindow =
     answered,
     unanswered: callsMade - answered,
     answerRatePct: callsMade ? round((answered / callsMade) * 100) : 0,
+    callsOverOneMinute: scoped.filter(isOverOneMinute).length,
+    infoAcquired: scoped.filter(hasAcquiredInfo).length,
     totalTalkSeconds,
     avgTalkSeconds: answered ? round(totalTalkSeconds / answered) : 0,
     unlinkedCount: scoped.filter((r) => r.linkState === "unlinked").length,
