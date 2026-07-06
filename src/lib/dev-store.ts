@@ -83,6 +83,13 @@ type DevStore = {
   notificationRules: NotificationRule[];
   permissionMatrix: PermissionMatrix;
   platformSettings: PlatformSettings;
+  // APP-10 — ACCEPTED LIMITATION: exhibition slot config/layout/holds live ONLY
+  // in this in-memory dev-store. There is no Frappe DocType for slots, so booth
+  // holds are ephemeral — reset on restart/redeploy and NOT shared across
+  // instances in a horizontally-scaled deployment. The slot write routes are
+  // intentionally exempt from the fail-loud backend gate for this reason. This
+  // is a documented, tracked limitation (see docs/exhibition-slots-persistence.md
+  // and docs/production-blockers.md); durable persistence is a follow-up.
   slotConfig: SlotConfig;
   slotStatuses: Record<string, SlotStatusRecord>;
   slotLayout: Record<string, SlotLayoutEntry>;
