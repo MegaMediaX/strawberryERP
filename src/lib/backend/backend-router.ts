@@ -13,21 +13,32 @@ export function activeBackendSource() {
 export const BACKEND_NOT_CONFIGURED_CODE = "BACKEND_NOT_CONFIGURED";
 
 /**
- * Write-path guard. When Frappe is NOT configured, returns a 501
- * { ok:false, code:"BACKEND_NOT_CONFIGURED" } response so a write never falls
- * through to a fake-success dev-store response. Returns null when Frappe IS
- * configured (caller proceeds with its normal proxy/local logic).
+ * Write-path guard, placed AFTER any `maybeRouteToFrappe(...)` attempt. Reaching
+ * this guard means the write did NOT route to a live Frappe backend — either
+ * Frappe is unconfigured, or this resource/action has no Frappe method (so
+ * `maybeRouteToFrappe` returned null / was never called). In every such case the
+ * write must fail loud with 501 { ok:false, code:"BACKEND_NOT_CONFIGURED" }.
+ *
+ * APP-9: this previously returned null whenever Frappe was merely configured
+ * *for something*, which let unmapped writes (currencies, payment-methods,
+ * resellers, lead/customer archive, delete-note, …) silently fall through to a
+ * fake-success in-memory dev-store response once any Frappe env was set —
+ * indistinguishable from a durable write but lost on restart/scale-out. The
+ * guard is now per-write, not global: an unbacked write can never masquerade as
+ * success, regardless of whether Frappe is configured for other resources.
+ *
+ * Return type stays `NextResponse | null` so existing call sites
+ * (`const gate = writeRequiresBackend(); if (gate) return gate;`) are unchanged;
+ * it simply never returns null anymore.
  */
 export function writeRequiresBackend(): NextResponse | null {
-  if (!isFrappeConfigured()) {
-    return jsonError(
-      "This write requires a configured Frappe backend.",
-      501,
-      BACKEND_NOT_CONFIGURED_CODE,
-    );
-  }
-
-  return null;
+  return jsonError(
+    isFrappeConfigured()
+      ? "This write has no Frappe backing and cannot be persisted to the configured backend."
+      : "This write requires a configured Frappe backend.",
+    501,
+    BACKEND_NOT_CONFIGURED_CODE,
+  );
 }
 
 export async function maybeRouteToFrappe(resource: string, method: BackendMethod, payload?: unknown) {

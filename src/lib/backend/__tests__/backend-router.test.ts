@@ -26,12 +26,21 @@ describe("writeRequiresBackend", () => {
     expect(BACKEND_NOT_CONFIGURED_CODE).toBe("BACKEND_NOT_CONFIGURED");
   });
 
-  it("returns null when Frappe is configured", async () => {
+  it("APP-9: still returns 501 even when Frappe IS configured (the guard is only reached when a write did not route to Frappe)", async () => {
     const { isFrappeConfigured } = await import("@/lib/frappe-client");
     vi.mocked(isFrappeConfigured).mockReturnValue(true);
 
-    const { writeRequiresBackend } = await import("@/lib/backend/backend-router");
+    const { writeRequiresBackend, BACKEND_NOT_CONFIGURED_CODE } = await import("@/lib/backend/backend-router");
 
-    expect(writeRequiresBackend()).toBeNull();
+    // Previously this returned null, letting an unmapped write fall through to a
+    // fake-success dev-store response as soon as any Frappe env was set. It must
+    // now fail loud so an unbacked write can never masquerade as durable.
+    const response = writeRequiresBackend();
+    expect(response).not.toBeNull();
+    expect(response!.status).toBe(501);
+
+    const body = await response!.json();
+    expect(body.ok).toBe(false);
+    expect(body.error.code).toBe(BACKEND_NOT_CONFIGURED_CODE);
   });
 });
