@@ -162,8 +162,14 @@ export function resolvePortalSession(request: Request): PortalSession {
     sessionToken,
     source: sessionToken ? "session-token" : "dev-header",
     auditLabel: canImpersonate ? `${user.name} impersonating ${effectiveUser.name}` : `${user.name} as ${user.role}`,
-    // No verified cookie + dev headers disallowed (production) => unauthenticated.
-    authenticated: allowDevHeaders,
+    // SEC-10: authenticated must reflect that a real, active user actually
+    // resolved — not merely that dev-header policy is enabled. Otherwise, with
+    // ALLOW_DEV_IDENTITY_HEADERS=true in production, a request carrying no
+    // x-platform-user-id resolves to ANONYMOUS_USER yet would report
+    // authenticated:true, letting routes that gate solely on `authenticated`
+    // (e.g. /api/slots/hold) act for an anonymous caller. Require a non-anonymous
+    // user so the flag can never outrun a real identity.
+    authenticated: allowDevHeaders && user !== ANONYMOUS_USER,
   };
 }
 
