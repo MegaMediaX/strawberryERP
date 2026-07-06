@@ -4,6 +4,8 @@ Production-oriented scaffold for a white-label reseller CRM and partner operatio
 
 Users should never operate inside the ERPNext UI. ERPNext/Frappe acts as the accounting backbone, data layer, permission engine, and API layer. This frontend is the operational interface for Super Admins, Regional Directors, Reseller Admins, and Sales Team Users.
 
+📚 **[Documentation index → `docs/README.md`](docs/README.md)** — architecture, production readiness, deployment, operations, and API docs.
+
 ## Included
 
 - Next.js App Router frontend with TypeScript, TailwindCSS, light/dark mode, responsive CRM dashboard, charts, lead workflow, call screen, commission panel, integrations, audit and delete queue surfaces.
