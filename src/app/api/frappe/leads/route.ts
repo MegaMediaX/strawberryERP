@@ -6,6 +6,7 @@ import { allowedCountries, leads, leadStatuses, type Country } from "@/lib/sampl
 import { resolvePortalSession, roleHeadersFromSession } from "@/lib/portal-security";
 import { authorizeApiRequest, logSuccessfulApiRequest } from "@/lib/security/permissions";
 import { validateLeadTransition } from "@/lib/business/lead-workflow";
+import { canAssignLeadTo } from "@/lib/security/assignable-users";
 import { paginate } from "@/lib/query/scoped-page";
 import { frappePaginationParams } from "@/lib/query/frappe-pagination";
 import { leadsScopeForFrappe } from "@/lib/security/leads-scope";
@@ -89,6 +90,14 @@ export async function POST(request: Request) {
   const validation = validateLeadPayload(payload);
   if (validation) {
     return jsonError(validation);
+  }
+
+  // §9: a lead may only be assigned to a user the caller has authority over.
+  // The add-lead dropdown already constrains this in the UI; enforce it here so
+  // a crafted request cannot assign a lead outside the caller's scope.
+  const session = resolvePortalSession(request);
+  if (!canAssignLeadTo(session.effectiveUser, payload.assignedUser)) {
+    return jsonError("You can only assign this lead to a user you manage.");
   }
 
   // A new lead genuinely needs a starting status; updates must not (see mapLeadToFrappe).
