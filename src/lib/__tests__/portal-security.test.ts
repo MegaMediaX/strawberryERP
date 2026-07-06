@@ -96,3 +96,39 @@ describe("resolvePortalSession — local-dev ergonomics preserved", () => {
     });
   });
 });
+
+describe("resolvePortalSession — SEC-10 authenticated flag tracks a real identity", () => {
+  it("production-proxy mode with a MISSING x-platform-user-id is NOT authenticated", () => {
+    withProductionProxyEnv(() => {
+      const session = resolvePortalSession(req());
+      // Resolves to the anonymous sentinel, so authenticated must be false even
+      // though ALLOW_DEV_IDENTITY_HEADERS is enabled.
+      expect(session.user.id).toBe("ANON");
+      expect(session.authenticated).toBe(false);
+    });
+  });
+
+  it("production-proxy mode with an UNKNOWN x-platform-user-id is NOT authenticated", () => {
+    withProductionProxyEnv(() => {
+      const session = resolvePortalSession(req({ "x-platform-user-id": "USR-DOES-NOT-EXIST" }));
+      expect(session.user.id).toBe("ANON");
+      expect(session.authenticated).toBe(false);
+    });
+  });
+
+  it("production-proxy mode with a KNOWN, active x-platform-user-id IS authenticated", () => {
+    withProductionProxyEnv(() => {
+      const session = resolvePortalSession(req({ "x-platform-user-id": "USR-REG-LB" }));
+      expect(session.user.id).toBe("USR-REG-LB");
+      expect(session.authenticated).toBe(true);
+    });
+  });
+
+  it("local-dev default (resolved Super Admin) IS authenticated", () => {
+    withEnv({ NODE_ENV: "test", ALLOW_DEV_IDENTITY_HEADERS: undefined }, () => {
+      const session = resolvePortalSession(req());
+      expect(session.user.id).toBe("USR-SUPER");
+      expect(session.authenticated).toBe(true);
+    });
+  });
+});

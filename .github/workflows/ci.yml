@@ -17,6 +17,16 @@ on:
           - "false"
           - "true"
 
+# Least-privilege default token: CI only reads the repo.
+permissions:
+  contents: read
+
+# Supersede in-flight runs when new commits land on the same ref, so rapid
+# iteration doesn't queue redundant full validations.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate:
     name: Local validation
