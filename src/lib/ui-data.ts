@@ -21,6 +21,11 @@ export type PortalLead = {
   followUp: string;
   source: string;
   notes: string;
+  /** "Acquired information" captured on the lead, attributed to the acting agent. */
+  acquiredPhone?: string;
+  acquiredEmail?: string;
+  acquiredBy?: string;
+  acquiredAt?: string;
 };
 
 export type UiDataResult<T> = {
@@ -75,7 +80,21 @@ export async function getUiLeads(session: PortalSession): Promise<UiDataResult<P
     const merged = devLeads
       .map((lead) => {
         const o = overrides[lead.id];
-        return { ...lead, country: lead.country as Country, ...(o ? { assignedTo: o.assignedTo ?? lead.assignedTo, status: (o.status as LeadStatus) ?? lead.status, followUp: o.followUp ?? lead.followUp } : {}) };
+        return {
+          ...lead,
+          country: lead.country as Country,
+          ...(o
+            ? {
+                assignedTo: o.assignedTo ?? lead.assignedTo,
+                status: (o.status as LeadStatus) ?? lead.status,
+                followUp: o.followUp ?? lead.followUp,
+                ...(o.acquiredPhone ? { acquiredPhone: o.acquiredPhone } : {}),
+                ...(o.acquiredEmail ? { acquiredEmail: o.acquiredEmail } : {}),
+                ...(o.acquiredBy ? { acquiredBy: o.acquiredBy } : {}),
+                ...(o.acquiredAt ? { acquiredAt: o.acquiredAt } : {}),
+              }
+            : {}),
+        };
       })
       .filter((lead) => !overrides[lead.id]?.archived);
     return { source: "dev-store", data: scopeLeads(merged, session) };

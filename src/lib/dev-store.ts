@@ -133,7 +133,19 @@ export type InvoiceDocSettings = {
 };
 
 /** Admin mutations applied over the static lead seed (spec §13/§14). */
-export type LeadOverride = { assignedTo?: string; status?: string; convertedAt?: string; archived?: boolean; followUp?: string };
+export type LeadOverride = {
+  assignedTo?: string;
+  status?: string;
+  convertedAt?: string;
+  archived?: boolean;
+  followUp?: string;
+  /** "Acquired information": a new phone/email captured on the lead during a call,
+   *  attributed to the acting agent. Lead-level so it always persists (ADR 0001). */
+  acquiredPhone?: string;
+  acquiredEmail?: string;
+  acquiredBy?: string;
+  acquiredAt?: string;
+};
 
 /** Admin mutations applied over the static customer seed (spec §15/§16). */
 export type CustomerOverride = { archived?: boolean; notes?: string[] };
@@ -666,6 +678,32 @@ export function upsertCallRecord(record: CallRecord): { record: CallRecord; crea
 /** All call records, most-recent-first (dev-store; Frappe seam later). */
 export function getCallRecords(): CallRecord[] {
   return getDevStore().callRecords;
+}
+
+/**
+ * Attach "acquired information" (a new phone/email captured on the call) to an
+ * existing call record, keyed by externalId. Merges — only the provided fields
+ * are set. When `expectedLeadId` is given, the call must belong to that lead
+ * (ownership guard: `externalId` is client-supplied, so never let a disposition
+ * on one lead stamp another lead's call). Returns the updated record, or
+ * undefined when no matching call exists / the ownership check fails.
+ */
+export function setCallRecordAcquiredInfo(
+  externalId: string,
+  info: { acquiredPhone?: string; acquiredEmail?: string },
+  expectedLeadId?: string,
+): CallRecord | undefined {
+  const store = getDevStore();
+  const idx = store.callRecords.findIndex((c) => c.externalId === externalId);
+  if (idx < 0) return undefined;
+  if (expectedLeadId && store.callRecords[idx].leadId !== expectedLeadId) return undefined;
+  const updated: CallRecord = {
+    ...store.callRecords[idx],
+    ...(info.acquiredPhone ? { acquiredPhone: info.acquiredPhone } : {}),
+    ...(info.acquiredEmail ? { acquiredEmail: info.acquiredEmail } : {}),
+  };
+  store.callRecords[idx] = updated;
+  return updated;
 }
 
 /** Calls that matched no lead/customer — the triage bucket (ADR 0001 §F). */

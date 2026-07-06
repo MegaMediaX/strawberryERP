@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { appendAudit, applyLeadOverride } from "@/lib/dev-store";
+import { appendAudit, applyLeadOverride, setCallRecordAcquiredInfo } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { authorizeApiRequest } from "@/lib/security/permissions";
 import { parseDispositionInput, resolveDisposition } from "@/lib/telephony/disposition";
@@ -43,13 +43,42 @@ export async function POST(request: Request) {
     ...(resolved.value.followUp ? { followUp: resolved.value.followUp } : {}),
   });
 
+  const performedBy = session.effectiveUser.name || session.effectiveUser.email || "sales";
+
+  // "Acquired information" (ADR 0001): store a captured phone/email on the LEAD,
+  // attributed to the acting agent. Lead-level so it ALWAYS persists — no
+  // dependency on a client-supplied call id (which is why this never silently
+  // drops). When a call is logged for this lead we also stamp it, ownership-
+  // guarded, for live-mode fidelity. The per-agent KPI counts from the lead.
+  const { acquiredPhone, acquiredEmail } = parsed.value; // already normalized/validated
+  const acquiredInfoSaved = Boolean(acquiredPhone || acquiredEmail);
+  if (acquiredInfoSaved) {
+    applyLeadOverride(lead.id, {
+      ...(acquiredPhone ? { acquiredPhone } : {}),
+      ...(acquiredEmail ? { acquiredEmail } : {}),
+      acquiredBy: performedBy,
+      acquiredAt: new Date().toISOString(),
+    });
+    if (parsed.value.externalId) {
+      setCallRecordAcquiredInfo(parsed.value.externalId, { acquiredPhone, acquiredEmail }, lead.id);
+    }
+    appendAudit({
+      entityType: "lead",
+      entityId: lead.id,
+      action: "info_acquired",
+      oldValue: "",
+      newValue: [acquiredPhone && `phone ${acquiredPhone}`, acquiredEmail && `email ${acquiredEmail}`].filter(Boolean).join(" · "),
+      performedBy,
+    });
+  }
+
   appendAudit({
     entityType: "lead",
     entityId: lead.id,
     action: "call_disposition",
     oldValue: lead.status,
     newValue: `${parsed.value.disposition}${parsed.value.notes ? `: ${parsed.value.notes}` : ""}`,
-    performedBy: session.effectiveUser.name || session.effectiveUser.email || "sales",
+    performedBy,
   });
 
   return NextResponse.json(
@@ -58,6 +87,7 @@ export async function POST(request: Request) {
       leadId: lead.id,
       status: resolved.value.targetStatus,
       followUp: resolved.value.followUp ?? null,
+      acquiredInfoSaved,
     },
     { status: 200 },
   );

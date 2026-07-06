@@ -35,6 +35,27 @@ describe("parseDispositionInput", () => {
   it("rejects a non-object body", () => {
     expect(parseDispositionInput(null).ok).toBe(false);
   });
+
+  it("captures acquired info (normalized) and the linked externalId", () => {
+    const r = parseDispositionInput({
+      leadId: "LEAD-1",
+      disposition: "Interested",
+      externalId: "call-123",
+      acquiredPhone: "03 999 000",
+      acquiredEmail: "  new@lead.com ",
+    });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value).toMatchObject({ externalId: "call-123", acquiredPhone: "03999000", acquiredEmail: "new@lead.com" });
+  });
+
+  it("omits acquired fields when blank", () => {
+    const r = parseDispositionInput({ leadId: "LEAD-1", disposition: "Interested", acquiredPhone: "", acquiredEmail: "  " });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value.acquiredPhone).toBeUndefined();
+    expect(r.value.acquiredEmail).toBeUndefined();
+  });
 });
 
 describe("resolveDisposition", () => {

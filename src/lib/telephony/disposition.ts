@@ -1,4 +1,5 @@
 import { validateLeadTransition } from "@/lib/business/lead-workflow";
+import { normalizeAcquiredInfo } from "@/lib/telephony/call-record";
 import type { LeadStatus } from "@/lib/sample-data";
 
 /**
@@ -44,6 +45,9 @@ export interface DispositionInput {
   followUpDate?: string;
   /** Optional link back to the logged call this disposition is for. */
   externalId?: string;
+  /** "Acquired information" captured on the call — a new phone and/or email. */
+  acquiredPhone?: string;
+  acquiredEmail?: string;
 }
 
 export type DispositionParse =
@@ -67,8 +71,12 @@ export function parseDispositionInput(body: unknown): DispositionParse {
   const notes = typeof b.notes === "string" && b.notes.trim() ? b.notes.trim() : undefined;
   const followUpDate = typeof b.followUpDate === "string" && b.followUpDate.trim() ? b.followUpDate.trim() : undefined;
   const externalId = typeof b.externalId === "string" && b.externalId.trim() ? b.externalId.trim() : undefined;
+  const acquired = normalizeAcquiredInfo({ acquiredPhone: b.acquiredPhone, acquiredEmail: b.acquiredEmail });
 
-  return { ok: true, value: { leadId, disposition: disposition as CallDisposition, notes, followUpDate, externalId } };
+  return {
+    ok: true,
+    value: { leadId, disposition: disposition as CallDisposition, notes, followUpDate, externalId, ...acquired },
+  };
 }
 
 export interface DispositionResolution {

@@ -42,6 +42,7 @@ export default async function SalesLeadDetailPage({ params }: { params: Promise<
         lead={lead}
         enableQuickOutcomes
         enableNotesCompose
+        recentCallExternalId={leadCalls[0]?.externalId}
         timeline={buildTimeline(lead, leadCalls)}
         importantDetails={resolveImportantDetails(lead, getImportantDetails(lead.reseller))}
         actingUser={{

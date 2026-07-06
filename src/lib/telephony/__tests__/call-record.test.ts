@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildCallRecord,
+  hasAcquiredInfo,
   isBlockedPhone,
   linkCall,
+  normalizeAcquiredInfo,
   normalizePhone,
   parseCallPayload,
   type LinkableEntity,
@@ -94,6 +96,45 @@ describe("parseCallPayload", () => {
   it("derives answered=false for rang_no_answer", () => {
     const res = parseCallPayload({ ...validBody, outcome: "rang_no_answer", answered: false });
     expect(res.ok && res.value.answered).toBe(false);
+  });
+});
+
+describe("acquired information", () => {
+  it("hasAcquiredInfo is true when either phone or email is filled", () => {
+    expect(hasAcquiredInfo({})).toBe(false);
+    expect(hasAcquiredInfo({ acquiredPhone: "   " })).toBe(false); // whitespace only
+    expect(hasAcquiredInfo({ acquiredPhone: "+9613123456" })).toBe(true);
+    expect(hasAcquiredInfo({ acquiredEmail: "a@b.com" })).toBe(true);
+    expect(hasAcquiredInfo({ acquiredPhone: "03123456", acquiredEmail: "a@b.com" })).toBe(true);
+  });
+
+  it("normalizeAcquiredInfo trims/normalizes phone, lowercases + validates email, drops junk", () => {
+    expect(normalizeAcquiredInfo({ acquiredPhone: "03 123-456", acquiredEmail: "  New@Lead.COM " })).toEqual({
+      acquiredPhone: "03123456",
+      acquiredEmail: "new@lead.com", // trimmed + lowercased
+    });
+    expect(normalizeAcquiredInfo({ acquiredPhone: "", acquiredEmail: "" })).toEqual({});
+    expect(normalizeAcquiredInfo({ acquiredPhone: 42 })).toEqual({}); // non-string phone
+    expect(normalizeAcquiredInfo({ acquiredEmail: "NotAnEmail" })).toEqual({}); // fails the sanity check → dropped
+    expect(normalizeAcquiredInfo({ acquiredEmail: "a@b" })).toEqual({}); // no TLD → dropped
+  });
+
+  it("parseCallPayload carries acquired_phone/acquired_email off the ingest contract", () => {
+    const res = parseCallPayload({ ...validBody, acquired_phone: "03 999 000", acquired_email: "new@lead.com" });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.value.acquiredPhone).toBe("03999000");
+    expect(res.value.acquiredEmail).toBe("new@lead.com");
+  });
+
+  it("buildCallRecord includes acquired info when present, omits when absent", () => {
+    const withInfo = parseCallPayload({ ...validBody, acquired_email: "new@lead.com" });
+    const without = parseCallPayload(validBody);
+    expect(withInfo.ok && without.ok).toBe(true);
+    if (!withInfo.ok || !without.ok) return;
+    const opts = { account: "1001@x", extension: "1001", loggedAt: "2026-07-02T09:16:00.000Z" };
+    expect(buildCallRecord(withInfo.value, { linkState: "unlinked" }, opts).acquiredEmail).toBe("new@lead.com");
+    expect(buildCallRecord(without.value, { linkState: "unlinked" }, opts).acquiredEmail).toBeUndefined();
   });
 });
 
