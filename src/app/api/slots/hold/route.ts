@@ -37,6 +37,10 @@ export async function POST(request: Request) {
   const result = applyTransition(current, p.action, { role: acting.role, actor, now });
   if (!result.ok) return jsonError(result.error, 403);
 
+  // APP-10 accepted limitation: slot holds persist ONLY in the in-memory
+  // dev-store (no Frappe DocType exists for slots). The response is tagged
+  // source:"dev-store" and holds are ephemeral — reset on restart and not shared
+  // across instances. Tracked in docs/exhibition-slots-persistence.md.
   setSlotStatus(p.label, result.next);
   const audit = appendAudit({ entityType: "SlotHold", entityId: p.label, action: p.action === "requestHold" ? "hold" : "cancel", oldValue: current.status, newValue: result.next.status, performedBy: session.auditLabel });
   return devStoreResponse({ slot: p.label, status: result.next, message: p.action === "requestHold" ? `Slot ${p.label} held — pending Super Admin approval.` : `Hold on ${p.label} cancelled.` }, { audit });
