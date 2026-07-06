@@ -110,7 +110,14 @@ jobs:
           MARIADB_IMAGE: mariadb:10.6.27@sha256:daacc2f260f8ec999daa5e03a017a23a7e6fa3fb982aaf26e8b72f24daf03bc9
           REDIS_IMAGE: redis:7-alpine@sha256:8b81dd37ff027bec4e516d41acfbe9fe2460070dc6d4a4570a2ac5b9d59df065
           NGINX_IMAGE: nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10
-        run: npm run preflight:production
+        run: |
+          # docker-compose.yml references `env_file: .env`, which is gitignored and
+          # absent on a fresh CI checkout, so `docker compose config` (run inside the
+          # preflight) fails on the missing file. Provide a throwaway .env from the
+          # committed example; the real secrets are still injected via `env:` above,
+          # and this .env is discarded with the runner.
+          cp .env.example .env
+          npm run preflight:production
 
   frappe-live-smoke:
     name: Optional live Frappe smoke
