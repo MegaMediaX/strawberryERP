@@ -1,7 +1,7 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
 import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
 import { appendAudit, getCountries, setCountryActive, upsertCountry } from "@/lib/dev-store";
-import { resolvePortalSession } from "@/lib/portal-security";
+import { requireSuperAdmin } from "@/lib/security/admin-guard";
 import { validateCountryForm, type CountryFormInput, type CountryRecord } from "@/lib/admin/countries";
 
 /**
@@ -11,22 +11,14 @@ import { validateCountryForm, type CountryFormInput, type CountryRecord } from "
  * removed). dev-store only — no Frappe persistence.
  */
 
-function ensureSuperAdmin(request: Request) {
-  const session = resolvePortalSession(request);
-  // Use the authenticated user (not effectiveUser) so the real Super Admin keeps
-  // admin access during an active Login-As — consistent with every other admin route.
-  if (session.user.role !== "Super Admin") return { denied: jsonError("Super Admin only.", 403), session };
-  return { denied: null, session };
-}
-
 export function GET(request: Request) {
-  const { denied } = ensureSuperAdmin(request);
+  const { denied } = requireSuperAdmin(request);
   if (denied) return denied;
   return devStoreResponse({ countries: getCountries() });
 }
 
 export async function POST(request: Request) {
-  const { denied, session } = ensureSuperAdmin(request);
+  const { denied, session } = requireSuperAdmin(request);
   if (denied) return denied;
 
   let payload: Partial<CountryFormInput & { paymentMethods: string[] }>;
@@ -57,7 +49,7 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const { denied, session } = ensureSuperAdmin(request);
+  const { denied, session } = requireSuperAdmin(request);
   if (denied) return denied;
 
   let payload: Partial<CountryFormInput & { paymentMethods: string[]; active: boolean; deactivate: boolean }>;
