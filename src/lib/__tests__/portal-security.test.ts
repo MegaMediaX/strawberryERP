@@ -19,14 +19,12 @@ function withEnv<T>(vars: Record<string, string | undefined>, fn: () => T): T {
   try {
     for (const [key, value] of Object.entries(vars)) {
       if (value === undefined) delete process.env[key];
-      // @ts-expect-error override for the test
       else process.env[key] = value;
     }
     return fn();
   } finally {
     for (const [key, value] of Object.entries(originals)) {
       if (value === undefined) delete process.env[key];
-      // @ts-expect-error restore for the test
       else process.env[key] = value;
     }
   }
