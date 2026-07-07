@@ -69,7 +69,7 @@ export const portalUsers: PortalUser[] = [
     active: true,
   },
   {
-    id: "USR-SALES-RAMI",
+    id: "USR-SALES-MARVEN",
     name: "Marven El Mouallem",
     email: "m.elmouallem@leb-tech.com",
     role: "Sales Team User",

@@ -38,7 +38,7 @@ const SEED_CREDENTIALS: CredentialRecord[] = [
   },
   {
     email: "m.elmouallem@leb-tech.com",
-    userId: "USR-SALES-RAMI",
+    userId: "USR-SALES-MARVEN",
     passwordHash:
       "85b838374ca306c1f0a5c0b02dc61a28:eab6f89b606e3062b97a6fe7530590e861148afad2de2997168752bb50b60fa3f5089acac257778d982188962135b6c9694b3a12bc342530d77a0d3f4dd1478d",
   },

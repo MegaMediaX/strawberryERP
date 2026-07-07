@@ -30,7 +30,7 @@ describe("/api/frappe/contracts (§17)", () => {
   });
 
   it("denies a Sales Team User from uploading", async () => {
-    const res = await POST(req("POST", "USR-SALES-RAMI", { customer: "Cedar Cloud Services", country: "Lebanon", fileName: "x.pdf" }));
+    const res = await POST(req("POST", "USR-SALES-MARVEN", { customer: "Cedar Cloud Services", country: "Lebanon", fileName: "x.pdf" }));
     expect(res.status).toBe(403);
   });
 });

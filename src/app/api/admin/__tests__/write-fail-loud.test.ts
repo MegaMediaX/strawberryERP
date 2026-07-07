@@ -37,7 +37,7 @@ describe("admin write fail-loud gate (Frappe unconfigured)", () => {
 
   it("runs the role guard BEFORE the gate (403 for a non-Super-Admin, not 501)", async () => {
     const res = await deleteRequestPOST(
-      adminReq("POST", { entityType: "lead", entityId: "LEAD-1", reason: "duplicate" }, "USR-SALES-RAMI"),
+      adminReq("POST", { entityType: "lead", entityId: "LEAD-1", reason: "duplicate" }, "USR-SALES-MARVEN"),
     );
     expect(res.status).toBe(403);
   });

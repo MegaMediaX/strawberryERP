@@ -150,7 +150,7 @@ async function runHttpSmoke(baseUrl) {
       },
     })),
     ...[
-      ["Sales User", "USR-SALES-RAMI"],
+      ["Sales User", "USR-SALES-MARVEN"],
       ["Regional Director", "USR-REG-LB"],
       ["Reseller Admin", "USR-RESELLER-BDP"],
     ].map(([role, userId]) => ({
@@ -160,7 +160,7 @@ async function runHttpSmoke(baseUrl) {
     })),
     {
       name: "impersonating Super Admin cannot access delete queue UI",
-      request: () => fetch(`${baseUrl}/settings/delete-queue`, { headers: { "x-platform-user-id": "USR-SUPER", "x-platform-impersonate-user-id": "USR-SALES-RAMI" } }),
+      request: () => fetch(`${baseUrl}/settings/delete-queue`, { headers: { "x-platform-user-id": "USR-SUPER", "x-platform-impersonate-user-id": "USR-SALES-MARVEN" } }),
       expect: async (response) => response.ok && (await response.text()).includes("You cannot access this page while impersonating another user."),
     },
     {
@@ -263,7 +263,7 @@ async function runHttpSmoke(baseUrl) {
     },
     {
       name: "Sales User cannot access invoices",
-      request: () => fetch(`${baseUrl}/api/frappe/invoices`, { headers: { "x-platform-user-id": "USR-SALES-RAMI" } }),
+      request: () => fetch(`${baseUrl}/api/frappe/invoices`, { headers: { "x-platform-user-id": "USR-SALES-MARVEN" } }),
       expect: async (response) => response.status === 403,
     },
     {
@@ -338,7 +338,7 @@ async function runHttpSmoke(baseUrl) {
           headers: {
             "Content-Type": "application/json",
             "x-platform-user-id": "USR-SUPER",
-            "x-platform-impersonate-user-id": "USR-SALES-RAMI",
+            "x-platform-impersonate-user-id": "USR-SALES-MARVEN",
           },
           body: JSON.stringify({ id: "DEL-9001", action: "restore" }),
         }),

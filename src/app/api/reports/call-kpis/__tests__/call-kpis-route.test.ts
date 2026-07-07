@@ -59,7 +59,7 @@ describe("GET /api/reports/call-kpis — scoping", () => {
   });
 
   it("Sales sees only their own calls", async () => {
-    const json = await (await get("USR-SALES-RAMI")).json();
+    const json = await (await get("USR-SALES-MARVEN")).json();
     const agents = json.agents.map((a: { agent: string }) => a.agent);
     expect(agents).not.toContain("KPI-Sara");
     expect(agents).not.toContain("KPI-Omar");

@@ -36,14 +36,14 @@ describe("assignableUsersFor", () => {
   });
 
   it("Sales Team User can assign only to themselves", () => {
-    expect(names("USR-SALES-RAMI")).toEqual(["Marven El Mouallem"]);
+    expect(names("USR-SALES-MARVEN")).toEqual(["Marven El Mouallem"]);
   });
 });
 
 describe("canAssignLeadTo", () => {
   const superAdmin = userFor("USR-SUPER");
   const reseller = userFor("USR-RESELLER-BDP");
-  const sales = userFor("USR-SALES-RAMI");
+  const sales = userFor("USR-SALES-MARVEN");
 
   it("allows assigning to oneself", () => {
     expect(canAssignLeadTo(sales, "Marven El Mouallem")).toBe(true);

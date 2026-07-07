@@ -16,7 +16,7 @@ describe("requireSuperAdmin (APP-11 shared admin gate)", () => {
   });
 
   it("denies a non-Super-Admin with 403", async () => {
-    const { denied, session } = requireSuperAdmin(req("USR-SALES-RAMI"));
+    const { denied, session } = requireSuperAdmin(req("USR-SALES-MARVEN"));
     expect(session.user.role).not.toBe("Super Admin");
     expect(denied).not.toBeNull();
     expect(denied!.status).toBe(403);
@@ -27,7 +27,7 @@ describe("requireSuperAdmin (APP-11 shared admin gate)", () => {
 
   it("uses the real user role, not the impersonated one (Super Admin keeps access during Login-As)", () => {
     const request = new Request("https://portal.local/api/admin/x", {
-      headers: { "x-platform-user-id": "USR-SUPER", "x-platform-impersonate-user-id": "USR-SALES-RAMI" },
+      headers: { "x-platform-user-id": "USR-SUPER", "x-platform-impersonate-user-id": "USR-SALES-MARVEN" },
     });
     const { denied } = requireSuperAdmin(request);
     expect(denied).toBeNull();

@@ -50,7 +50,7 @@ describe("POST settings/custom-fields", () => {
   });
 
   it("blocks a Super Admin who is impersonating (sensitive action)", async () => {
-    const res = await post(validDef, { userId: "USR-SUPER", impersonate: "USR-SALES-RAMI" });
+    const res = await post(validDef, { userId: "USR-SUPER", impersonate: "USR-SALES-MARVEN" });
     expect(res.status).toBe(403);
   });
 });

@@ -46,7 +46,7 @@ describe("GET /api/auth/session", () => {
   it("reflects impersonation state via the dev header", async () => {
     const res = await getSession({
       "x-platform-user-id": "USR-SUPER",
-      "x-platform-impersonate-user-id": "USR-SALES-RAMI",
+      "x-platform-impersonate-user-id": "USR-SALES-MARVEN",
     });
     const body = (await res.json()) as { data: { effectiveRole: string; impersonating: boolean } };
     expect(body.data.effectiveRole).toBe("Sales Team User");

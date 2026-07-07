@@ -84,10 +84,10 @@ describe("POST settings/notifications", () => {
   });
 
   it("denies a non-Super-Admin (403)", async () => {
-    expect((await post(validRule, { userId: "USR-SALES-RAMI" })).status).toBe(403);
+    expect((await post(validRule, { userId: "USR-SALES-MARVEN" })).status).toBe(403);
   });
 
   it("blocks an impersonating Super Admin (403)", async () => {
-    expect((await post(validRule, { userId: "USR-SUPER", impersonate: "USR-SALES-RAMI" })).status).toBe(403);
+    expect((await post(validRule, { userId: "USR-SUPER", impersonate: "USR-SALES-MARVEN" })).status).toBe(403);
   });
 });

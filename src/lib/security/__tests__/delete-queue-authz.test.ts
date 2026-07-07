@@ -34,7 +34,7 @@ describe("delete-queue resolution authorization", () => {
       resource: "delete-queue/resolve",
       method: "POST",
       userId: "USR-SUPER",
-      impersonate: "USR-SALES-RAMI",
+      impersonate: "USR-SALES-MARVEN",
     });
     expect(d.allowed).toBe(false);
     expect(d.status).toBe(403);
@@ -47,7 +47,7 @@ describe("delete-queue resolution authorization", () => {
   });
 
   it("blocks a Sales Team User from resolving the queue", () => {
-    const d = evaluate({ resource: "delete-queue/resolve", method: "POST", userId: "USR-SALES-RAMI" });
+    const d = evaluate({ resource: "delete-queue/resolve", method: "POST", userId: "USR-SALES-MARVEN" });
     expect(d.allowed).toBe(false);
     expect(d.status).toBe(403);
   });

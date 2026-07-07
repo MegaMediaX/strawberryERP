@@ -116,7 +116,7 @@ describe("POST delete-queue", () => {
 
 describe("POST delete-queue/resolve", () => {
   it("denies a non-Super-Admin before the write gate", async () => {
-    const res = await post(["delete-queue", "resolve"], { id: "DEL-9001", status: "Restored" }, { userId: "USR-SALES-RAMI" });
+    const res = await post(["delete-queue", "resolve"], { id: "DEL-9001", status: "Restored" }, { userId: "USR-SALES-MARVEN" });
     expect(res.status).toBe(403);
   });
 
@@ -133,7 +133,7 @@ describe("POST delete-queue/resolve", () => {
 
 describe("PATCH delete-queue", () => {
   it("denies a non-Super-Admin before the write gate", async () => {
-    const res = await patch(["delete-queue"], { id: "DEL-9001", status: "Restored" }, { userId: "USR-SALES-RAMI" });
+    const res = await patch(["delete-queue"], { id: "DEL-9001", status: "Restored" }, { userId: "USR-SALES-MARVEN" });
     expect(res.status).toBe(403);
   });
 

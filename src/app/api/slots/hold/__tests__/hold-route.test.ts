@@ -66,7 +66,7 @@ describe("POST /api/slots/hold — auth gate (SEC-1)", () => {
   it("allows an AUTHENTICATED reseller to requestHold on an Available slot (200)", async () => {
     const res = await holdRequest(
       { label: SLOT, action: "requestHold" },
-      { "x-platform-user-id": "USR-SALES-RAMI" },
+      { "x-platform-user-id": "USR-SALES-MARVEN" },
     );
     expect(res.status).toBe(200);
     const body = (await res.json()) as { ok: boolean; data: { status: { status: string } } };

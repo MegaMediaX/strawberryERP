@@ -73,6 +73,6 @@ describe("POST settings/payment-methods", () => {
   });
 
   it("blocks an impersonating Super Admin (403)", async () => {
-    expect((await post(valid, { userId: "USR-SUPER", impersonate: "USR-SALES-RAMI" })).status).toBe(403);
+    expect((await post(valid, { userId: "USR-SUPER", impersonate: "USR-SALES-MARVEN" })).status).toBe(403);
   });
 });

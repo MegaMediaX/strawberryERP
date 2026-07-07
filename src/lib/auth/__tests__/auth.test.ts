@@ -26,7 +26,7 @@ describe("session token (HMAC)", () => {
   });
 
   it("rejects a tampered payload", () => {
-    const token = createSessionToken("USR-SALES-RAMI");
+    const token = createSessionToken("USR-SALES-MARVEN");
     const [body, sig] = token.split(".");
     const forgedBody = Buffer.from(JSON.stringify({ sub: "USR-SUPER", exp: Date.now() + 100000 })).toString(
       "base64url",
