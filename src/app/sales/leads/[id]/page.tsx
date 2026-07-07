@@ -8,6 +8,7 @@ import { getCallRecords, getImportantDetails } from "@/lib/dev-store";
 import { buildTimeline } from "@/lib/sales/timeline-builder";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 import { getUiLeads } from "@/lib/ui-data";
+import { isWebrtcMode } from "@/lib/telephony/webrtc";
 
 export default async function SalesLeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -43,6 +44,7 @@ export default async function SalesLeadDetailPage({ params }: { params: Promise<
         enableQuickOutcomes
         enableNotesCompose
         recentCallExternalId={leadCalls[0]?.externalId}
+        telephonyMode={isWebrtcMode() ? "webrtc" : "tinyphone"}
         timeline={buildTimeline(lead, leadCalls)}
         importantDetails={resolveImportantDetails(lead, getImportantDetails(lead.reseller))}
         actingUser={{

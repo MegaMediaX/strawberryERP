@@ -248,6 +248,8 @@ export const apiScopes: ApiScope[] = [
   "write:resellers",
   "read:reports",
   "read:commissions",
+  "read:calls",
+  "write:calls",
 ];
 
 export const resellers = [

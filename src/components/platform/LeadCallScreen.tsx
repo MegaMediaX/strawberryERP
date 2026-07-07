@@ -11,6 +11,7 @@ import { buildCustomerFromLead, validateConversion, type ConversionOverrides } f
 import { eligibleAssignees, validateReassignment } from "@/lib/business/lead-reassignment";
 import { quickOutcomes, type QuickOutcome } from "@/lib/business/quick-outcomes";
 import { dispositionForStatus } from "@/lib/telephony/disposition";
+import { WebrtcCallButton } from "@/components/platform/WebrtcCallButton";
 import { formatNoteLine, noteTemplates, parseNotes, prependNote } from "@/lib/sales/notes-formatter";
 import type { TimelineEntry } from "@/lib/sales/timeline-builder";
 import { leadStatuses } from "@/lib/sample-data";
@@ -42,6 +43,7 @@ export function LeadCallScreen({
   enableQuickOutcomes = false,
   enableNotesCompose = false,
   recentCallExternalId,
+  telephonyMode = "tinyphone",
   timeline,
 }: {
   lead: PortalLead;
@@ -55,6 +57,8 @@ export function LeadCallScreen({
   enableNotesCompose?: boolean;
   /** Most-recent logged call for this lead; acquired info attaches to it (ADR 0001). */
   recentCallExternalId?: string;
+  /** "webrtc" → in-browser softphone; "tinyphone" → CRM dial-queue (ADR 0001). */
+  telephonyMode?: "tinyphone" | "webrtc";
   /** Spec §12 — derived activity timeline (sales persona). */
   timeline?: TimelineEntry[];
 }) {
@@ -339,14 +343,18 @@ export function LeadCallScreen({
               <a href={`mailto:${lead.email}`} className={`${actionBase} bg-slate-700 hover:bg-slate-800`}>
                 Email
               </a>
-              <button
-                type="button"
-                onClick={dialViaCrm}
-                disabled={dialBusy || dialCooldown}
-                className={`${actionBase} bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60`}
-              >
-                {dialBusy ? "Calling…" : "Call via CRM"}
-              </button>
+              {telephonyMode === "webrtc" ? (
+                <WebrtcCallButton number={lead.phone} onCallStarted={() => setCallLogged(true)} />
+              ) : (
+                <button
+                  type="button"
+                  onClick={dialViaCrm}
+                  disabled={dialBusy || dialCooldown}
+                  className={`${actionBase} bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60`}
+                >
+                  {dialBusy ? "Calling…" : "Call via CRM"}
+                </button>
+              )}
             </div>
             {dialMsg ? <p className="text-sm text-[var(--muted)]">{dialMsg}</p> : null}
             <div className="flex flex-wrap items-center gap-3">

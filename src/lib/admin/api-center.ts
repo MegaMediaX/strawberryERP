@@ -21,6 +21,7 @@ export const API_SCOPE_LIST: ApiScope[] = [
   "read:resellers", "write:resellers",
   "read:reports",
   "read:commissions",
+  "read:calls", "write:calls",
 ];
 
 export type ApiKeyStatus = "Active" | "Expired" | "Revoked";
