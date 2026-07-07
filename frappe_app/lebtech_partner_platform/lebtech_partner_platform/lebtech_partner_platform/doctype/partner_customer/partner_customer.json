@@ -32,9 +32,8 @@
     },
     {
       "fieldname": "assigned_user",
-      "fieldtype": "Link",
+      "fieldtype": "Data",
       "label": "Assigned User",
-      "options": "User",
       "search_index": true
     },
     {

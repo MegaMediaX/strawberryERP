@@ -22,7 +22,7 @@ const SEED_CREDENTIALS: CredentialRecord[] = [
     email: "ggkhoueiry@gmail.com",
     userId: "USR-SUPER",
     passwordHash:
-      "ed5f76c35efaf979ca9bbcf0fe6da167:8526349d2c9c82110b4ce365531e7505cfe26dd91069ba9e082b9f448ca32e73f87e1eedcb22f5723f4be80b4109ed3f9987da6da3b6c08aec3b51b72f2e42d4",
+      "03c8eb9f5d0dee7738490d937b5fca94:5e223bc7a8029a0ca445e8f3148729a027d745a631809426419ab2003b9bc0e06a2a63cc379f197edae8a78e22803f3c7cc17d976a629fdde3d2b111d03ca9e7",
   },
   {
     email: "maya.regional@lebtech.example",

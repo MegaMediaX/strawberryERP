@@ -10,7 +10,7 @@
   "fields": [
     { "fieldname": "company_name", "fieldtype": "Data", "label": "Company Name", "reqd": 1 },
     { "fieldname": "country", "fieldtype": "Select", "label": "Country", "options": "Lebanon\nCyprus\nJordan\nSyria", "reqd": 1, "search_index": 1 },
-    { "fieldname": "assigned_user", "fieldtype": "Link", "label": "Assigned User", "options": "User", "reqd": 1, "search_index": 1 },
+    { "fieldname": "assigned_user", "fieldtype": "Data", "label": "Assigned User", "reqd": 1, "search_index": 1 },
     { "fieldname": "contact_first_name", "fieldtype": "Data", "label": "Contact First Name", "reqd": 1 },
     { "fieldname": "contact_last_name", "fieldtype": "Data", "label": "Contact Last Name", "reqd": 1 },
     { "fieldname": "gender", "fieldtype": "Select", "label": "Gender", "options": "Male\nFemale", "reqd": 1 },
