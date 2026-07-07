@@ -37,10 +37,10 @@ const SEED_CREDENTIALS: CredentialRecord[] = [
       "899338f289a8524b6b938f34240b4bb1:ac19f4e658cae7da8e392cee4d64b8db873ea36691e9e07fbdd4653f529fc7a591188493f1192cd0106080d782237e5717481befbd59ab4b566199cb73b28224",
   },
   {
-    email: "rami@beirutdigital.example",
+    email: "m.elmouallem@leb-tech.com",
     userId: "USR-SALES-RAMI",
     passwordHash:
-      "63d1b5a8eae0fc312afffe6ee3c1d377:0847ac50bb101d184314c6294166446bf900d5d9732e7253cc9f17f360bc44011852e4423902363e06cdaf27d52bcafde8965fea14116556467b8fa7a49dd910",
+      "85b838374ca306c1f0a5c0b02dc61a28:eab6f89b606e3062b97a6fe7530590e861148afad2de2997168752bb50b60fa3f5089acac257778d982188962135b6c9694b3a12bc342530d77a0d3f4dd1478d",
   },
   {
     email: "e.mouawad.oradion@gmail.com",

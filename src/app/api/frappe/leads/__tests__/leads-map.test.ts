@@ -16,8 +16,8 @@ describe("mapLeadToFrappe", () => {
   });
 
   it("sends only the changed fields on a reassign", () => {
-    const out = mapLeadToFrappe({ assignedUser: "rami@beirutdigital.example" });
-    expect(out).toEqual({ assigned_user: "rami@beirutdigital.example" });
+    const out = mapLeadToFrappe({ assignedUser: "m.elmouallem@leb-tech.com" });
+    expect(out).toEqual({ assigned_user: "m.elmouallem@leb-tech.com" });
   });
 
   it("passes an explicit status through unchanged", () => {

@@ -27,5 +27,5 @@ export const SEED_LOGINS = [
   { name: "Super Admin", email: SEED_SUPER_EMAIL, password: SEED_ADMIN_PW },
   { name: "Regional Director", email: "maya.regional@lebtech.example", password: SEED_REGIONAL_PW },
   { name: "Reseller Admin", email: "admin@beirutdigital.example", password: SEED_RESELLER_PW },
-  { name: "Sales Team User", email: "rami@beirutdigital.example", password: SEED_SALES_PW },
+  { name: "Sales Team User", email: "m.elmouallem@leb-tech.com", password: SEED_SALES_PW },
 ] as const;

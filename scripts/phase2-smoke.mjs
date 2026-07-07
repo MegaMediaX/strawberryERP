@@ -217,7 +217,7 @@ async function runHttpSmoke(baseUrl) {
           body: JSON.stringify({
             companyName: "Smoke Co",
             country: "Lebanon",
-            assignedUser: "Rami K.",
+            assignedUser: "Marven El Mouallem",
             contactFirstName: "Sam",
             contactLastName: "Smoke",
             gender: "Male",
@@ -297,7 +297,7 @@ async function runHttpSmoke(baseUrl) {
           body: JSON.stringify({
             companyName: "Smoke Co",
             country: "Lebanon",
-            assignedUser: "Rami K.",
+            assignedUser: "Marven El Mouallem",
             contactFirstName: "Sam",
             contactLastName: "Smoke",
             gender: "Male",

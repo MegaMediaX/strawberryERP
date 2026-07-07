@@ -4,7 +4,7 @@ import { filterReceipts, receiptsTotal, type ReceiptRow } from "@/lib/reseller/r
 
 const rcpt = (over: Partial<ReceiptRow> & { id: string }): ReceiptRow => ({
   receiptNumber: "RCPT-1", invoice: "INV-1", customer: "Cedar Cloud Services", amount: 2500,
-  currency: "USD", paymentMethod: "Bank Transfer", paymentReference: "BLC-1", issuedBy: "Rami K.",
+  currency: "USD", paymentMethod: "Bank Transfer", paymentReference: "BLC-1", issuedBy: "Marven El Mouallem",
   issuedAt: "2026-06-06T13:15:00Z", pdfUrl: "/x.pdf", ...over,
 });
 

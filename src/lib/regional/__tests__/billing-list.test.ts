@@ -13,9 +13,9 @@ import type { ReceiptLike } from "@/lib/reseller/invoice-payment-state";
 const NOW = new Date(2026, 5, 15);
 
 const invoices: RegionalInvoiceLike[] = [
-  { id: "INV-1", invoiceNumber: "LB-1", customer: "Cedar Cloud Services", country: "Lebanon", reseller: "Beirut Digital Partners", currency: "USD", total: 1000, dueDate: "2026-06-21", createdBy: "Rami K." },
+  { id: "INV-1", invoiceNumber: "LB-1", customer: "Cedar Cloud Services", country: "Lebanon", reseller: "Beirut Digital Partners", currency: "USD", total: 1000, dueDate: "2026-06-21", createdBy: "Marven El Mouallem" },
   { id: "INV-2", invoiceNumber: "JO-1", customer: "Amman Logistics Hub", country: "Jordan", reseller: "Levant Growth Systems", currency: "USD", total: 500, dueDate: "2026-06-01", createdBy: "Lina S." }, // overdue
-  { id: "INV-3", invoiceNumber: "LB-2", customer: "Beirut Bistro", country: "Lebanon", reseller: "Beirut Digital Partners", currency: "EUR", total: 800, dueDate: "2026-06-30", createdBy: "Rami K." },
+  { id: "INV-3", invoiceNumber: "LB-2", customer: "Beirut Bistro", country: "Lebanon", reseller: "Beirut Digital Partners", currency: "EUR", total: 800, dueDate: "2026-06-30", createdBy: "Marven El Mouallem" },
 ];
 const receipts: ReceiptLike[] = [
   { invoice: "INV-1", reseller: "Beirut Digital Partners", amount: 400, paymentMethod: "Bank Transfer" }, // partial
@@ -57,8 +57,8 @@ describe("filterInvoices", () => {
 
 describe("filterReceipts (spec §20)", () => {
   const receiptRows: RegionalReceiptRow[] = [
-    { id: "R1", receiptNumber: "RCPT-1", invoice: "INV-1", customer: "Cedar Cloud Services", country: "Lebanon", reseller: "Beirut Digital Partners", amount: 400, currency: "USD", paymentMethod: "Bank Transfer", issuedBy: "Rami K.", issuedAt: "2026-06-06" },
-    { id: "R2", receiptNumber: "RCPT-2", invoice: "INV-3", customer: "Beirut Bistro", country: "Lebanon", reseller: "Beirut Digital Partners", amount: 800, currency: "EUR", paymentMethod: "Cash", issuedBy: "Rami K.", issuedAt: "2026-06-08" },
+    { id: "R1", receiptNumber: "RCPT-1", invoice: "INV-1", customer: "Cedar Cloud Services", country: "Lebanon", reseller: "Beirut Digital Partners", amount: 400, currency: "USD", paymentMethod: "Bank Transfer", issuedBy: "Marven El Mouallem", issuedAt: "2026-06-06" },
+    { id: "R2", receiptNumber: "RCPT-2", invoice: "INV-3", customer: "Beirut Bistro", country: "Lebanon", reseller: "Beirut Digital Partners", amount: 800, currency: "EUR", paymentMethod: "Cash", issuedBy: "Marven El Mouallem", issuedAt: "2026-06-08" },
   ];
   it("filters by payment method, currency, and search", () => {
     expect(filterReceipts(receiptRows, { paymentMethod: "Cash" }).map((r) => r.id)).toEqual(["R2"]);

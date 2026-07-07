@@ -13,7 +13,7 @@ function req(body: unknown): Request {
 
 const rec = (over: Partial<ImportRecord>): ImportRecord => ({
   rowNumber: 1,
-  data: { companyName: "A", country: "Lebanon", assignedUser: "Rami K.", contactFirstName: "X", contactLastName: "Y", gender: "Male", phone: "+961 70 1", email: "a@a.co" },
+  data: { companyName: "A", country: "Lebanon", assignedUser: "Marven El Mouallem", contactFirstName: "X", contactLastName: "Y", gender: "Male", phone: "+961 70 1", email: "a@a.co" },
   errors: [],
   duplicate: false,
   ...over,

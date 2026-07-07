@@ -70,8 +70,8 @@ export const portalUsers: PortalUser[] = [
   },
   {
     id: "USR-SALES-RAMI",
-    name: "Rami K.",
-    email: "rami@beirutdigital.example",
+    name: "Marven El Mouallem",
+    email: "m.elmouallem@leb-tech.com",
     role: "Sales Team User",
     countries: ["Lebanon"],
     reseller: "Beirut Digital Partners",

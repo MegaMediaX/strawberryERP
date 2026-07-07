@@ -11,7 +11,7 @@ function lead(overrides: Partial<PortalLead> = {}): PortalLead {
     gender: "Female",
     country: "Lebanon",
     reseller: "Beirut Digital Partners",
-    assignedTo: "rami@beirutdigital.example",
+    assignedTo: "m.elmouallem@leb-tech.com",
     phone: "+961 70 144 221",
     email: "maya@cedarcloud.example",
     priority: "High",
@@ -46,8 +46,8 @@ describe("buildCustomerFromLead", () => {
   it("carries the lead's assigned user onto the customer draft (P1-2 scoping)", () => {
     // Without this, a Sales Team User converting their own lead would create a
     // customer with no assigned_user and never see it under Partner Customer scoping.
-    const draft = buildCustomerFromLead(lead({ assignedTo: "rami@beirutdigital.example" }));
-    expect(draft.assigned_user).toBe("rami@beirutdigital.example");
+    const draft = buildCustomerFromLead(lead({ assignedTo: "m.elmouallem@leb-tech.com" }));
+    expect(draft.assigned_user).toBe("m.elmouallem@leb-tech.com");
   });
 
   it("normalizes the Unassigned sentinel to an empty assigned_user", () => {

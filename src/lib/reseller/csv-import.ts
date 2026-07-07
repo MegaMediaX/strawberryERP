@@ -213,7 +213,7 @@ export function summarizeImport(records: readonly ImportRecord[], policy: Duplic
 /** Downloadable template: header row + one example data row. */
 export function csvTemplate(): string {
   const headers = SYSTEM_FIELDS.map((f) => f.label).join(",");
-  const sample = "Acme Trading,Lebanon,Rami K.,Sara,Haddad,Female,+961 70 123 456,sara@acme.example,First contact pending,WhatsApp";
+  const sample = "Acme Trading,Lebanon,Marven El Mouallem,Sara,Haddad,Female,+961 70 123 456,sara@acme.example,First contact pending,WhatsApp";
   return `${headers}\n${sample}\n`;
 }
 

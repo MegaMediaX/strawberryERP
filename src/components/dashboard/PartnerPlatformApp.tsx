@@ -120,7 +120,7 @@ export function PartnerPlatformApp({ initialLeads, loadError, session, source }:
       }
 
       if (activeRole === "Sales Team User") {
-        return matchesCountry && lead.assignedTo === "Rami K." && matchesQuery;
+        return matchesCountry && lead.assignedTo === "Marven El Mouallem" && matchesQuery;
       }
 
       return matchesCountry && matchesQuery;

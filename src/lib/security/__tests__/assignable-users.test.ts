@@ -23,20 +23,20 @@ function names(userId: string) {
 
 describe("assignableUsersFor", () => {
   it("Super Admin can assign to every active user", () => {
-    expect(names("USR-SUPER")).toEqual(["Beirut Reseller Admin", "Elie Mouawad", "Maya Regional", "Rami K.", "Super Admin"]);
+    expect(names("USR-SUPER")).toEqual(["Beirut Reseller Admin", "Elie Mouawad", "Marven El Mouallem", "Maya Regional", "Super Admin"]);
   });
 
   it("Regional Director can assign to users in their countries", () => {
     // USR-REG-LB covers Lebanon + Jordan; all seed users operate in Lebanon.
-    expect(names("USR-REG-LB")).toEqual(["Beirut Reseller Admin", "Elie Mouawad", "Maya Regional", "Rami K."]);
+    expect(names("USR-REG-LB")).toEqual(["Beirut Reseller Admin", "Elie Mouawad", "Marven El Mouallem", "Maya Regional"]);
   });
 
   it("Reseller Admin can assign only within their own reseller", () => {
-    expect(names("USR-RESELLER-BDP")).toEqual(["Beirut Reseller Admin", "Elie Mouawad", "Rami K."]);
+    expect(names("USR-RESELLER-BDP")).toEqual(["Beirut Reseller Admin", "Elie Mouawad", "Marven El Mouallem"]);
   });
 
   it("Sales Team User can assign only to themselves", () => {
-    expect(names("USR-SALES-RAMI")).toEqual(["Rami K."]);
+    expect(names("USR-SALES-RAMI")).toEqual(["Marven El Mouallem"]);
   });
 });
 
@@ -46,7 +46,7 @@ describe("canAssignLeadTo", () => {
   const sales = userFor("USR-SALES-RAMI");
 
   it("allows assigning to oneself", () => {
-    expect(canAssignLeadTo(sales, "Rami K.")).toBe(true);
+    expect(canAssignLeadTo(sales, "Marven El Mouallem")).toBe(true);
   });
 
   it("blocks a Sales Team User from assigning to someone else", () => {
@@ -58,11 +58,11 @@ describe("canAssignLeadTo", () => {
   });
 
   it("allows a Reseller Admin to assign to their own team", () => {
-    expect(canAssignLeadTo(reseller, "Rami K.")).toBe(true);
+    expect(canAssignLeadTo(reseller, "Marven El Mouallem")).toBe(true);
   });
 
   it("lets Super Admin assign to anyone", () => {
-    expect(canAssignLeadTo(superAdmin, "Rami K.")).toBe(true);
+    expect(canAssignLeadTo(superAdmin, "Marven El Mouallem")).toBe(true);
   });
 
   it("passes empty assignee (required-field validation handles it)", () => {

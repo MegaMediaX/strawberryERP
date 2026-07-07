@@ -11,13 +11,13 @@ import type { ActivityTimelineEvent } from "@/lib/phase2-data";
 
 const ev = (over: Partial<ActivityTimelineEvent>): ActivityTimelineEvent => ({
   id: "ACT-1", entityType: "Lead", entityId: "LEAD-1", action: "status_change",
-  oldValue: "New", newValue: "Interested", performedBy: "Rami K. as Sales Team User",
+  oldValue: "New", newValue: "Interested", performedBy: "Marven El Mouallem as Sales Team User",
   timestamp: "2026-06-10T09:00:00Z", ...over,
 });
 
 describe("deriveRole (spec §33)", () => {
   it("extracts the role from the audit label", () => {
-    expect(deriveRole("Rami K. as Sales Team User")).toBe("Sales Team User");
+    expect(deriveRole("Marven El Mouallem as Sales Team User")).toBe("Sales Team User");
     expect(deriveRole("Super Admin impersonating Rami")).toBe("Impersonation");
     expect(deriveRole("system")).toBe("—");
   });
@@ -26,13 +26,13 @@ describe("deriveRole (spec §33)", () => {
 describe("toAuditRows", () => {
   it("maps a timeline event to a display row", () => {
     const [row] = toAuditRows([ev({})]);
-    expect(row).toMatchObject({ user: "Rami K.", role: "Sales Team User", module: "Lead", record: "LEAD-1", action: "status_change", details: "New → Interested" });
+    expect(row).toMatchObject({ user: "Marven El Mouallem", role: "Sales Team User", module: "Lead", record: "LEAD-1", action: "status_change", details: "New → Interested" });
   });
 });
 
 describe("filterAuditRows (spec §33)", () => {
   const rows = toAuditRows([
-    ev({ id: "1", entityType: "Lead", action: "status_change", performedBy: "Rami K. as Sales Team User", timestamp: "2026-06-10T09:00:00Z" }),
+    ev({ id: "1", entityType: "Lead", action: "status_change", performedBy: "Marven El Mouallem as Sales Team User", timestamp: "2026-06-10T09:00:00Z" }),
     ev({ id: "2", entityType: "Invoice", action: "invoice_issued", performedBy: "Admin as Super Admin", timestamp: "2026-06-12T09:00:00Z", entityId: "INV-9" }),
   ]);
   it("filters by module, action, query, and date range", () => {

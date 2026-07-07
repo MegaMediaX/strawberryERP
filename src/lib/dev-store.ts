@@ -199,7 +199,7 @@ export function getDevStore() {
           entityType: "Lead",
           entityId: "LEAD-2477",
           label: "Spam lead from web form",
-          requestedBy: "Rami K.",
+          requestedBy: "Marven El Mouallem",
           reason: "Obvious spam submission",
           status: "Pending",
           requestedAt: "2026-06-09T14:25:00Z",
