@@ -8,10 +8,10 @@ import { requireEnv } from "./load-env.mjs";
 const BASE = process.argv[2] || process.env.BASE_URL || "http://localhost:8080";
 
 const ROLES = [
-  { name: "Super Admin", email: "super.admin@lebtech.example", password: requireEnv("SEED_ADMIN_PW") },
+  { name: "Super Admin", email: "ggkhoueiry@gmail.com", password: requireEnv("SEED_ADMIN_PW") },
   { name: "Regional Director", email: "maya.regional@lebtech.example", password: requireEnv("SEED_REGIONAL_PW") },
   { name: "Reseller Admin", email: "admin@beirutdigital.example", password: requireEnv("SEED_RESELLER_PW") },
-  { name: "Sales Team User", email: "rami@beirutdigital.example", password: requireEnv("SEED_SALES_PW") },
+  { name: "Sales Team User", email: "m.elmouallem@leb-tech.com", password: requireEnv("SEED_SALES_PW") },
 ];
 
 let pass = 0, fail = 0;
@@ -38,8 +38,8 @@ async function leadsFor(role) {
 async function main() {
   const sales = await leadsFor(ROLES[3]);
   check("Sales: non-empty result", sales.length > 0, `(${sales.length})`);
-  check("Sales: every lead assigned to 'Rami K.'", sales.every((r) => r.assigned_user === "Rami K."),
-    `offenders=${sales.filter((r) => r.assigned_user !== "Rami K.").length}`);
+  check("Sales: every lead assigned to 'Marven El Mouallem'", sales.every((r) => r.assigned_user === "Marven El Mouallem"),
+    `offenders=${sales.filter((r) => r.assigned_user !== "Marven El Mouallem").length}`);
   check("Sales: sees no Cyprus leads", sales.every((r) => r.country !== "Cyprus"));
 
   const reseller = await leadsFor(ROLES[2]);

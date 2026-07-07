@@ -7,7 +7,7 @@ const NOW = new Date(2026, 5, 15);
 
 const lead = (over: Partial<PortalLead> & { id: string }): PortalLead => ({
   company: "Cedar", contact: "Maya", gender: "Female", country: "Lebanon", reseller: "Beirut Digital Partners",
-  assignedTo: "Rami K.", phone: "+961", email: "x@x", priority: "VIP",
+  assignedTo: "Marven El Mouallem", phone: "+961", email: "x@x", priority: "VIP",
   status: "Contacted (Awaiting Response)", followUp: "Unscheduled", source: "WhatsApp", notes: "",
   ...over,
 });
@@ -22,7 +22,7 @@ const data: NotificationData = {
     { id: "INV-2", invoiceNumber: "LB-0042", customer: "Cedar", paymentStatus: "Unpaid" },
   ],
   receipts: [{ id: "R1", receiptNumber: "RC-1", invoice: "INV-1", customer: "Cedar" }],
-  contracts: [{ id: "C1", customer: "Cedar", uploadedBy: "Rami K.", fileUrl: "/x.pdf" }],
+  contracts: [{ id: "C1", customer: "Cedar", uploadedBy: "Marven El Mouallem", fileUrl: "/x.pdf" }],
   commissions: [{ id: "CM1", invoice: "INV-1", status: "Pending", commissionAmount: 300 }],
   customerIdByName: { Cedar: "CUST-1" },
 };

@@ -13,7 +13,7 @@ import {
 
 const CTX = {
   countries: ["Lebanon"],
-  assignees: ["Rami K.", "Beirut Reseller Admin"],
+  assignees: ["Marven El Mouallem", "Beirut Reseller Admin"],
   existingKeys: [] as string[],
 };
 
@@ -48,9 +48,9 @@ describe("csv-import: autoMapColumns", () => {
 describe("csv-import: buildRecord + defaults", () => {
   const mapping: ColumnMapping = { companyName: 0, phone: 1, gender: 2 };
   it("fills blanks from defaults and normalizes gender", () => {
-    const r = buildRecord(["Acme", "+961 70 1", "f"], mapping, { country: "Lebanon", assignedUser: "Rami K.", source: "Referral" });
+    const r = buildRecord(["Acme", "+961 70 1", "f"], mapping, { country: "Lebanon", assignedUser: "Marven El Mouallem", source: "Referral" });
     expect(r.country).toBe("Lebanon");
-    expect(r.assignedUser).toBe("Rami K.");
+    expect(r.assignedUser).toBe("Marven El Mouallem");
     expect(r.source).toBe("Referral");
     expect(r.gender).toBe("Female");
   });
@@ -60,7 +60,7 @@ describe("csv-import: buildRecord + defaults", () => {
 });
 
 describe("csv-import: validateRecords", () => {
-  const base = { companyName: "Acme", country: "Lebanon", assignedUser: "Rami K.", contactFirstName: "Sara", contactLastName: "H", gender: "Female" as const, phone: "+961 70 123 456", email: "sara@acme.example" };
+  const base = { companyName: "Acme", country: "Lebanon", assignedUser: "Marven El Mouallem", contactFirstName: "Sara", contactLastName: "H", gender: "Female" as const, phone: "+961 70 123 456", email: "sara@acme.example" };
 
   it("flags missing required, bad email/phone, unknown country + assignee", () => {
     const recs = validateRecords([
@@ -91,9 +91,9 @@ describe("csv-import: validateRecords", () => {
 
 describe("csv-import: summarizeImport", () => {
   const recs = validateRecords([
-    { companyName: "A", country: "Lebanon", assignedUser: "Rami K.", contactFirstName: "X", contactLastName: "Y", gender: "Male", phone: "+961 70 1 234 5", email: "a@a.co" },
-    { companyName: "A", country: "Lebanon", assignedUser: "Rami K.", contactFirstName: "X", contactLastName: "Y", gender: "Male", phone: "+961 70 1 234 5", email: "a@a.co" }, // dup
-    { companyName: "", country: "Lebanon", assignedUser: "Rami K.", contactFirstName: "X", contactLastName: "Y", gender: "Male", phone: "+961 70 9 999 9", email: "bad" }, // invalid
+    { companyName: "A", country: "Lebanon", assignedUser: "Marven El Mouallem", contactFirstName: "X", contactLastName: "Y", gender: "Male", phone: "+961 70 1 234 5", email: "a@a.co" },
+    { companyName: "A", country: "Lebanon", assignedUser: "Marven El Mouallem", contactFirstName: "X", contactLastName: "Y", gender: "Male", phone: "+961 70 1 234 5", email: "a@a.co" }, // dup
+    { companyName: "", country: "Lebanon", assignedUser: "Marven El Mouallem", contactFirstName: "X", contactLastName: "Y", gender: "Male", phone: "+961 70 9 999 9", email: "bad" }, // invalid
   ], CTX);
 
   it("skip policy excludes duplicates; import-anyway includes them", () => {
@@ -108,8 +108,8 @@ describe("csv-import: template + error log", () => {
   });
   it("error log lists only failed rows", () => {
     const recs = validateRecords([
-      { companyName: "Good", country: "Lebanon", assignedUser: "Rami K.", contactFirstName: "X", contactLastName: "Y", gender: "Male", phone: "+961 70 1 234 5", email: "g@g.co" },
-      { companyName: "Bad", country: "Lebanon", assignedUser: "Rami K.", contactFirstName: "X", contactLastName: "Y", gender: "Male", phone: "+961 70 9 999 9", email: "bad" },
+      { companyName: "Good", country: "Lebanon", assignedUser: "Marven El Mouallem", contactFirstName: "X", contactLastName: "Y", gender: "Male", phone: "+961 70 1 234 5", email: "g@g.co" },
+      { companyName: "Bad", country: "Lebanon", assignedUser: "Marven El Mouallem", contactFirstName: "X", contactLastName: "Y", gender: "Male", phone: "+961 70 9 999 9", email: "bad" },
     ], CTX);
     const log = errorLogCsv(recs);
     expect(log).toContain("Bad");

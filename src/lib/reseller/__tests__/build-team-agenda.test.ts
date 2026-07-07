@@ -7,15 +7,15 @@ const NOW = new Date(2026, 5, 15);
 
 const lead = (over: Partial<PortalLead> & { id: string }): PortalLead => ({
   company: "C", contact: "X", gender: "Male", country: "Lebanon", reseller: "Beirut Digital Partners",
-  assignedTo: "Rami K.", phone: "+961", email: "x@x", priority: "Medium",
+  assignedTo: "Marven El Mouallem", phone: "+961", email: "x@x", priority: "Medium",
   status: "Contacted (Awaiting Response)", followUp: "Today, 10:00", source: "WhatsApp", notes: "",
   ...over,
 });
 
 const leads = [
-  lead({ id: "1", assignedTo: "Rami K.", followUp: "Today, 10:00", priority: "VIP" }),
+  lead({ id: "1", assignedTo: "Marven El Mouallem", followUp: "Today, 10:00", priority: "VIP" }),
   lead({ id: "2", assignedTo: "Lina M.", followUp: "Jun 10, 09:00" }),         // overdue
-  lead({ id: "3", assignedTo: "Rami K.", country: "Cyprus", followUp: "Unscheduled" }),
+  lead({ id: "3", assignedTo: "Marven El Mouallem", country: "Cyprus", followUp: "Unscheduled" }),
 ];
 
 describe("buildTeamAgenda (spec §23)", () => {
@@ -27,7 +27,7 @@ describe("buildTeamAgenda (spec §23)", () => {
   });
 
   it("filters by salesperson", () => {
-    const sections = buildTeamAgenda(leads, { salesperson: "Rami K." }, NOW);
+    const sections = buildTeamAgenda(leads, { salesperson: "Marven El Mouallem" }, NOW);
     expect(agendaCount(sections)).toBe(2); // ids 1 + 3
     expect(sections.find((s) => s.bucket === "Overdue")!.items).toHaveLength(0);
   });

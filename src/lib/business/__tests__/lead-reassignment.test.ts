@@ -8,7 +8,7 @@ const users: PortalUser[] = [
   { id: "USR-SUPER", name: "Super Admin", email: "s@x", role: "Super Admin", countries: ["Lebanon", "Cyprus", "Jordan", "Syria"], active: true },
   { id: "USR-REG-LB", name: "Maya Regional", email: "m@x", role: "Regional Director", countries: ["Lebanon", "Jordan"], active: true },
   { id: "USR-RES-BDP", name: "BDP Admin", email: "a@x", role: "Reseller Admin", countries: ["Lebanon"], reseller: "Beirut Digital Partners", active: true },
-  { id: "USR-SALES-RAMI", name: "Rami K.", email: "r@x", role: "Sales Team User", countries: ["Lebanon"], reseller: "Beirut Digital Partners", active: true },
+  { id: "USR-SALES-MARVEN", name: "Marven El Mouallem", email: "r@x", role: "Sales Team User", countries: ["Lebanon"], reseller: "Beirut Digital Partners", active: true },
   { id: "USR-SALES-OTHER", name: "Other Reseller Sales", email: "o@x", role: "Sales Team User", countries: ["Lebanon"], reseller: "Other Reseller", active: true },
   { id: "USR-INACTIVE", name: "Inactive", email: "i@x", role: "Sales Team User", countries: ["Lebanon"], reseller: "Beirut Digital Partners", active: false },
   { id: "USR-CY", name: "Cyprus Sales", email: "c@x", role: "Sales Team User", countries: ["Cyprus"], reseller: "Beirut Digital Partners", active: true },
@@ -22,7 +22,7 @@ function lead(overrides: Partial<PortalLead> = {}): PortalLead {
     gender: "Female",
     country: "Lebanon",
     reseller: "Beirut Digital Partners",
-    assignedTo: "rami@beirutdigital.example",
+    assignedTo: "m.elmouallem@leb-tech.com",
     phone: "+961",
     email: "m@x",
     priority: "High",
@@ -39,7 +39,7 @@ const byId = (id: string) => users.find((u) => u.id === id)!;
 describe("eligibleAssignees", () => {
   it("Super Admin sees active users in the lead's country and reseller (or unscoped overseers)", () => {
     const ids = eligibleAssignees(lead(), byId("USR-SUPER"), users).map((u) => u.id);
-    expect(ids).toContain("USR-SALES-RAMI"); // same reseller, Lebanon
+    expect(ids).toContain("USR-SALES-MARVEN"); // same reseller, Lebanon
     expect(ids).toContain("USR-REG-LB"); // director, no reseller, covers Lebanon
     expect(ids).not.toContain("USR-SALES-OTHER"); // different reseller
     expect(ids).not.toContain("USR-INACTIVE"); // inactive
@@ -48,25 +48,25 @@ describe("eligibleAssignees", () => {
 
   it("Reseller Admin only sees users in their own reseller", () => {
     const ids = eligibleAssignees(lead(), byId("USR-RES-BDP"), users).map((u) => u.id);
-    expect(ids).toContain("USR-SALES-RAMI");
+    expect(ids).toContain("USR-SALES-MARVEN");
     expect(ids).not.toContain("USR-REG-LB"); // director has no reseller → outside admin's reseller scope
     expect(ids).not.toContain("USR-SALES-OTHER");
   });
 
   it("Regional Director is limited to users covering their countries", () => {
     const ids = eligibleAssignees(lead(), byId("USR-REG-LB"), users).map((u) => u.id);
-    expect(ids).toContain("USR-SALES-RAMI"); // Lebanon
+    expect(ids).toContain("USR-SALES-MARVEN"); // Lebanon
     expect(ids).not.toContain("USR-CY"); // wrong country anyway
   });
 
   it("Sales Team User cannot reassign (no candidates)", () => {
-    expect(eligibleAssignees(lead(), byId("USR-SALES-RAMI"), users)).toEqual([]);
+    expect(eligibleAssignees(lead(), byId("USR-SALES-MARVEN"), users)).toEqual([]);
   });
 });
 
 describe("validateReassignment", () => {
   it("accepts an eligible target", () => {
-    expect(validateReassignment(lead(), "USR-SALES-RAMI", byId("USR-SUPER"), users)).toBeNull();
+    expect(validateReassignment(lead(), "USR-SALES-MARVEN", byId("USR-SUPER"), users)).toBeNull();
   });
 
   it("rejects a cross-reseller target", () => {
@@ -74,7 +74,7 @@ describe("validateReassignment", () => {
   });
 
   it("rejects when the acting role cannot reassign", () => {
-    expect(validateReassignment(lead(), "USR-SALES-RAMI", byId("USR-SALES-RAMI"), users)).toMatch(/cannot reassign/i);
+    expect(validateReassignment(lead(), "USR-SALES-MARVEN", byId("USR-SALES-MARVEN"), users)).toMatch(/cannot reassign/i);
   });
 
   it("requires a target selection", () => {

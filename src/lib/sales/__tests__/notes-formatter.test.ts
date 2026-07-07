@@ -4,8 +4,8 @@ import { formatNoteLine, noteTemplates, parseNotes, prependNote } from "@/lib/sa
 
 describe("notes formatter (spec §11)", () => {
   it("formats a line with timestamp + author + trimmed text", () => {
-    expect(formatNoteLine("  called, no answer  ", "Rami K.", "2026-06-14T10:00:00Z")).toBe(
-      "2026-06-14T10:00:00Z · Rami K.: called, no answer",
+    expect(formatNoteLine("  called, no answer  ", "Marven El Mouallem", "2026-06-14T10:00:00Z")).toBe(
+      "2026-06-14T10:00:00Z · Marven El Mouallem: called, no answer",
     );
   });
 

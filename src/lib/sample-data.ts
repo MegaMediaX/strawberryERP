@@ -147,7 +147,7 @@ export const leads = [
     gender: "Female",
     country: "Lebanon",
     reseller: "Beirut Digital Partners",
-    assignedTo: "Rami K.",
+    assignedTo: "Marven El Mouallem",
     phone: "+961 70 144 221",
     email: "maya@cedarcloud.example",
     priority: "VIP",
@@ -222,7 +222,7 @@ export const integrationHealth = [
 ];
 
 export const auditEvents = [
-  "Rami K. changed LEAD-2408 to Scheduled Follow-Up",
+  "Marven El Mouallem changed LEAD-2408 to Scheduled Follow-Up",
   "Super Admin updated invoice numbering to country-based",
   "API key LT-DEV-03 created with read/write lead scopes",
   "Regional Director viewed Jordan country performance",

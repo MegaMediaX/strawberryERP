@@ -45,7 +45,7 @@ describe("/api/frappe/settings/important-details (§14)", () => {
   });
 
   it("denies a Sales Team User from writing", async () => {
-    const res = await PATCH(req("PATCH", "USR-SALES-RAMI", { entries: [goodEntry] }));
+    const res = await PATCH(req("PATCH", "USR-SALES-MARVEN", { entries: [goodEntry] }));
     expect(res.status).toBe(403);
   });
 });

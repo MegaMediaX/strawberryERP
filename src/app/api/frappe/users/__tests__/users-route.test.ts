@@ -40,7 +40,7 @@ describe("POST /api/frappe/users (spec §22 — roles strictly below)", () => {
   });
 
   it("denies a Sales Team User from creating anyone", async () => {
-    const res = await POST(req("USR-SALES-RAMI", valid));
+    const res = await POST(req("USR-SALES-MARVEN", valid));
     expect(res.status).toBe(403);
   });
 });

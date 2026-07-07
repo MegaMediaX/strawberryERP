@@ -24,7 +24,7 @@ function cookieValue(setCookie: string | null): string {
 
 describe("POST /api/auth/login", () => {
   it("authenticates the super admin and sets a session cookie", async () => {
-    const res = await loginReq({ email: "super.admin@lebtech.example", password: SEED_ADMIN_PW });
+    const res = await loginReq({ email: "ggkhoueiry@gmail.com", password: SEED_ADMIN_PW });
     expect(res.status).toBe(200);
     const body = (await res.json()) as { ok: boolean; data: { role: string } };
     expect(body.ok).toBe(true);
@@ -36,7 +36,7 @@ describe("POST /api/auth/login", () => {
   });
 
   it("rejects wrong credentials with 401 and no cookie token", async () => {
-    const res = await loginReq({ email: "super.admin@lebtech.example", password: "wrong" });
+    const res = await loginReq({ email: "ggkhoueiry@gmail.com", password: "wrong" });
     expect(res.status).toBe(401);
   });
 
@@ -50,7 +50,7 @@ describe("POST /api/auth/login", () => {
 
 describe("login → session cookie resolves a verified identity", () => {
   it("a cookie from a successful login resolves to the Super Admin session", async () => {
-    const res = await loginReq({ email: "super.admin@lebtech.example", password: SEED_ADMIN_PW });
+    const res = await loginReq({ email: "ggkhoueiry@gmail.com", password: SEED_ADMIN_PW });
     const token = cookieValue(res.headers.get("set-cookie"));
     expect(token).not.toBe("");
 

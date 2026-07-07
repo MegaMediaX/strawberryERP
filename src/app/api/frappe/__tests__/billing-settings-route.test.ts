@@ -53,12 +53,12 @@ describe("POST settings/currencies", () => {
   });
 
   it("denies a non-Super-Admin", async () => {
-    const res = await post(CURRENCIES, validCurrency, { userId: "USR-SALES-RAMI" });
+    const res = await post(CURRENCIES, validCurrency, { userId: "USR-SALES-MARVEN" });
     expect(res.status).toBe(403);
   });
 
   it("blocks an impersonating Super Admin (sensitive)", async () => {
-    const res = await post(CURRENCIES, validCurrency, { userId: "USR-SUPER", impersonate: "USR-SALES-RAMI" });
+    const res = await post(CURRENCIES, validCurrency, { userId: "USR-SUPER", impersonate: "USR-SALES-MARVEN" });
     expect(res.status).toBe(403);
   });
 });
@@ -115,12 +115,12 @@ describe("GET + PATCH settings/invoice-numbering (singleton)", () => {
   });
 
   it("denies a non-Super-Admin PATCH", async () => {
-    const res = await patch(NUMBERING, { mode: "Global" }, { userId: "USR-SALES-RAMI" });
+    const res = await patch(NUMBERING, { mode: "Global" }, { userId: "USR-SALES-MARVEN" });
     expect(res.status).toBe(403);
   });
 
   it("blocks an impersonating Super Admin PATCH (sensitive)", async () => {
-    const res = await patch(NUMBERING, { mode: "Global" }, { userId: "USR-SUPER", impersonate: "USR-SALES-RAMI" });
+    const res = await patch(NUMBERING, { mode: "Global" }, { userId: "USR-SUPER", impersonate: "USR-SALES-MARVEN" });
     expect(res.status).toBe(403);
   });
 });

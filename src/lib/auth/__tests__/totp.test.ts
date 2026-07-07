@@ -94,7 +94,7 @@ describe("loginTotpCheck — login-time 2FA gate", () => {
 
 describe("otpauthUrl", () => {
   it("builds a scannable otpauth URI with issuer and secret", () => {
-    const url = otpauthUrl("ABCDEFGH", "super.admin@lebtech.example");
+    const url = otpauthUrl("ABCDEFGH", "ggkhoueiry@gmail.com");
     expect(url.startsWith("otpauth://totp/")).toBe(true);
     expect(url).toContain("secret=ABCDEFGH");
     expect(url).toContain("issuer=LebTech");

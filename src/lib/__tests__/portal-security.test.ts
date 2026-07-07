@@ -90,9 +90,9 @@ describe("resolvePortalSession — local-dev ergonomics preserved", () => {
 
   it("a known x-platform-user-id header outside production resolves that user as before", () => {
     withEnv({ NODE_ENV: "test", ALLOW_DEV_IDENTITY_HEADERS: undefined }, () => {
-      const session = resolvePortalSession(req({ "x-platform-user-id": "USR-SALES-RAMI" }));
+      const session = resolvePortalSession(req({ "x-platform-user-id": "USR-SALES-MARVEN" }));
       expect(session.user.role).toBe("Sales Team User");
-      expect(session.user.id).toBe("USR-SALES-RAMI");
+      expect(session.user.id).toBe("USR-SALES-MARVEN");
     });
   });
 });

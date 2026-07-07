@@ -188,7 +188,7 @@ describe("P1-4: outgoing write payload scope is overridden (not merged) by sessi
         role: "Sales Team User",
         countries: [],
         reseller: undefined,
-        name: "Rami K.",
+        name: "Marven El Mouallem",
       },
     } as never;
 
@@ -197,7 +197,7 @@ describe("P1-4: outgoing write payload scope is overridden (not merged) by sessi
       assigned_user: "",
     });
 
-    expect(outgoing.assigned_user).toBe("Rami K.");
+    expect(outgoing.assigned_user).toBe("Marven El Mouallem");
   });
 
   it("does not override scope for Super Admin (unrestricted)", () => {

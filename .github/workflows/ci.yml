@@ -57,7 +57,11 @@ jobs:
 
       - name: Unit tests
         env:
-          SEED_ADMIN_PW: LebTech!Admin#2026
+          # SEED_ADMIN_PW is the real Super Admin login password (matches the
+          # seeded scrypt hash for ggkhoueiry@gmail.com), so it is injected from a
+          # repo secret — never hardcoded here. Add it under Settings → Secrets →
+          # Actions as SEED_ADMIN_PW. The others are test-only fixtures.
+          SEED_ADMIN_PW: ${{ secrets.SEED_ADMIN_PW }}
           SEED_REGIONAL_PW: LebTech!Regional#2026
           SEED_RESELLER_PW: LebTech!Reseller#2026
           SEED_SALES_PW: LebTech!Sales#2026

@@ -29,7 +29,7 @@ describe("Super Admin impersonating a lower role", () => {
   const session = resolvePortalSession(
     req({
       "x-platform-user-id": "USR-SUPER",
-      "x-platform-impersonate-user-id": "USR-SALES-RAMI",
+      "x-platform-impersonate-user-id": "USR-SALES-MARVEN",
     }),
   );
 
@@ -73,8 +73,8 @@ describe("Non-Super-Admin cannot impersonate", () => {
 });
 
 describe("Privilege never expands — effective rank <= actor rank for every combination", () => {
-  const userIds = ["USR-SUPER", "USR-REG-LB", "USR-RESELLER-BDP", "USR-SALES-RAMI"];
-  const targetIds = ["USR-SUPER", "USR-REG-LB", "USR-RESELLER-BDP", "USR-SALES-RAMI"];
+  const userIds = ["USR-SUPER", "USR-REG-LB", "USR-RESELLER-BDP", "USR-SALES-MARVEN"];
+  const targetIds = ["USR-SUPER", "USR-REG-LB", "USR-RESELLER-BDP", "USR-SALES-MARVEN"];
 
   for (const actor of userIds) {
     for (const target of targetIds) {

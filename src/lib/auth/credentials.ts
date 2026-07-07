@@ -19,10 +19,10 @@ interface CredentialRecord {
 
 const SEED_CREDENTIALS: CredentialRecord[] = [
   {
-    email: "super.admin@lebtech.example",
+    email: "ggkhoueiry@gmail.com",
     userId: "USR-SUPER",
     passwordHash:
-      "c0f526c6942aeed61caef173d5054702:57eb4335565f35fdcdef7aacc06d4ef496f33b69adaf346cdff0d661028c5c9d4d4a87ec6c80f96b72089cb358b001c39b4805285d7811f6bc0a4ea29d3c2f77",
+      "ed5f76c35efaf979ca9bbcf0fe6da167:8526349d2c9c82110b4ce365531e7505cfe26dd91069ba9e082b9f448ca32e73f87e1eedcb22f5723f4be80b4109ed3f9987da6da3b6c08aec3b51b72f2e42d4",
   },
   {
     email: "maya.regional@lebtech.example",
@@ -37,10 +37,16 @@ const SEED_CREDENTIALS: CredentialRecord[] = [
       "899338f289a8524b6b938f34240b4bb1:ac19f4e658cae7da8e392cee4d64b8db873ea36691e9e07fbdd4653f529fc7a591188493f1192cd0106080d782237e5717481befbd59ab4b566199cb73b28224",
   },
   {
-    email: "rami@beirutdigital.example",
-    userId: "USR-SALES-RAMI",
+    email: "m.elmouallem@leb-tech.com",
+    userId: "USR-SALES-MARVEN",
     passwordHash:
-      "63d1b5a8eae0fc312afffe6ee3c1d377:0847ac50bb101d184314c6294166446bf900d5d9732e7253cc9f17f360bc44011852e4423902363e06cdaf27d52bcafde8965fea14116556467b8fa7a49dd910",
+      "85b838374ca306c1f0a5c0b02dc61a28:eab6f89b606e3062b97a6fe7530590e861148afad2de2997168752bb50b60fa3f5089acac257778d982188962135b6c9694b3a12bc342530d77a0d3f4dd1478d",
+  },
+  {
+    email: "e.mouawad.oradion@gmail.com",
+    userId: "USR-SALES-ELIE",
+    passwordHash:
+      "91ec6fd5c6c9e2d469f9a98a7b419a21:d87220994b56bf1ceb8b6cba15d49fae72cf7d688ce20f4c54c3a61d36c9bdf8f97898cafd059ce41b492fa4b51cbad3f35ecc7e6be0c48d491f3c9ef722dbbc",
   },
 ];
 

@@ -34,8 +34,8 @@ describe("leadsScopeForFrappe", () => {
   });
 
   it("Sales Team User scopes to their own assigned leads", () => {
-    const scope = scopeFor("USR-SALES-RAMI");
-    expect(scope.assigned_user).toBe("Rami K.");
+    const scope = scopeFor("USR-SALES-MARVEN");
+    expect(scope.assigned_user).toBe("Marven El Mouallem");
     expect(scope.countries).toBeUndefined();
   });
 });

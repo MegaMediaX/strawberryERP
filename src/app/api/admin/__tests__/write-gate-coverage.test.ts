@@ -65,7 +65,7 @@ describe("accounting/currencies", () => {
   it("POST 501 for a valid new currency", async () =>
     expectGate(await currenciesPOST(adminReq("POST", { currencyCode: "AED", currencyName: "UAE Dirham", symbol: "AED", decimalPrecision: 2, isActive: true, manualExchangeRate: 0.27 }))));
   it("POST 403 for a non-Super-Admin (guard before gate)", async () =>
-    expectGuard(await currenciesPOST(adminReq("POST", { currencyCode: "AED", currencyName: "UAE Dirham", symbol: "AED", decimalPrecision: 2 }, "USR-SALES-RAMI")), 403));
+    expectGuard(await currenciesPOST(adminReq("POST", { currencyCode: "AED", currencyName: "UAE Dirham", symbol: "AED", decimalPrecision: 2 }, "USR-SALES-MARVEN")), 403));
   it("PATCH 404 for an unknown currency (guard before gate)", async () =>
     expectGuard(await currenciesPATCH(adminReq("PATCH", { currencyCode: "ZZZ", isActive: false })), 404));
 });
@@ -95,7 +95,7 @@ describe("api-keys", () => {
   it("POST 501 for a valid key definition", async () =>
     expectGate(await apiKeysPOST(adminReq("POST", { keyName: "CI Bot", description: "pipeline", scopes: ["read:leads", "write:leads"], readAccess: true, writeAccess: true, rateLimitPerMinute: 60 }))));
   it("POST 403 for a non-Super-Admin (guard before gate)", async () =>
-    expectGuard(await apiKeysPOST(adminReq("POST", { keyName: "CI Bot", scopes: ["read:leads"], readAccess: true }, "USR-SALES-RAMI")), 403));
+    expectGuard(await apiKeysPOST(adminReq("POST", { keyName: "CI Bot", scopes: ["read:leads"], readAccess: true }, "USR-SALES-MARVEN")), 403));
   it("PATCH 404 revoking an unknown key (guard before gate)", async () =>
     expectGuard(await apiKeysPATCH(adminReq("PATCH", { id: "APIK-999", action: "revoke" })), 404));
 });
@@ -120,7 +120,7 @@ describe("custom-fields", () => {
   it("POST 501 for a valid new field", async () =>
     expectGate(await customFieldsPOST(adminReq("POST", { target: "customers", fieldName: "account_manager", label: "Account Manager", fieldType: "text", required: false, searchable: true }))));
   it("POST 403 for a non-Super-Admin (guard before gate)", async () =>
-    expectGuard(await customFieldsPOST(adminReq("POST", { target: "customers", fieldName: "tier", label: "Tier", fieldType: "text" }, "USR-SALES-RAMI")), 403));
+    expectGuard(await customFieldsPOST(adminReq("POST", { target: "customers", fieldName: "tier", label: "Tier", fieldType: "text" }, "USR-SALES-MARVEN")), 403));
 });
 
 describe("customers", () => {
@@ -134,7 +134,7 @@ describe("delete-queue", () => {
   it("POST clear-all 501 once confirmed", async () =>
     expectGate(await deleteQueuePOST(adminReq("POST", { action: "clear-all", confirm: "CLEAR ALL" }))));
   it("PATCH 403 for a non-Super-Admin (guard before gate)", async () =>
-    expectGuard(await deleteQueuePATCH(adminReq("PATCH", { id: "DQ-1", action: "restore" }, "USR-SALES-RAMI")), 403));
+    expectGuard(await deleteQueuePATCH(adminReq("PATCH", { id: "DQ-1", action: "restore" }, "USR-SALES-MARVEN")), 403));
 });
 
 describe("integrations", () => {
@@ -164,7 +164,7 @@ describe("permissions", () => {
   it("PATCH 501 for a valid permission matrix", async () =>
     expectGate(await permissionsPATCH(adminReq("PATCH", defaultPermissionMatrix))));
   it("PATCH 403 for a non-Super-Admin (guard before gate)", async () =>
-    expectGuard(await permissionsPATCH(adminReq("PATCH", {}, "USR-SALES-RAMI")), 403));
+    expectGuard(await permissionsPATCH(adminReq("PATCH", {}, "USR-SALES-MARVEN")), 403));
 });
 
 describe("resellers", () => {
@@ -213,7 +213,7 @@ describe("users/[id]", () => {
     context: { params: Promise.resolve({ id }) },
   });
   it("PATCH 501 resetting a known user's password", async () => {
-    const { request, context } = withId("PATCH", { action: "reset_password", password: "password123" }, "USR-SALES-RAMI");
+    const { request, context } = withId("PATCH", { action: "reset_password", password: "password123" }, "USR-SALES-MARVEN");
     await expectGate(await userByIdPATCH(request, context));
   });
   it("PATCH 404 for an unknown user (guard before gate)", async () => {
@@ -226,5 +226,5 @@ describe("white-label", () => {
   it("PATCH 501 for a valid branding patch", async () =>
     expectGate(await whiteLabelPATCH(adminReq("PATCH", { platformName: "LebTech Partner Platform" }))));
   it("PATCH 403 for a non-Super-Admin (guard before gate)", async () =>
-    expectGuard(await whiteLabelPATCH(adminReq("PATCH", {}, "USR-SALES-RAMI")), 403));
+    expectGuard(await whiteLabelPATCH(adminReq("PATCH", {}, "USR-SALES-MARVEN")), 403));
 });

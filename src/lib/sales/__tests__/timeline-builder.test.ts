@@ -23,7 +23,7 @@ const missedCall: CallTimelineInput = {
 function lead(over: Partial<PortalLead> = {}): PortalLead {
   return {
     id: "LEAD-9", company: "Acme", contact: "Sara", gender: "Female", country: "Lebanon",
-    reseller: "Beirut Digital Partners", assignedTo: "Rami K.", phone: "+961", email: "s@x",
+    reseller: "Beirut Digital Partners", assignedTo: "Marven El Mouallem", phone: "+961", email: "s@x",
     priority: "High", status: "Contacted (Interested)", followUp: "Tomorrow, 10:00",
     source: "WhatsApp", notes: "",
     ...over,

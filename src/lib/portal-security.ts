@@ -45,8 +45,8 @@ export type DeleteQueueRecord = {
 export const portalUsers: PortalUser[] = [
   {
     id: "USR-SUPER",
-    name: "Super Admin",
-    email: "super.admin@lebtech.example",
+    name: "Georges Khoueiry",
+    email: "ggkhoueiry@gmail.com",
     role: "Super Admin",
     countries: [...allowedCountries],
     active: true,
@@ -69,9 +69,18 @@ export const portalUsers: PortalUser[] = [
     active: true,
   },
   {
-    id: "USR-SALES-RAMI",
-    name: "Rami K.",
-    email: "rami@beirutdigital.example",
+    id: "USR-SALES-MARVEN",
+    name: "Marven El Mouallem",
+    email: "m.elmouallem@leb-tech.com",
+    role: "Sales Team User",
+    countries: ["Lebanon"],
+    reseller: "Beirut Digital Partners",
+    active: true,
+  },
+  {
+    id: "USR-SALES-ELIE",
+    name: "Elie Mouawad",
+    email: "e.mouawad.oradion@gmail.com",
     role: "Sales Team User",
     countries: ["Lebanon"],
     reseller: "Beirut Digital Partners",

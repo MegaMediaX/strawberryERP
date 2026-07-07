@@ -40,7 +40,7 @@ function get(userId: string) {
 }
 
 // Distinctive agents/resellers so assertions are robust against other tests' data.
-seed({ agent: "Rami K.", reseller: "Beirut Digital Partners", country: "Lebanon" });
+seed({ agent: "Marven El Mouallem", reseller: "Beirut Digital Partners", country: "Lebanon" });
 seed({ agent: "KPI-Sara", reseller: "Beirut Digital Partners", country: "Lebanon" });
 seed({ agent: "KPI-Omar", reseller: "MedTech Channel CY", country: "Cyprus" });
 
@@ -48,7 +48,7 @@ describe("GET /api/reports/call-kpis — scoping", () => {
   it("Super Admin sees every agent", async () => {
     const json = await (await get("USR-SUPER")).json();
     const agents = json.agents.map((a: { agent: string }) => a.agent);
-    expect(agents).toEqual(expect.arrayContaining(["Rami K.", "KPI-Sara", "KPI-Omar"]));
+    expect(agents).toEqual(expect.arrayContaining(["Marven El Mouallem", "KPI-Sara", "KPI-Omar"]));
   });
 
   it("Reseller Admin sees only their reseller's agents", async () => {
@@ -59,12 +59,12 @@ describe("GET /api/reports/call-kpis — scoping", () => {
   });
 
   it("Sales sees only their own calls", async () => {
-    const json = await (await get("USR-SALES-RAMI")).json();
+    const json = await (await get("USR-SALES-MARVEN")).json();
     const agents = json.agents.map((a: { agent: string }) => a.agent);
     expect(agents).not.toContain("KPI-Sara");
     expect(agents).not.toContain("KPI-Omar");
     // Every returned agent bucket must be Rami himself.
-    expect(agents.every((a: string) => a === "Rami K." || a === "rami@beirutdigital.example")).toBe(true);
+    expect(agents.every((a: string) => a === "Marven El Mouallem" || a === "m.elmouallem@leb-tech.com")).toBe(true);
   });
 
   it("returns team totals + a window echo", async () => {

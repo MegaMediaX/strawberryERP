@@ -4,9 +4,9 @@ import { deserializeLeadFilters, serializeLeadFilters } from "@/lib/reseller/fil
 
 describe("reseller leads filter persistence (spec §30)", () => {
   it("serializes only non-empty known fields", () => {
-    const json = serializeLeadFilters({ search: "cedar", country: "", status: "Contacted (Interested)", assignedUser: "Rami K." });
+    const json = serializeLeadFilters({ search: "cedar", country: "", status: "Contacted (Interested)", assignedUser: "Marven El Mouallem" });
     const parsed = JSON.parse(json);
-    expect(parsed).toEqual({ search: "cedar", status: "Contacted (Interested)", assignedUser: "Rami K." });
+    expect(parsed).toEqual({ search: "cedar", status: "Contacted (Interested)", assignedUser: "Marven El Mouallem" });
     expect("country" in parsed).toBe(false);
   });
 

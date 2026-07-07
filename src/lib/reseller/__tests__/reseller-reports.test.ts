@@ -8,7 +8,7 @@ const NOW = new Date(2026, 5, 15);
 
 const lead = (over: Partial<PortalLead> & { id: string }): PortalLead => ({
   company: "C", contact: "X", gender: "Male", country: "Lebanon", reseller: "Beirut Digital Partners",
-  assignedTo: "Rami K.", phone: "+961", email: "x@x", priority: "Medium",
+  assignedTo: "Marven El Mouallem", phone: "+961", email: "x@x", priority: "Medium",
   status: "Contacted (Awaiting Response)", followUp: "Unscheduled", source: "WhatsApp", notes: "",
   ...over,
 });
@@ -32,7 +32,7 @@ describe("resellerReports (spec §24)", () => {
     expect(r.pipeline).toHaveLength(6);
     expect(r.pipeline.find((p) => p.label === "Interested")!.count).toBe(1);
     expect(r.leadSources.find((s) => s.label === "WhatsApp")!.count).toBe(2);
-    expect(r.team.find((t) => t.label === "Rami K.")!.count).toBe(2);
+    expect(r.team.find((t) => t.label === "Marven El Mouallem")!.count).toBe(2);
   });
 
   it("computes conversion rate + follow-up buckets", () => {

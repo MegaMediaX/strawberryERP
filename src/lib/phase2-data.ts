@@ -407,7 +407,7 @@ export const invoices: Invoice[] = [
     generatedPdfUrl: "/generated/invoices/LB-2026-0041.pdf",
     qrCodeUrl: "/generated/invoices/LB-2026-0041-qr.png",
     paymentLink: "https://pay.lebtech.example/LB-2026-0041",
-    createdByUser: "Rami K.",
+    createdByUser: "Marven El Mouallem",
     issuedAt: "2026-06-05T09:00:00Z",
   },
   {
@@ -448,7 +448,7 @@ export const receipts: Receipt[] = [
     paymentReference: "BLC-778821",
     attachmentUrl: "/uploads/receipts/BLC-778821.png",
     receiptPdfUrl: "/generated/receipts/RCPT-2026-0032.pdf",
-    issuedBy: "Rami K.",
+    issuedBy: "Marven El Mouallem",
     issuedAt: "2026-06-06T13:15:00Z",
   },
 ];
@@ -512,7 +512,7 @@ export const contracts: Contract[] = [
     storageProvider: "Google Drive",
     googleDriveFileId: "gdrive-contract-0018",
     fileUrl: "https://drive.google.com/file/d/gdrive-contract-0018",
-    uploadedBy: "Rami K.",
+    uploadedBy: "Marven El Mouallem",
     uploadedAt: "2026-06-03T10:00:00Z",
     generatedFromTemplate: true,
     templateUsed: "Managed Services Agreement",
@@ -728,7 +728,7 @@ export const activityTimeline: ActivityTimelineEvent[] = [
     action: "status_change",
     oldValue: "Contacted (Interested)",
     newValue: "Scheduled Follow-Up",
-    performedBy: "Rami K.",
+    performedBy: "Marven El Mouallem",
     timestamp: "2026-06-08T09:30:00Z",
   },
   {
@@ -738,7 +738,7 @@ export const activityTimeline: ActivityTimelineEvent[] = [
     action: "invoice_issued",
     oldValue: "Draft",
     newValue: "Issued",
-    performedBy: "Rami K.",
+    performedBy: "Marven El Mouallem",
     timestamp: "2026-06-05T09:00:00Z",
   },
   {

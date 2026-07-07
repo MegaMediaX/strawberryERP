@@ -13,24 +13,24 @@ const user = (over: Partial<PortalUser> & { id: string; name: string }): PortalU
 
 const lead = (over: Partial<PortalLead> & { id: string }): PortalLead => ({
   company: "C", contact: "X", gender: "Male", country: "Lebanon", reseller: "Beirut Digital Partners",
-  assignedTo: "Rami K.", phone: "+961", email: "x@x", priority: "Medium",
+  assignedTo: "Marven El Mouallem", phone: "+961", email: "x@x", priority: "Medium",
   status: "Contacted (Awaiting Response)", followUp: "Unscheduled", source: "WhatsApp", notes: "",
   ...over,
 });
 
 describe("teamPerformance (spec §7/§22)", () => {
-  const users = [user({ id: "u1", name: "Rami K." }), user({ id: "u2", name: "Lina M.", active: false })];
+  const users = [user({ id: "u1", name: "Marven El Mouallem" }), user({ id: "u2", name: "Lina M.", active: false })];
   const leads = [
-    lead({ id: "1", assignedTo: "Rami K.", status: "Contacted (Interested)", followUp: "Today, 10:00" }),
-    lead({ id: "2", assignedTo: "Rami K.", followUp: "Jun 10, 09:00" }),               // overdue
-    lead({ id: "3", assignedTo: "Rami K.", status: "Contacted (Not Interested)" }),    // excluded from active
+    lead({ id: "1", assignedTo: "Marven El Mouallem", status: "Contacted (Interested)", followUp: "Today, 10:00" }),
+    lead({ id: "2", assignedTo: "Marven El Mouallem", followUp: "Jun 10, 09:00" }),               // overdue
+    lead({ id: "3", assignedTo: "Marven El Mouallem", status: "Contacted (Not Interested)" }),    // excluded from active
     lead({ id: "4", assignedTo: "Lina M.", status: "Contacted (Interested)" }),
   ];
 
   const stats = teamPerformance(users, leads, NOW);
 
   it("computes per-member tallies from assigned leads", () => {
-    const rami = stats.find((s) => s.name === "Rami K.")!;
+    const rami = stats.find((s) => s.name === "Marven El Mouallem")!;
     expect(rami.activeLeads).toBe(2);      // 2 active (id 1,2); id3 Not Interested excluded
     expect(rami.interested).toBe(1);
     expect(rami.followUpsToday).toBe(1);
