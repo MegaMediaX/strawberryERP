@@ -23,7 +23,7 @@ function names(userId: string) {
 
 describe("assignableUsersFor", () => {
   it("Super Admin can assign to every active user", () => {
-    expect(names("USR-SUPER")).toEqual(["Beirut Reseller Admin", "Elie Mouawad", "Marven El Mouallem", "Maya Regional", "Super Admin"]);
+    expect(names("USR-SUPER")).toEqual(["Beirut Reseller Admin", "Elie Mouawad", "Georges Khoueiry", "Marven El Mouallem", "Maya Regional"]);
   });
 
   it("Regional Director can assign to users in their countries", () => {

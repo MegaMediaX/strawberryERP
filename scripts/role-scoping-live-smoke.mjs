@@ -8,7 +8,7 @@ import { requireEnv } from "./load-env.mjs";
 const BASE = process.argv[2] || process.env.BASE_URL || "http://localhost:8080";
 
 const ROLES = [
-  { name: "Super Admin", email: "super.admin@lebtech.example", password: requireEnv("SEED_ADMIN_PW") },
+  { name: "Super Admin", email: "ggkhoueiry@gmail.com", password: requireEnv("SEED_ADMIN_PW") },
   { name: "Regional Director", email: "maya.regional@lebtech.example", password: requireEnv("SEED_REGIONAL_PW") },
   { name: "Reseller Admin", email: "admin@beirutdigital.example", password: requireEnv("SEED_RESELLER_PW") },
   { name: "Sales Team User", email: "m.elmouallem@leb-tech.com", password: requireEnv("SEED_SALES_PW") },

@@ -6,7 +6,7 @@ import crypto from "node:crypto";
 import { requireEnv } from "./load-env.mjs";
 
 const BASE = process.argv[2] || process.env.BASE_URL || "http://localhost:8080";
-const EMAIL = process.argv[3] || "super.admin@lebtech.example";
+const EMAIL = process.argv[3] || "ggkhoueiry@gmail.com";
 const PASSWORD = process.argv[4] || requireEnv("SEED_ADMIN_PW");
 
 const B32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";

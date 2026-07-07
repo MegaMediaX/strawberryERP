@@ -25,7 +25,7 @@ describe("GET /api/auth/session", () => {
       new Request("https://portal.local/api/auth/login", {
         method: "POST",
         headers: { "content-type": "application/json", "x-forwarded-for": "5.5.5.1" },
-        body: JSON.stringify({ email: "super.admin@lebtech.example", password: SEED_ADMIN_PW }),
+        body: JSON.stringify({ email: "ggkhoueiry@gmail.com", password: SEED_ADMIN_PW }),
       }),
     );
     const token = cookieFrom(loginRes.headers.get("set-cookie"));
@@ -38,7 +38,7 @@ describe("GET /api/auth/session", () => {
       data: { user: { role: string; email: string }; source: string; impersonating: boolean };
     };
     expect(body.data.user.role).toBe("Super Admin");
-    expect(body.data.user.email).toBe("super.admin@lebtech.example");
+    expect(body.data.user.email).toBe("ggkhoueiry@gmail.com");
     expect(body.data.source).toBe("session-token");
     expect(body.data.impersonating).toBe(false);
   });

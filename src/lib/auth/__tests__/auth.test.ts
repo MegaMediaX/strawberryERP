@@ -49,15 +49,15 @@ describe("session token (HMAC)", () => {
 
 describe("authenticate (seed credentials)", () => {
   it("accepts the super admin credentials", () => {
-    expect(authenticate("super.admin@lebtech.example", SEED_ADMIN_PW)).toBe("USR-SUPER");
+    expect(authenticate("ggkhoueiry@gmail.com", SEED_ADMIN_PW)).toBe("USR-SUPER");
   });
 
   it("is case-insensitive on email and trims whitespace", () => {
-    expect(authenticate("  SUPER.ADMIN@LEBTECH.EXAMPLE ", SEED_ADMIN_PW)).toBe("USR-SUPER");
+    expect(authenticate("  GGKHOUEIRY@GMAIL.COM ", SEED_ADMIN_PW)).toBe("USR-SUPER");
   });
 
   it("rejects a wrong password", () => {
-    expect(authenticate("super.admin@lebtech.example", "nope")).toBeNull();
+    expect(authenticate("ggkhoueiry@gmail.com", "nope")).toBeNull();
   });
 
   it("rejects an unknown email", () => {

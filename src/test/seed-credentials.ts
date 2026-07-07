@@ -21,7 +21,7 @@ export const SEED_REGIONAL_PW = req("SEED_REGIONAL_PW");
 export const SEED_RESELLER_PW = req("SEED_RESELLER_PW");
 export const SEED_SALES_PW = req("SEED_SALES_PW");
 
-export const SEED_SUPER_EMAIL = "super.admin@lebtech.example";
+export const SEED_SUPER_EMAIL = "ggkhoueiry@gmail.com";
 
 export const SEED_LOGINS = [
   { name: "Super Admin", email: SEED_SUPER_EMAIL, password: SEED_ADMIN_PW },

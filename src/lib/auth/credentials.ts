@@ -19,10 +19,10 @@ interface CredentialRecord {
 
 const SEED_CREDENTIALS: CredentialRecord[] = [
   {
-    email: "super.admin@lebtech.example",
+    email: "ggkhoueiry@gmail.com",
     userId: "USR-SUPER",
     passwordHash:
-      "c0f526c6942aeed61caef173d5054702:57eb4335565f35fdcdef7aacc06d4ef496f33b69adaf346cdff0d661028c5c9d4d4a87ec6c80f96b72089cb358b001c39b4805285d7811f6bc0a4ea29d3c2f77",
+      "ed5f76c35efaf979ca9bbcf0fe6da167:8526349d2c9c82110b4ce365531e7505cfe26dd91069ba9e082b9f448ca32e73f87e1eedcb22f5723f4be80b4109ed3f9987da6da3b6c08aec3b51b72f2e42d4",
   },
   {
     email: "maya.regional@lebtech.example",
