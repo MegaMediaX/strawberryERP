@@ -42,6 +42,12 @@ const SEED_CREDENTIALS: CredentialRecord[] = [
     passwordHash:
       "63d1b5a8eae0fc312afffe6ee3c1d377:0847ac50bb101d184314c6294166446bf900d5d9732e7253cc9f17f360bc44011852e4423902363e06cdaf27d52bcafde8965fea14116556467b8fa7a49dd910",
   },
+  {
+    email: "e.mouawad.oradion@gmail.com",
+    userId: "USR-SALES-ELIE",
+    passwordHash:
+      "91ec6fd5c6c9e2d469f9a98a7b419a21:d87220994b56bf1ceb8b6cba15d49fae72cf7d688ce20f4c54c3a61d36c9bdf8f97898cafd059ce41b492fa4b51cbad3f35ecc7e6be0c48d491f3c9ef722dbbc",
+  },
 ];
 
 /**

@@ -23,16 +23,16 @@ function names(userId: string) {
 
 describe("assignableUsersFor", () => {
   it("Super Admin can assign to every active user", () => {
-    expect(names("USR-SUPER")).toEqual(["Beirut Reseller Admin", "Maya Regional", "Rami K.", "Super Admin"]);
+    expect(names("USR-SUPER")).toEqual(["Beirut Reseller Admin", "Elie Mouawad", "Maya Regional", "Rami K.", "Super Admin"]);
   });
 
   it("Regional Director can assign to users in their countries", () => {
     // USR-REG-LB covers Lebanon + Jordan; all seed users operate in Lebanon.
-    expect(names("USR-REG-LB")).toEqual(["Beirut Reseller Admin", "Maya Regional", "Rami K."]);
+    expect(names("USR-REG-LB")).toEqual(["Beirut Reseller Admin", "Elie Mouawad", "Maya Regional", "Rami K."]);
   });
 
   it("Reseller Admin can assign only within their own reseller", () => {
-    expect(names("USR-RESELLER-BDP")).toEqual(["Beirut Reseller Admin", "Rami K."]);
+    expect(names("USR-RESELLER-BDP")).toEqual(["Beirut Reseller Admin", "Elie Mouawad", "Rami K."]);
   });
 
   it("Sales Team User can assign only to themselves", () => {

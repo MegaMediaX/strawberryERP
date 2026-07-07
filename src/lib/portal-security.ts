@@ -77,6 +77,15 @@ export const portalUsers: PortalUser[] = [
     reseller: "Beirut Digital Partners",
     active: true,
   },
+  {
+    id: "USR-SALES-ELIE",
+    name: "Elie Mouawad",
+    email: "e.mouawad.oradion@gmail.com",
+    role: "Sales Team User",
+    countries: ["Lebanon"],
+    reseller: "Beirut Digital Partners",
+    active: true,
+  },
 ];
 
 const roleRank: Record<Role, number> = {
