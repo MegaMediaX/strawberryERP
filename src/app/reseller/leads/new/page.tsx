@@ -1,5 +1,5 @@
 import { ResellerNewLead } from "@/components/reseller/ResellerNewLead";
-import { getUsers } from "@/lib/dev-store";
+import { assignableUsersFor } from "@/lib/security/assignable-users";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 
 export default async function ResellerNewLeadPage() {
@@ -8,11 +8,10 @@ export default async function ResellerNewLeadPage() {
 
   const actingUser = session.effectiveUser;
   // §9: country dropdown limited to the reseller's assigned countries; assignee
-  // dropdown limited to the reseller's own active team.
+  // dropdown limited to who the Reseller Admin has authority over (their own
+  // reseller's active team).
   const countries = actingUser.countries as readonly string[];
-  const assignees = getUsers()
-    .filter((u) => u.active && u.reseller === actingUser.reseller)
-    .map((u) => ({ name: u.name }));
+  const assignees = assignableUsersFor(actingUser).map((u) => ({ name: u.name }));
 
   return <ResellerNewLead countries={countries} assignees={assignees} />;
 }

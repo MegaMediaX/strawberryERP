@@ -32,9 +32,17 @@ export function NewLeadForm({
   assignees?: readonly { name: string }[];
 }) {
   const countryOptions = countries ?? allowedCountries;
-  const [form, setForm] = useState<NewLeadInput>(
-    defaultAssignedUser ? { ...emptyNewLead, assignedUser: defaultAssignedUser } : emptyNewLead,
-  );
+  // A single assignable user (e.g. a Sales Team User, who may only assign leads
+  // to themselves) locks the dropdown to that name — "just their name comes up".
+  const lockedAssignee = !!assignees && assignees.length === 1;
+  // Preselect the assignee when it is not a free choice: an explicit default, or
+  // the sole locked option (so the required field is satisfied even when the
+  // disabled select can't be changed — e.g. a reseller admin with no team yet).
+  const initialAssignedUser = defaultAssignedUser ?? (lockedAssignee ? assignees![0].name : "");
+  const initialForm: NewLeadInput = initialAssignedUser
+    ? { ...emptyNewLead, assignedUser: initialAssignedUser }
+    : emptyNewLead;
+  const [form, setForm] = useState<NewLeadInput>(initialForm);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -67,7 +75,7 @@ export function NewLeadForm({
         return;
       }
       setSuccess(`${form.companyName.trim()} was added.`);
-      setForm(emptyNewLead);
+      setForm(initialForm);
       onCreated?.();
     } catch {
       setError("Network error. Please try again.");
@@ -108,10 +116,18 @@ export function NewLeadForm({
               <option>Female</option>
             </Select>
           </Field>
-          <Field label="Assigned user">
+          <Field
+            label="Assigned user"
+            description={lockedAssignee ? "Leads you add are assigned to you." : undefined}
+          >
             {assignees ? (
-              <Select value={form.assignedUser} onChange={(e) => set("assignedUser", e.target.value)}>
-                <option value="">Select team member…</option>
+              <Select
+                value={form.assignedUser}
+                onChange={(e) => set("assignedUser", e.target.value)}
+                disabled={lockedAssignee}
+                aria-label="Assigned user"
+              >
+                {lockedAssignee ? null : <option value="">Select team member…</option>}
                 {assignees.map((a) => (
                   <option key={a.name}>{a.name}</option>
                 ))}
@@ -167,7 +183,7 @@ export function NewLeadForm({
             <button type="submit" className={btnPrimary} disabled={busy}>
               {busy ? "Adding…" : "Add lead"}
             </button>
-            <button type="button" className={btnGhost} onClick={() => { setForm(emptyNewLead); setError(null); setSuccess(null); }}>
+            <button type="button" className={btnGhost} onClick={() => { setForm(initialForm); setError(null); setSuccess(null); }}>
               Reset
             </button>
           </div>
