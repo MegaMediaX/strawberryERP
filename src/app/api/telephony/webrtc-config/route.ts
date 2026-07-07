@@ -20,7 +20,9 @@ export function GET(request: Request) {
   const config = buildWebrtcConfig(webrtcEnv(), session.user.id, Date.now() / 1000);
   if (!config) return jsonError("No telephony seat is configured for your account.", 404);
 
-  return NextResponse.json({ ok: true, config });
+  // The body carries the rep's SIP password + ephemeral TURN creds — never let
+  // any cache (browser or intermediary) retain it.
+  return NextResponse.json({ ok: true, config }, { headers: { "Cache-Control": "no-store" } });
 }
 
 // No-DELETE boundary (§18).
