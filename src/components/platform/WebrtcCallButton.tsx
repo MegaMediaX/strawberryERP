@@ -63,6 +63,7 @@ export function WebrtcCallButton({ number, onCallStarted }: { number: string; on
 
         // Dynamic import keeps sip.js out of SSR + the initial bundle.
         const { Web } = await import("sip.js");
+        if (cancelled) return;
         user = new Web.SimpleUser(config.wssUrl, {
           aor: config.sipUri,
           media: { remote: { audio: audioRef.current ?? undefined } },
@@ -74,6 +75,9 @@ export function WebrtcCallButton({ number, onCallStarted }: { number: string; on
             },
           },
         }) as unknown as SimpleUser;
+        // Track it NOW (before connect) so unmount mid-connect can still tear it
+        // down — otherwise a REGISTER completed after unmount would be orphaned.
+        userRef.current = user;
 
         user.delegate = {
           onCallAnswered: () => !cancelled && setPhase("in-call"),
@@ -87,8 +91,11 @@ export function WebrtcCallButton({ number, onCallStarted }: { number: string; on
 
         await user.connect();
         await user.register();
-        if (cancelled) return;
-        userRef.current = user;
+        if (cancelled) {
+          // Unmounted during connect/register — undo the registration we just made.
+          void user.disconnect().catch(() => {});
+          return;
+        }
         domainRef.current = config.sipDomain;
         setPhase("ready");
       } catch (e) {
@@ -101,9 +108,12 @@ export function WebrtcCallButton({ number, onCallStarted }: { number: string; on
 
     return () => {
       cancelled = true;
-      // Best-effort teardown; ignore rejections on an already-closing transport.
-      void user?.hangup().catch(() => {});
-      void user?.disconnect().catch(() => {});
+      // Best-effort teardown of whatever was constructed (even mid-connect); ignore
+      // rejections on an already-closing transport.
+      const u = userRef.current;
+      userRef.current = null;
+      void u?.hangup().catch(() => {});
+      void u?.disconnect().catch(() => {});
     };
   }, []);
 
@@ -122,8 +132,9 @@ export function WebrtcCallButton({ number, onCallStarted }: { number: string; on
     }
     try {
       setPhase("calling");
-      onCallStarted?.();
       await user.call(`sip:${digits}@${domainRef.current}`);
+      // Only mark the call logged once it was actually placed (not if call() threw).
+      onCallStarted?.();
     } catch (e) {
       setPhase("ready");
       setMessage(e instanceof Error ? e.message : "Could not place the call.");
