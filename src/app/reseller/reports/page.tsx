@@ -4,7 +4,7 @@ import { distinctValues } from "@/lib/sales/lead-filters";
 import { invoiceRowsFor, type InvoiceLike, type ReceiptLike } from "@/lib/reseller/invoice-payment-state";
 import type { ReportInvoiceRow } from "@/lib/reseller/reseller-reports";
 import { getPortalUiSession } from "@/lib/security/ui-session";
-import { getUiLeads, getUiRows } from "@/lib/ui-data";
+import { getUiCommissionEntries, getUiLeads, getUiRows } from "@/lib/ui-data";
 
 export default async function ResellerReportsPage() {
   const session = await getPortalUiSession();
@@ -14,7 +14,7 @@ export default async function ResellerReportsPage() {
   const [leadsResult, invoicesResult, commissionsResult] = await Promise.all([
     getUiLeads(session),
     getUiRows<Record<string, unknown>>("invoices", store.invoices as unknown as Record<string, unknown>[], session),
-    getUiRows<Record<string, unknown>>("commissions", store.commissionEntries as unknown as Record<string, unknown>[], session),
+    getUiCommissionEntries(session),
   ]);
 
   const leads = leadsResult.data;

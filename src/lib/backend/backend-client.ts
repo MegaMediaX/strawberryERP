@@ -53,6 +53,12 @@ export const frappeMethodMap: Record<string, { get?: string; post?: string; patc
     post: "lebtech_partner_platform.api.receipts.create_receipt",
     patch: "lebtech_partner_platform.api.receipts.update_receipt",
   },
+  // Bare "commissions" is what the dashboards/data-gathers fetch (commission
+  // ENTRIES); without this key handle() returns null and every dashboard
+  // shows "The Frappe commissions endpoint is unavailable."
+  commissions: {
+    get: "lebtech_partner_platform.api.commissions.list_commission_entries",
+  },
   "commissions/rules": {
     get: "lebtech_partner_platform.api.commissions.list_commission_rules",
     post: "lebtech_partner_platform.api.commissions.create_commission_rule",

@@ -4,7 +4,8 @@ import { frappeBackendClient } from "@/lib/backend/frappe-client";
 import { isFrappeConfigured } from "@/lib/frappe-client";
 import type { PortalSession } from "@/lib/portal-security";
 import { leads as devLeads, leadStatuses, type Country, type LeadStatus } from "@/lib/sample-data";
-import { getLeadOverrides } from "@/lib/dev-store";
+import { getDevStore, getLeadOverrides } from "@/lib/dev-store";
+import type { CommissionEntry } from "@/lib/phase2-data";
 import { leadsScopeForFrappe } from "@/lib/security/leads-scope";
 
 export type PortalLead = {
@@ -72,6 +73,54 @@ export async function getUiObject<T extends Record<string, unknown>>(
   } catch (error) {
     return { source: "frappe", data: {} as T, error: error instanceof Error ? error.message : `Unable to load ${resource} from Frappe.` };
   }
+}
+
+/**
+ * Commission ENTRIES for dashboards/reports, normalized to the dev-store
+ * CommissionEntry shape. Frappe's list_commission_entries returns snake_case
+ * rows keyed by `name`; consumers read camelCase (`commissionAmount`, `id`),
+ * so without this seam live commissions would silently read as $0.
+ */
+export async function getUiCommissionEntries(session: PortalSession): Promise<UiDataResult<CommissionEntry[]>> {
+  if (!isFrappeConfigured()) {
+    return {
+      source: "dev-store",
+      data: scopeRows([...getDevStore().commissionEntries] as unknown as Record<string, unknown>[], session) as unknown as CommissionEntry[],
+    };
+  }
+  try {
+    const result = await frappeBackendClient.handle({ resource: "commissions", method: "get" });
+    if (!result) return { source: "frappe", data: [], error: "The Frappe commissions endpoint is unavailable." };
+    const rows = unwrapRows(result.data).map(normalizeCommissionEntry).filter((entry): entry is CommissionEntry => Boolean(entry));
+    return {
+      source: "frappe",
+      data: scopeRows(rows as unknown as Record<string, unknown>[], session) as unknown as CommissionEntry[],
+    };
+  } catch (error) {
+    return { source: "frappe", data: [], error: error instanceof Error ? error.message : "Unable to load commissions from Frappe." };
+  }
+}
+
+const commissionStatuses: ReadonlyArray<CommissionEntry["status"]> = ["Pending", "Approved", "Paid", "Cancelled"];
+
+function normalizeCommissionEntry(row: Record<string, unknown>): CommissionEntry | null {
+  const country = String(row.country ?? "");
+  if (!isCountry(country)) return null;
+  const rawStatus = String(row.status ?? "Pending");
+  const receipt = String(row.receipt ?? "");
+  return {
+    id: String(row.name ?? row.id ?? ""),
+    commissionRule: String(row.commission_rule ?? row.commissionRule ?? ""),
+    reseller: String(row.reseller ?? ""),
+    country,
+    invoice: String(row.invoice ?? ""),
+    ...(receipt ? { receipt } : {}),
+    baseAmount: Number(row.base_amount ?? row.baseAmount ?? 0),
+    commissionPercentage: Number(row.commission_percentage ?? row.commissionPercentage ?? 0),
+    commissionAmount: Number(row.commission_amount ?? row.commissionAmount ?? 0),
+    status: commissionStatuses.includes(rawStatus as CommissionEntry["status"]) ? (rawStatus as CommissionEntry["status"]) : "Pending",
+    calculatedAt: String(row.calculated_at ?? row.calculatedAt ?? ""),
+  };
 }
 
 export async function getUiLeads(session: PortalSession): Promise<UiDataResult<PortalLead[]>> {
