@@ -66,6 +66,26 @@ export function agentOf(record: CallRecord): string {
   return record.agent ?? record.assignedTo ?? "Unassigned";
 }
 
+/**
+ * Build an email→display-name lookup from the portal-user directory. Different
+ * sources attribute the same human by name in one place and by email in
+ * another (e.g. Frappe's assigned_user is an email, dev-store/acquiredBy are
+ * names) — without canonicalizing, that human's KPI row silently splits in two.
+ * Matching is case-insensitive on email.
+ */
+export function buildAgentAliasMap(users: readonly { name: string; email: string }[]): Map<string, string> {
+  const aliases = new Map<string, string>();
+  for (const u of users) {
+    if (u.email) aliases.set(u.email.toLowerCase(), u.name);
+  }
+  return aliases;
+}
+
+/** Resolve an attribution key to its canonical display name; unknown keys (not a known email) pass through unchanged. */
+export function canonicalAgent(key: string, aliases: ReadonlyMap<string, string>): string {
+  return aliases.get(key.toLowerCase()) ?? key;
+}
+
 /** Minimal caller identity used to scope which call records are visible. */
 export interface CallScope {
   role: string;

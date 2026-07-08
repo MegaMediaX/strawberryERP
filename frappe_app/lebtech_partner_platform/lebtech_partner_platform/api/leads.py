@@ -38,6 +38,10 @@ LEAD_UPDATE_FIELDS = {
     "notes",
     "custom_fields_json",
     "timeline_json",
+    "acquired_phone",
+    "acquired_email",
+    "acquired_by",
+    "acquired_at",
 }
 
 
@@ -96,6 +100,10 @@ def list_leads(
             "priority",
             "reseller",
             "source",
+            "acquired_phone",
+            "acquired_email",
+            "acquired_by",
+            "acquired_at",
             "modified",
         ],
         order_by=safe_order_by(order_by, SORTABLE_FIELDS),
