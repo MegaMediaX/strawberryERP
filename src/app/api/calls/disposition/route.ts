@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 
+import { mapLeadToFrappe } from "@/app/api/frappe/leads/route";
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
+import { maybeRouteToFrappe } from "@/lib/backend/backend-router";
 import { appendAudit, applyLeadOverride, setCallRecordAcquiredInfo } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { authorizeApiRequest } from "@/lib/security/permissions";
+import { hasAcquiredInfo } from "@/lib/telephony/call-record";
 import { parseDispositionInput, resolveDisposition } from "@/lib/telephony/disposition";
 import { getUiLeads } from "@/lib/ui-data";
 
@@ -51,13 +54,14 @@ export async function POST(request: Request) {
   // drops). When a call is logged for this lead we also stamp it, ownership-
   // guarded, for live-mode fidelity. The per-agent KPI counts from the lead.
   const { acquiredPhone, acquiredEmail } = parsed.value; // already normalized/validated
-  const acquiredInfoSaved = Boolean(acquiredPhone || acquiredEmail);
+  const acquiredInfoSaved = hasAcquiredInfo({ acquiredPhone, acquiredEmail });
+  const acquiredAt = new Date().toISOString();
   if (acquiredInfoSaved) {
     applyLeadOverride(lead.id, {
       ...(acquiredPhone ? { acquiredPhone } : {}),
       ...(acquiredEmail ? { acquiredEmail } : {}),
       acquiredBy: performedBy,
-      acquiredAt: new Date().toISOString(),
+      acquiredAt,
     });
     if (parsed.value.externalId) {
       setCallRecordAcquiredInfo(parsed.value.externalId, { acquiredPhone, acquiredEmail }, lead.id);
@@ -71,6 +75,23 @@ export async function POST(request: Request) {
       performedBy,
     });
   }
+
+  // Forward the same status/follow-up/acquired-info fields to Frappe when
+  // configured — the overrides above are dev-store-only local state; this is
+  // the durable write. No-ops (returns null) when Frappe isn't configured.
+  // A failed proxy MUST surface to the caller (mirrors the leads route) — a
+  // swallowed durable-write failure would report false success.
+  const proxied = await maybeRouteToFrappe("leads", "patch", {
+    name: lead.id,
+    ...mapLeadToFrappe({
+      status: resolved.value.targetStatus,
+      ...(resolved.value.followUp ? { followUpDate: resolved.value.followUp } : {}),
+      ...(acquiredInfoSaved
+        ? { acquiredPhone, acquiredEmail, acquiredBy: performedBy, acquiredAt }
+        : {}),
+    }),
+  });
+  if (proxied && !proxied.ok) return proxied;
 
   appendAudit({
     entityType: "lead",

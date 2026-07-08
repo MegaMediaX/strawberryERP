@@ -20,6 +20,8 @@ export interface AdminDashboardData {
   integrations: IntegrationHealthRow[];
   recentAudit: ActivityTimelineEvent[];
   badges: AdminBadgeCounts;
+  /** Backend errors surfaced by the five Promise.all fetches (deduped), so the view can warn instead of silently showing zeros. */
+  errors: string[];
 }
 
 /** Gather GLOBAL (unscoped) platform data for the Super Admin dashboard (§5-§8). */
@@ -41,8 +43,16 @@ export async function adminDashboardData(session: PortalSession): Promise<AdminD
   const commissions = commissionsResult.data.map((c) => ({ reseller: String(c.reseller ?? ""), country: String(c.country ?? ""), status: String(c.status ?? ""), commissionAmount: Number(c.commissionAmount ?? 0) }));
   const customers = customersResult.data.map((c) => ({ reseller: String(c.reseller ?? ""), country: String(c.country ?? "") }));
 
-  const activeResellers = new Set([...leads.map((l) => l.reseller), ...invoices.map((i) => i.reseller)].filter(Boolean)).size;
-  const countriesCount = new Set([...leads.map((l) => l.country), ...invoices.map((i) => i.country)].filter(Boolean)).size;
+  // Widened to match the tables rendered below the KPI tiles: the reseller
+  // leaderboard (regionalResellers) also counts customers + receipts; the
+  // country table (countryPerformance) also counts receipts. Narrower KPI sets
+  // made the tile and its own table disagree on the same screen.
+  const activeResellers = new Set([...leads.map((l) => l.reseller), ...invoices.map((i) => i.reseller), ...customers.map((c) => c.reseller), ...receipts.map((r) => r.reseller)].filter(Boolean)).size;
+  const countriesCount = new Set([...leads.map((l) => l.country), ...invoices.map((i) => i.country), ...receipts.map((r) => r.country)].filter(Boolean)).size;
+
+  const errors = [...new Set(
+    [leadsResult.error, invoicesResult.error, receiptsResult.error, commissionsResult.error, customersResult.error].filter((e): e is string => Boolean(e)),
+  )];
 
   return {
     summary: adminGlobalSummary(leads, invoices, receipts, customers.length, activeResellers, countriesCount, now),
@@ -52,6 +62,7 @@ export async function adminDashboardData(session: PortalSession): Promise<AdminD
     integrations: integrationHealth(store.integrationSettings),
     recentAudit: [...store.activityTimeline].slice(0, 8),
     badges: adminBadgeCounts(invoices, store.deleteQueue, store.apiLogs, store.integrationSettings, now),
+    errors,
   };
 }
 

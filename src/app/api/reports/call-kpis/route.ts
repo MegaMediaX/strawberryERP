@@ -5,6 +5,7 @@ import { getCallRecords } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { authorizeApiRequest } from "@/lib/security/permissions";
 import { agentCallKpis, applyAcquiredInfo, scopeCallRecords, teamCallKpis, type AcquisitionEvent, type CallScope } from "@/lib/telephony/call-kpis";
+import { hasAcquiredInfo } from "@/lib/telephony/call-record";
 import { getUiLeads } from "@/lib/ui-data";
 
 export const dynamic = "force-dynamic";
@@ -41,7 +42,7 @@ export async function GET(request: Request) {
   // no calls in the window still gets a row).
   const leadsResult = await getUiLeads(session);
   const acquisitions: AcquisitionEvent[] = leadsResult.data
-    .filter((l) => l.acquiredPhone || l.acquiredEmail)
+    .filter((l) => hasAcquiredInfo(l))
     .map((l) => ({ agent: l.acquiredBy ?? l.assignedTo ?? "Unassigned", acquiredAt: l.acquiredAt }));
   const merged = applyAcquiredInfo(agents, team, acquisitions, window);
 

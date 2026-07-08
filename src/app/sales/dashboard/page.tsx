@@ -27,6 +27,12 @@ export default async function SalesDashboardPage() {
 
   return (
     <div className="grid gap-5">
+      {result.error ? (
+        <div role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">
+          Live data unavailable — showing no records. ({result.error})
+        </div>
+      ) : null}
+
       <Card className="overflow-hidden">
         <CardContent className="grid gap-5 pt-6">
           <div>
