@@ -26,7 +26,9 @@ export function toLocalDialNumber(raw: string): string {
     // A bare local NSN can also start with "961" (area 9 landline, e.g.
     // 9614941) — only treat "961" as a country code when what follows is a
     // plausible NSN, or the number was explicitly international (+/00961).
-    if (hasPlus || nsn.length >= MIN_NSN_DIGITS) return `0${nsn}`;
+    // A country code with no subscriber digits (e.g. a "+961" placeholder lead)
+    // is not dialable — return "" so the caller shows "no dialable number".
+    if (hasPlus || nsn.length >= MIN_NSN_DIGITS) return nsn ? `0${nsn}` : "";
   }
 
   // Non-Lebanese international number: pass raw digits through unchanged.

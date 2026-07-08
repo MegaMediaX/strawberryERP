@@ -49,6 +49,13 @@ describe("toLocalDialNumber (Lebanon FXO local format)", () => {
     expect(toLocalDialNumber("no digits")).toBe("");
   });
 
+  it("returns empty string for a bare country code with no subscriber number", () => {
+    // Placeholder leads sometimes store just "+961"; a lone "0" must NOT look
+    // dialable to the caller (the component treats "" as "no dialable number").
+    expect(toLocalDialNumber("+961")).toBe("");
+    expect(toLocalDialNumber("00961")).toBe("");
+  });
+
   it("does not interfere with the isBlockedPhone guard on the raw number", () => {
     // The component checks isBlockedPhone(number) BEFORE normalizing; blocked
     // +972 numbers must still be caught on the raw value.
