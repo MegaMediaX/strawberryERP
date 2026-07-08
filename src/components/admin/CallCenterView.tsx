@@ -66,11 +66,13 @@ export function CallCenterView() {
   const [filters, setFilters] = useStickyFilters<CallKpiFilters>("lebtech.admin.callcenter.filters", {});
   // Updated only from fetch callbacks (never synchronously in the effect):
   // the previous report stays on screen while a new window loads.
-  const [{ report, loading, error }, setState] = useState<{
+  const [{ report, loading, error, errors }, setState] = useState<{
     report: CallKpiReport | null;
     loading: boolean;
     error: string | null;
-  }>({ report: null, loading: true, error: null });
+    /** Partial-data warnings from the route (e.g. a Frappe read failure) — data still renders. */
+    errors: string[];
+  }>({ report: null, loading: true, error: null, errors: [] });
   const [reloadTick, setReloadTick] = useState(0);
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "callsMade", dir: "desc" });
 
@@ -86,14 +88,14 @@ export function CallCenterView() {
     fetch(`/api/reports/call-kpis${qs ? `?${qs}` : ""}`, { signal: controller.signal })
       .then(async (res) => {
         if (!res.ok) throw new Error(`Request failed (${res.status})`);
-        const json = (await res.json()) as { ok: boolean } & CallKpiReport;
+        const json = (await res.json()) as { ok: boolean; errors?: string[] } & CallKpiReport;
         if (!json.ok) throw new Error("Report unavailable");
         if (controller.signal.aborted) return; // superseded by a newer window
-        setState({ report: { team: json.team, agents: json.agents }, loading: false, error: null });
+        setState({ report: { team: json.team, agents: json.agents }, loading: false, error: null, errors: json.errors ?? [] });
       })
       .catch((e: unknown) => {
         if (controller.signal.aborted) return;
-        setState({ report: null, loading: false, error: e instanceof Error ? e.message : "Could not load call KPIs" });
+        setState({ report: null, loading: false, error: e instanceof Error ? e.message : "Could not load call KPIs", errors: [] });
       });
     return () => controller.abort();
   }, [from, to, reloadTick]);
@@ -137,6 +139,12 @@ export function CallCenterView() {
           ) : null}
         </CardContent>
       </Card>
+
+      {errors.length > 0 ? (
+        <div role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">
+          Live data unavailable — showing partial records. ({errors.join("; ")})
+        </div>
+      ) : null}
 
       {error ? (
         <Card>

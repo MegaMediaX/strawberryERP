@@ -25,7 +25,11 @@
     { "fieldname": "notes", "fieldtype": "Text Editor", "label": "Notes" },
     { "fieldname": "custom_fields_json", "fieldtype": "JSON", "label": "Custom Fields" },
     { "fieldname": "timeline_json", "fieldtype": "JSON", "label": "Timeline" },
-    { "fieldname": "customer", "fieldtype": "Link", "label": "Converted Customer", "options": "Customer", "read_only": 1 }
+    { "fieldname": "customer", "fieldtype": "Link", "label": "Converted Customer", "options": "Customer", "read_only": 1 },
+    { "fieldname": "acquired_phone", "fieldtype": "Data", "label": "Acquired Phone" },
+    { "fieldname": "acquired_email", "fieldtype": "Data", "label": "Acquired Email" },
+    { "fieldname": "acquired_by", "fieldtype": "Data", "label": "Acquired By" },
+    { "fieldname": "acquired_at", "fieldtype": "Datetime", "label": "Acquired At" }
   ],
   "permissions": [
     { "role": "Super Admin", "read": 1, "write": 1, "create": 1, "delete": 1 },

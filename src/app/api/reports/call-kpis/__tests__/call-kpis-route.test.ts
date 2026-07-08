@@ -63,8 +63,10 @@ describe("GET /api/reports/call-kpis — scoping", () => {
     const agents = json.agents.map((a: { agent: string }) => a.agent);
     expect(agents).not.toContain("KPI-Sara");
     expect(agents).not.toContain("KPI-Omar");
-    // Every returned agent bucket must be Rami himself.
-    expect(agents.every((a: string) => a === "Marven El Mouallem" || a === "m.elmouallem@leb-tech.com")).toBe(true);
+    // Every returned agent bucket must be Marven himself, keyed by his canonical
+    // display name — never by his email (attribution is canonicalized before
+    // aggregation, so name- and email-keyed records land on one row).
+    expect(agents.every((a: string) => a === "Marven El Mouallem")).toBe(true);
   });
 
   it("returns team totals + a window echo", async () => {
@@ -86,6 +88,28 @@ describe("GET /api/reports/call-kpis — scoping", () => {
     const json = await (await get("USR-SUPER")).json();
     expect(json.team.infoAcquired).toBeGreaterThanOrEqual(1);
     expect(json.agents.some((a: { infoAcquired: number }) => a.infoAcquired >= 1)).toBe(true);
+  });
+
+  it("merges email-attributed calls and name-attributed acquisitions onto one canonical row", async () => {
+    // A call attributed by EMAIL (mirrors Frappe's assigned_user) for Marven.
+    seed({ agent: "m.elmouallem@leb-tech.com", reseller: "Beirut Digital Partners", country: "Lebanon" });
+
+    // An acquisition attributed by NAME (disposition writes acquiredBy name-first)
+    // for the same human, on his own lead.
+    await dispositionPost(
+      new Request("https://portal.local/api/calls/disposition", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-platform-user-id": "USR-SALES-MARVEN" },
+        body: JSON.stringify({ leadId: "LEAD-2408", disposition: "Awaiting response", acquiredEmail: "split-fix@lead.com" }),
+      }),
+    );
+
+    const json = await (await get("USR-SUPER")).json();
+    const rows = json.agents.filter((a: { agent: string }) => a.agent === "Marven El Mouallem" || a.agent === "m.elmouallem@leb-tech.com");
+    expect(rows).toHaveLength(1);
+    expect(rows[0].agent).toBe("Marven El Mouallem");
+    expect(rows[0].callsMade).toBeGreaterThanOrEqual(1);
+    expect(rows[0].infoAcquired).toBeGreaterThanOrEqual(1);
   });
 
   it("DELETE is blocked (405)", () => {

@@ -4,9 +4,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { LeadCallScreen } from "@/components/platform/LeadCallScreen";
 import { LeadCallSummary } from "@/components/platform/LeadCallSummary";
 import { resolveImportantDetails } from "@/lib/business/important-details-mgmt";
-import { getCallRecords, getImportantDetails } from "@/lib/dev-store";
+import { getImportantDetails } from "@/lib/dev-store";
 import { buildTimeline } from "@/lib/sales/timeline-builder";
 import { getPortalUiSession } from "@/lib/security/ui-session";
+import { getUiCallRecords } from "@/lib/telephony/call-data";
 import { getUiLeads } from "@/lib/ui-data";
 import { isWebrtcMode } from "@/lib/telephony/webrtc";
 
@@ -30,10 +31,16 @@ export default async function SalesLeadDetailPage({ params }: { params: Promise<
     );
   }
 
-  const leadCalls = getCallRecords().filter((c) => c.leadId === lead.id);
+  const callsResult = await getUiCallRecords(session);
+  const leadCalls = callsResult.data.filter((c) => c.leadId === lead.id);
 
   return (
     <div className="grid gap-4">
+      {callsResult.error ? (
+        <div role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">
+          Live call data unavailable — showing no records. ({callsResult.error})
+        </div>
+      ) : null}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Link href="/sales/leads" className="text-sm font-semibold text-[var(--brand)]">← Back to my leads</Link>
         <LeadCallSummary calls={leadCalls} />

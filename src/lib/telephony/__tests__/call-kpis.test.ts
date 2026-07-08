@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { agentCallKpis, agentOf, applyAcquiredInfo, filterByWindow, scopeCallRecords, teamCallKpis } from "@/lib/telephony/call-kpis";
+import {
+  agentCallKpis,
+  agentOf,
+  applyAcquiredInfo,
+  buildAgentAliasMap,
+  canonicalAgent,
+  filterByWindow,
+  scopeCallRecords,
+  teamCallKpis,
+} from "@/lib/telephony/call-kpis";
 import type { CallRecord } from "@/lib/telephony/call-record";
 
 function call(over: Partial<CallRecord> = {}): CallRecord {
@@ -121,6 +130,35 @@ describe("agentCallKpis", () => {
 
   it("returns [] for no calls", () => {
     expect(agentCallKpis([])).toEqual([]);
+  });
+});
+
+describe("buildAgentAliasMap / canonicalAgent", () => {
+  const users = [
+    { name: "Marven El Mouallem", email: "m.elmouallem@leb-tech.com" },
+    { name: "Elie Mouawad", email: "e.mouawad.oradion@gmail.com" },
+  ];
+
+  it("maps a known email to its display name", () => {
+    const aliases = buildAgentAliasMap(users);
+    expect(canonicalAgent("m.elmouallem@leb-tech.com", aliases)).toBe("Marven El Mouallem");
+  });
+
+  it("matches case-insensitively on email", () => {
+    const aliases = buildAgentAliasMap(users);
+    expect(canonicalAgent("M.ElMouallem@Leb-Tech.com", aliases)).toBe("Marven El Mouallem");
+  });
+
+  it("passes an unknown key through unchanged (a name, or an unrecognized email)", () => {
+    const aliases = buildAgentAliasMap(users);
+    expect(canonicalAgent("Marven El Mouallem", aliases)).toBe("Marven El Mouallem");
+    expect(canonicalAgent("nobody@example.com", aliases)).toBe("nobody@example.com");
+    expect(canonicalAgent("Unassigned", aliases)).toBe("Unassigned");
+  });
+
+  it("skips users without an email when building the map", () => {
+    const aliases = buildAgentAliasMap([{ name: "No Email", email: "" }]);
+    expect(aliases.size).toBe(0);
   });
 });
 

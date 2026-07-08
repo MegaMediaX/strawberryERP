@@ -133,8 +133,8 @@ function normalizeLead(row: Record<string, unknown>): PortalLead | null {
   const status = leadStatuses.includes(rawStatus as LeadStatus) ? (rawStatus as LeadStatus) : "New Lead (Uncontacted)";
   const firstName = String(row.contact_first_name ?? row.contactFirstName ?? "");
   const lastName = String(row.contact_last_name ?? row.contactLastName ?? "");
-  // acquired_* is not yet a Partner Lead DocType field (frappe_app/.../partner_lead.json) —
-  // mapped defensively so the "Acquired information" KPI surfaces once it is added.
+  // acquired_* mirrors the Partner Lead DocType fields (frappe_app/.../partner_lead.json) —
+  // mapped defensively (empty string if absent) so a stale/older Frappe still degrades gracefully.
   const acquiredPhone = String(row.acquired_phone ?? row.acquiredPhone ?? "");
   const acquiredEmail = String(row.acquired_email ?? row.acquiredEmail ?? "");
   const acquiredBy = String(row.acquired_by ?? row.acquiredBy ?? "");
