@@ -39,6 +39,7 @@ import type { EscalationRecord } from "@/lib/regional/escalation";
 import type { CallRecord } from "@/lib/telephony/call-record";
 import type { DialCommand, DialStatus } from "@/lib/telephony/dial";
 import { defaultCountries, type CountryRecord } from "@/lib/admin/countries";
+import { importedLeads, type ImportedLead } from "@/lib/data/imported-leads";
 import type { ResellerConfig } from "@/lib/admin/reseller-wizard";
 import type { ExpenseRecord } from "@/lib/admin/pnl";
 import { defaultWhiteLabel, mergeWhiteLabel, type WhiteLabelSettings } from "@/lib/admin/white-label";
@@ -75,6 +76,9 @@ type DevStore = {
   countries: CountryRecord[];
   resellerMetadata: ResellerConfig[];
   leadOverrides: Record<string, LeadOverride>;
+  /** Leads created after boot (CSV import + manual New-Lead POST). GET concats
+   *  these onto the static seed so imported leads render in the leads view. */
+  createdLeads: ImportedLead[];
   customerOverrides: Record<string, CustomerOverride>;
   invoiceDocSettings: InvoiceDocSettings;
   expenses: ExpenseRecord[];
@@ -223,6 +227,7 @@ export function getDevStore() {
       countries: defaultCountries(),
       resellerMetadata: [],
       leadOverrides: {},
+      createdLeads: [...importedLeads],
       customerOverrides: {},
       invoiceDocSettings: { pdfTemplate: "Default", qrCode: true, paymentLink: true, whatsappShare: true, emailSend: true, footer: "Thank you for your business." },
       expenses: [
@@ -251,6 +256,7 @@ export function getDevStore() {
   store.countries ??= defaultCountries();
   store.resellerMetadata ??= [];
   store.leadOverrides ??= {};
+  store.createdLeads ??= [...importedLeads];
   store.customerOverrides ??= {};
   store.invoiceDocSettings ??= { pdfTemplate: "Default", qrCode: true, paymentLink: true, whatsappShare: true, emailSend: true, footer: "Thank you for your business." };
   store.expenses ??= [];
@@ -432,6 +438,17 @@ export function applyCustomerOverride(id: string, patch: CustomerOverride): Cust
   const next: CustomerOverride = { ...cur, ...patch, ...(patch.notes ? { notes: [...(cur.notes ?? []), ...patch.notes] } : {}) };
   store.customerOverrides = { ...store.customerOverrides, [id]: next };
   return next;
+}
+
+/** Leads created after boot (CSV import seed + manual New-Lead POST). */
+export function getCreatedLeads(): ImportedLead[] {
+  return getDevStore().createdLeads;
+}
+
+/** Append a created lead so a later GET reflects it (newest-first). */
+export function appendLead(lead: ImportedLead): ImportedLead {
+  getDevStore().createdLeads.unshift(lead);
+  return lead;
 }
 
 /** Lead overrides applied by Super Admin actions (reassign/convert/archive) (§13/§14). */

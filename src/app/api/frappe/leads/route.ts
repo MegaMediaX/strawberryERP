@@ -10,6 +10,7 @@ import { canAssignLeadTo } from "@/lib/security/assignable-users";
 import { paginate } from "@/lib/query/scoped-page";
 import { frappePaginationParams } from "@/lib/query/frappe-pagination";
 import { leadsScopeForFrappe } from "@/lib/security/leads-scope";
+import { getCreatedLeads } from "@/lib/dev-store";
 
 type LeadPayload = {
   companyName?: string;
@@ -47,8 +48,9 @@ export async function GET(request: Request) {
     return proxied;
   }
 
+  const allLeads = [...leads, ...getCreatedLeads()];
   const scopedLeads = filterByPermission(
-    leads.map((lead) => ({ ...lead, country: lead.country as Country })),
+    allLeads.map((lead) => ({ ...lead, country: lead.country as Country })),
     {
     ...buildPermissionContext(request),
     ...roleHeadersFromSession(session),
