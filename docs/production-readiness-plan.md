@@ -192,3 +192,82 @@ promptly or not at all.
 _Regression guards for this change: `frappe_app/.../api/test_assigned_user_fieldtype.py`
 (DocType stays `Data`) and `src/lib/security/__tests__/assigned-user-name-contract.test.ts`
 (GET-scope + write agree on the display-name string)._
+
+---
+
+## Runbook: Call-record seam + acquired-info fields (PRs #17/#18)
+
+Ships the telephony Frappe seam from `master@436bfd6`: a new **Call Record**
+DocType + `api/calls.py` (`list_calls`/`upsert_call`), and four new
+`Partner Lead` fields (`acquired_phone`, `acquired_email`, `acquired_by` —
+Data; `acquired_at` — Datetime). Purely additive: no existing field, doctype,
+or row is modified.
+
+**⚠️ Human runs every command below, staging first. Nothing here is
+auto-executed. This is a SHARED production box — other tenants + a live
+ERPNext run on it.**
+
+### 0. What the CRM does before/after this migrate
+
+The merged CRM code is **inert until Frappe mode is on** (`FRAPPE_BASE_URL` +
+`FRAPPE_API_KEY` + `FRAPPE_API_SECRET` set on the portal): dev-store behavior
+is byte-identical. Once configured, the portal expects this migration to have
+run — call ingest forwards every record to `upsert_call` and returns **502 to
+the middleware when the Frappe write fails** (middleware retries), and the
+call-center report reads `list_calls`. Order therefore matters:
+**migrate first, flip the portal env second.**
+
+### 1. Apply on staging first
+
+```bash
+# Installs the Call Record DocType and the four Partner Lead acquired_* fields.
+bench --site <STAGING_SITE> migrate
+```
+
+### 2. Smoke-check on staging
+
+```bash
+# (a) Call round-trip: idempotent upsert keyed by external_id, then list it back.
+bench --site <STAGING_SITE> execute lebtech_partner_platform.api.calls.upsert_call \
+  --kwargs "{'external_id':'qa-call-1','direction':'outbound','outcome':'answered','answered':1,'ring_seconds':4,'talk_seconds':75,'duration_seconds':79,'started_at':'2026-07-08 09:00:00','contact_number':'0000000','agent':'QA Agent','link_state':'unlinked'}"
+# Re-running the same command must return "created": false (idempotency).
+bench --site <STAGING_SITE> execute lebtech_partner_platform.api.calls.list_calls \
+  --kwargs "{'agent':'QA Agent'}"
+
+# (b) Acquired-info round-trip on an existing QA lead (use a lead name from
+# list_leads; update, then confirm list_leads returns the acquired_* values).
+bench --site <STAGING_SITE> execute lebtech_partner_platform.api.leads.update_lead \
+  --kwargs "{'name':'<QA_LEAD_NAME>','acquired_phone':'70123456','acquired_email':'qa.acquired@example.com','acquired_by':'QA Agent','acquired_at':'2026-07-08 09:05:00'}"
+bench --site <STAGING_SITE> execute lebtech_partner_platform.api.leads.list_leads \
+  --kwargs "{'assigned_user':'<THAT_LEADS_ASSIGNED_USER>'}"
+```
+
+Then point a staging portal at the site (`FRAPPE_*` env) and confirm
+`/admin/reports/call-center` shows the QA call under "QA Agent" with no
+error banner.
+
+### 3. Promote to production
+
+After staging validation, run step 1's `bench migrate` against the production
+site (human-gated, per the promotion policy above), then flip the production
+portal's `FRAPPE_*` env.
+
+### 4. Rollback
+
+```bash
+# Revert the frappe_app changes (Call Record doctype dir + partner_lead.json
+# acquired_* fields + api/calls.py), redeploy the app, then:
+bench --site <SITE> migrate
+```
+
+Additive-only, so rollback is low-risk: reverting leaves the `Call Record`
+table and the acquired_* columns in MariaDB (orphaned, ignored — Frappe does
+not drop schema on migrate), and no existing data is touched either way. The
+CRM must be off Frappe mode (or rolled back to pre-#18) first, or ingest will
+502 on every call once `upsert_call` disappears.
+
+_Regression guards: `frappe_app/.../api/test_calls.py` (filter building +
+payload validation), `src/lib/frappe/__tests__/doctype-integrity.test.ts`
+(call_record search indexes), `src/app/api/calls/__tests__/calls-post-frappe.test.ts`
+(live-lead linking + 502 surfacing), `src/lib/telephony/__tests__/call-data-frappe.test.ts`
+(row normalization incl. naive-datetime → ISO-UTC)._
