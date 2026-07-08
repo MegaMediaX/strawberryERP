@@ -36,6 +36,7 @@ def run(path="/tmp/leads.json"):
         doc = frappe.get_doc({"doctype": "Partner Lead", **r})
         doc.flags.ignore_mandatory = True   # company leads: no contact/gender/email
         doc.flags.ignore_links = True       # tolerate a Reseller that may not exist yet
+        doc.flags.ignore_validate = True    # bypass per-person controller validate() (relax for company leads)
         doc.insert(ignore_permissions=True)
         created += 1
 
