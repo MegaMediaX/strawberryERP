@@ -106,6 +106,13 @@ Most modules exist at list/record level (inherited). Gaps to *complete & verify*
 
 ## Resume journal (newest first)
 
+### Session 2026-07-08 — softphone dials local trunk-0 format (frontend normalization) ✅
+- **Bug:** `WebrtcCallButton` sent raw digit-stripped numbers to the Asterisk gateway (`+961 05 941 119` → `96105941119`), but the analog FXO trunk needs LOCAL 0-leading digits (`05941119`). A server-side dialplan rewrite exists on the live box (strip 961, ensure leading 0); this adds the matching **defensive frontend normalization**.
+- New pure helper `src/lib/telephony/local-dial.ts` — `toLocalDialNumber()`: `+961`/`961`/`00961` → single leading 0; local numbers pass through (0 added if missing); foreign international left as raw digits (isBlockedPhone guard on the raw value unchanged, runs first). Guard: a 7-digit area-9 landline NSN like `9614941` starts with "961" but is NOT country-prefixed — only stripped when ≥7 digits remain or the number was explicitly `+`/`00961`. Wired into `WebrtcCallButton.tsx` before the `sip:` URI.
+- **Convention verified** (per task): Lebanon dials trunk 0 for mobiles AND landlines (dial-policy.ts prefixes + its tests `03…`/`01…`; server rewrite "ensure leading 0"): `+961 70 144 221` → `070144221`.
+- Tests: `src/lib/telephony/__tests__/local-dial.test.ts` (10, TDD red→green). Full suite 1035/1035 pass; lint clean. Pre-existing/unrelated: 4 auth suites abort on missing `SEED_ADMIN_PW` (no local `.env` in this worktree); `tsc` `sip.js` TS2307 (deliberate dynamic import, exists on clean tree).
+- **Next start:** merge this branch (`claude/beautiful-elgamal-f1a769`) to master; then telephony go-live (middleware wiring + `TELEPHONY_LIVE_DIAL=true` — real calls, ask human first).
+
 ### Fire AUDIT-CLOSE — 2026-07-05 — SEC-2 decision + CI pytest + audit-doc PR merged ✅ SHIPPED
 - PM-delegated calls (human said "ask the PM and proceed"); done directly (no paid agents — session cost was high). Pushed f957c8d..3a134a3.
   - **SEC-2 (critical) — RESOLVED as accepted+documented:** new ADR `docs/adr/0002-portal-authorization-lives-in-nextjs-layer.md`. Deliberate decision: authorization stays in the Next.js layer with the shared Frappe service identity; NOT forwarding per-user identity to Frappe now (large re-architecture, no per-user token model exists). Safe because the Next.js layer is the sole authoritative boundary AND comprehensively invariant-tested (hardened by SEC-1/SEC-3). ADR lists 4 guardrails + revisit trigger (a 2nd untrusted Frappe consumer / datastore-level compliance need). This closes SEC-2 as a documented accepted risk, not an open hole.
