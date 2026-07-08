@@ -1,16 +1,14 @@
 import { ResellerCommissionsView, type CommissionRow } from "@/components/reseller/ResellerCommissionsView";
 import { getDevStore } from "@/lib/dev-store";
 import { getPortalUiSession } from "@/lib/security/ui-session";
-import { getUiRows } from "@/lib/ui-data";
+import { getUiCommissionEntries } from "@/lib/ui-data";
 
 export default async function ResellerCommissionsPage() {
   const session = await getPortalUiSession();
   if (!session) return null;
 
   const store = getDevStore();
-  const commissionsResult = await getUiRows<Record<string, unknown>>(
-    "commissions", store.commissionEntries as unknown as Record<string, unknown>[], session,
-  );
+  const commissionsResult = await getUiCommissionEntries(session);
 
   // Resolve customer + currency from the linked invoice (entries don't carry them).
   const invoiceById = new Map(store.invoices.map((i) => [i.id, i]));

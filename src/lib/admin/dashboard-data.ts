@@ -10,7 +10,7 @@ import {
 import { countryPerformance, type CountryPerformanceRow } from "@/lib/regional/regional-reports";
 import { regionalResellers, type ResellerRow } from "@/lib/regional/reseller-list";
 import type { ActivityTimelineEvent } from "@/lib/phase2-data";
-import { getUiLeads, getUiRows } from "@/lib/ui-data";
+import { getUiCommissionEntries, getUiLeads, getUiRows } from "@/lib/ui-data";
 
 export interface AdminDashboardData {
   summary: AdminGlobalSummary;
@@ -33,7 +33,7 @@ export async function adminDashboardData(session: PortalSession): Promise<AdminD
     getUiLeads(session),
     getUiRows<Record<string, unknown>>("invoices", store.invoices as unknown as Record<string, unknown>[], session),
     getUiRows<Record<string, unknown>>("receipts", store.receipts as unknown as Record<string, unknown>[], session),
-    getUiRows<Record<string, unknown>>("commissions", store.commissionEntries as unknown as Record<string, unknown>[], session),
+    getUiCommissionEntries(session),
     getUiRows<Record<string, unknown>>("customers", seedCustomers as unknown as Record<string, unknown>[], session),
   ]);
 

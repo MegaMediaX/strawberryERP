@@ -4,7 +4,7 @@ import { getDevStore } from "@/lib/dev-store";
 import type { PortalSession } from "@/lib/portal-security";
 import type { RegionalCommissionRow } from "@/lib/regional/commission-list";
 import { resolveRegionalCountries } from "@/lib/regional/regional-scope";
-import { getUiRows } from "@/lib/ui-data";
+import { getUiCommissionEntries } from "@/lib/ui-data";
 
 export interface RegionalCommissionData {
   effective: string[];
@@ -19,7 +19,7 @@ export async function regionalCommissionData(session: PortalSession, country?: s
   const store = getDevStore();
 
   const [commissionsResult] = await Promise.all([
-    getUiRows<Record<string, unknown>>("commissions", store.commissionEntries as unknown as Record<string, unknown>[], session),
+    getUiCommissionEntries(session),
   ]);
 
   // invoice id → customer name + total, so each commission row carries its customer + invoice amount.

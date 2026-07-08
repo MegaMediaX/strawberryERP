@@ -5,7 +5,7 @@ import { customers as seedCustomers } from "@/lib/phase2-data";
 import type { PortalSession } from "@/lib/portal-security";
 import { escalationReasonLabel } from "@/lib/regional/escalation";
 import type { NotificationData } from "@/lib/reseller/reseller-notifications";
-import { getUiLeads, getUiRows } from "@/lib/ui-data";
+import { getUiCommissionEntries, getUiLeads, getUiRows } from "@/lib/ui-data";
 
 /** Gather the reseller-scoped records the §26 notifications derive from. */
 export async function resellerNotificationData(session: PortalSession): Promise<NotificationData> {
@@ -17,7 +17,7 @@ export async function resellerNotificationData(session: PortalSession): Promise<
     getUiRows<Record<string, unknown>>("customers", seedCustomers as unknown as Record<string, unknown>[], session),
     getUiRows<Record<string, unknown>>("invoices", store.invoices as unknown as Record<string, unknown>[], session),
     getUiRows<Record<string, unknown>>("receipts", store.receipts as unknown as Record<string, unknown>[], session),
-    getUiRows<Record<string, unknown>>("commissions", store.commissionEntries as unknown as Record<string, unknown>[], session),
+    getUiCommissionEntries(session),
   ]);
 
   const customerIdByName = Object.fromEntries(customersResult.data.map((c) => [String(c.name), String(c.id)]));

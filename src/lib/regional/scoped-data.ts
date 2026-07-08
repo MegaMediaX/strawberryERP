@@ -6,7 +6,7 @@ import type { PortalSession } from "@/lib/portal-security";
 import type { RCommission, RCustomer, RInvoice, RReceipt } from "@/lib/regional/reseller-list";
 import { resolveRegionalCountries, scopeByCountry } from "@/lib/regional/regional-scope";
 import type { PortalLead } from "@/lib/ui-data";
-import { getUiLeads, getUiRows } from "@/lib/ui-data";
+import { getUiCommissionEntries, getUiLeads, getUiRows } from "@/lib/ui-data";
 
 export interface RegionalScopedData {
   effective: string[];
@@ -28,7 +28,7 @@ export async function regionalScopedData(session: PortalSession, country?: strin
     getUiLeads(session),
     getUiRows<Record<string, unknown>>("invoices", store.invoices as unknown as Record<string, unknown>[], session),
     getUiRows<Record<string, unknown>>("receipts", store.receipts as unknown as Record<string, unknown>[], session),
-    getUiRows<Record<string, unknown>>("commissions", store.commissionEntries as unknown as Record<string, unknown>[], session),
+    getUiCommissionEntries(session),
     getUiRows<Record<string, unknown>>("customers", seedCustomers as unknown as Record<string, unknown>[], session),
   ]);
 
