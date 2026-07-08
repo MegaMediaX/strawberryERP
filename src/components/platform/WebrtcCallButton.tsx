@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { isBlockedPhone } from "@/lib/telephony/call-record";
+import { toLocalDialNumber } from "@/lib/telephony/local-dial";
 import type { WebrtcConfig } from "@/lib/telephony/webrtc";
 
 /**
@@ -11,7 +12,9 @@ import type { WebrtcConfig } from "@/lib/telephony/webrtc";
  * browser — no per-desk install, audio in/out of the browser. sip.js is loaded
  * dynamically so it never touches the server render.
  *
- * The gateway dials FXO pass-through (raw digits, no E.164). Country-block (IL)
+ * The gateway dials an analog FXO trunk that needs LOCAL trunk-0 digits, not
+ * E.164 — numbers are normalized via toLocalDialNumber before the sip: URI is
+ * built (the Asterisk dialplan applies the same rewrite defensively). Country-block (IL)
  * is guarded here for UX, but the AUTHORITATIVE block lives in the Asterisk
  * dialplan (the browser talks to the gateway directly, not through the CRM).
  */
@@ -125,7 +128,7 @@ export function WebrtcCallButton({ number, onCallStarted }: { number: string; on
       setMessage("Dialing this country is blocked.");
       return;
     }
-    const digits = number.replace(/[^\d]/g, ""); // FXO pass-through — raw digits
+    const digits = toLocalDialNumber(number); // FXO needs local trunk-0 format, not E.164
     if (!digits) {
       setMessage("This lead has no dialable number.");
       return;
