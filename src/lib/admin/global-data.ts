@@ -7,7 +7,7 @@ import type { RCommission, RCustomer, RInvoice, RReceipt } from "@/lib/regional/
 import type { AgendaEscalation, AgendaInvoice } from "@/lib/regional/build-regional-agenda";
 import { escalationReasonLabel } from "@/lib/regional/escalation";
 import type { PortalLead } from "@/lib/ui-data";
-import { getUiLeads, getUiRows } from "@/lib/ui-data";
+import { getUiCommissionEntries, getUiLeads, getUiRows } from "@/lib/ui-data";
 import type { AdminSearchData } from "@/lib/admin/global-search";
 
 /**
@@ -35,7 +35,7 @@ export async function adminGlobalData(session: PortalSession): Promise<AdminGlob
     getUiLeads(session),
     getUiRows<Record<string, unknown>>("invoices", store.invoices as unknown as Record<string, unknown>[], session),
     getUiRows<Record<string, unknown>>("receipts", store.receipts as unknown as Record<string, unknown>[], session),
-    getUiRows<Record<string, unknown>>("commissions", store.commissionEntries as unknown as Record<string, unknown>[], session),
+    getUiCommissionEntries(session),
     getUiRows<Record<string, unknown>>("customers", seedCustomers as unknown as Record<string, unknown>[], session),
   ]);
 

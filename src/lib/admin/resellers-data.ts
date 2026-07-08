@@ -6,7 +6,7 @@ import type { PortalSession } from "@/lib/portal-security";
 import { brandingModeLabel, resellerCommissionLabel, resolveResellerAdmin } from "@/lib/admin/resellers";
 import type { Reseller } from "@/lib/business/reseller-defaults";
 import { regionalResellers } from "@/lib/regional/reseller-list";
-import { getUiLeads, getUiRows } from "@/lib/ui-data";
+import { getUiCommissionEntries, getUiLeads, getUiRows } from "@/lib/ui-data";
 
 export interface AdminResellerRow extends Reseller {
   adminName: string;
@@ -27,7 +27,7 @@ export async function adminResellersData(session: PortalSession): Promise<AdminR
     getUiLeads(session),
     getUiRows<Record<string, unknown>>("invoices", store.invoices as unknown as Record<string, unknown>[], session),
     getUiRows<Record<string, unknown>>("receipts", store.receipts as unknown as Record<string, unknown>[], session),
-    getUiRows<Record<string, unknown>>("commissions", store.commissionEntries as unknown as Record<string, unknown>[], session),
+    getUiCommissionEntries(session),
     getUiRows<Record<string, unknown>>("customers", seedCustomers as unknown as Record<string, unknown>[], session),
   ]);
 
