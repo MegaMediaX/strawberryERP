@@ -92,6 +92,14 @@ describe("agentCallKpis", () => {
     expect(z.callsOverOneMinute).toBe(2);
   });
 
+  it("uses CONNECTED talk time, not total elapsed duration, for the 1m+ bucket", () => {
+    // High ring time + a long total duration must NOT make this count — only
+    // talkSeconds (the connected portion) determines "1m+ calls".
+    const recs = [call({ agent: "d", answered: true, ringSeconds: 50, talkSeconds: 10, durationSeconds: 65 })];
+    const [d] = agentCallKpis(recs);
+    expect(d.callsOverOneMinute).toBe(0);
+  });
+
   it("handles all-unanswered (avg/longest talk = 0)", () => {
     const recs = [
       call({ agent: "x", answered: false, outcome: "rang_no_answer", talkSeconds: 0 }),

@@ -24,6 +24,12 @@ type LeadPayload = {
   followUpDate?: string;
   notes?: string;
   source?: string;
+  /** "Acquired information" (ADR 0001) — not yet a Partner Lead DocType field;
+   *  mapped defensively so a disposition write surfaces it once the backend adds it. */
+  acquiredPhone?: string;
+  acquiredEmail?: string;
+  acquiredBy?: string;
+  acquiredAt?: string;
 };
 
 export async function GET(request: Request) {
@@ -212,6 +218,10 @@ const LEAD_FIELD_MAP: ReadonlyArray<readonly [keyof LeadPayload, string]> = [
   ["followUpDate", "follow_up_date"],
   ["notes", "notes"],
   ["source", "source"],
+  ["acquiredPhone", "acquired_phone"],
+  ["acquiredEmail", "acquired_email"],
+  ["acquiredBy", "acquired_by"],
+  ["acquiredAt", "acquired_at"],
 ];
 
 /**

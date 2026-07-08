@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { AdminDashboardData } from "@/lib/admin/dashboard-data";
 
-const money = (n: number) => `$${n.toLocaleString()}`;
+const money = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`;
 
 /** A clickable KPI tile (§7 — every metric opens a filtered list). */
 function Kpi({ label, value, href }: { label: string; value: string; href: string }) {
@@ -56,6 +56,12 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
         <p className="text-sm text-[var(--muted)]">Global control center · all countries · all resellers</p>
       </div>
 
+      {data.errors.length > 0 ? (
+        <div role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">
+          Live data unavailable — showing partial records. ({data.errors.join("; ")})
+        </div>
+      ) : null}
+
       {/* §8 Today Needs Attention — top card */}
       <Card>
         <CardHeader className="pb-2"><CardTitle className="flex items-center gap-1.5 text-base"><AlertTriangle className="size-4 text-amber-500" /> Today needs attention</CardTitle></CardHeader>
@@ -102,7 +108,7 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
         <Card>
           <CardHeader className="pb-2"><CardTitle className="flex items-center gap-1.5 text-base"><Plug className="size-4 text-[var(--muted)]" /> Integration health</CardTitle></CardHeader>
           <CardContent className="grid gap-2">
-            {data.integrations.map((i) => (
+            {data.integrations.length === 0 ? <p className="text-sm text-[var(--muted)]">No integrations configured.</p> : data.integrations.map((i) => (
               <Link key={i.integrationType} href={`/admin/integrations`} className="flex items-center justify-between gap-2 rounded-xl border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--background)]">
                 <span className="font-medium">{i.integrationType}<span className="ml-1 text-xs text-[var(--muted)]">{i.provider !== "Not configured" ? `· ${i.provider}` : ""}</span></span>
                 <Badge tone={i.ok ? "green" : i.status === "Failed" ? "rose" : "neutral"}>{i.status}</Badge>
@@ -123,7 +129,9 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
               </tr>
             </thead>
             <tbody>
-              {data.resellers.map((r, i) => (
+              {data.resellers.length === 0 ? (
+                <tr><td colSpan={10} className="py-4 text-sm text-[var(--muted)]">No reseller activity yet.</td></tr>
+              ) : data.resellers.map((r, i) => (
                 <tr key={r.reseller} className="border-b border-[var(--border)] last:border-0">
                   <td className="py-2.5 pr-4 align-middle text-[var(--muted)]">{i + 1}</td>
                   <td className="py-2.5 pr-4 align-middle font-medium"><Link href={`/admin/resellers/${encodeURIComponent(r.reseller)}`} className="text-[var(--brand)] hover:underline">{r.reseller}</Link></td>
@@ -144,7 +152,7 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
       {/* Reseller leaderboard — mobile cards */}
       <div className="grid gap-2 md:hidden">
         <h2 className="text-sm font-semibold">Reseller leaderboard</h2>
-        {data.resellers.map((r, i) => (
+        {data.resellers.length === 0 ? <p className="text-sm text-[var(--muted)]">No reseller activity yet.</p> : data.resellers.map((r, i) => (
           <Card key={r.reseller}><CardContent className="grid gap-1 pt-3">
             <div className="flex items-center justify-between gap-2">
               <Link href={`/admin/resellers/${encodeURIComponent(r.reseller)}`} className="truncate font-semibold text-[var(--brand)]">{i + 1}. {r.reseller}</Link>
