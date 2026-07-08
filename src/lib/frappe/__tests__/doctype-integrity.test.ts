@@ -93,4 +93,17 @@ describe("scale indexes are declared on the lead DocType", () => {
       expect(indexed.has(field)).toBe(true);
     }
   });
+
+  it("call_record indexes the scoping/filter fields", () => {
+    const callFile = files.find((f) => f.includes(join("call_record", "call_record.json")));
+    expect(callFile).toBeDefined();
+    const indexed = new Set(
+      (load(callFile!).fields ?? [])
+        .filter((f) => f.search_index === 1 || f.search_index === true)
+        .map((f) => f.fieldname as string),
+    );
+    for (const field of ["external_id", "agent", "reseller", "country", "started_at"]) {
+      expect(indexed.has(field)).toBe(true);
+    }
+  });
 });

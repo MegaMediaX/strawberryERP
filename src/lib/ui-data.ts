@@ -5,6 +5,7 @@ import { isFrappeConfigured } from "@/lib/frappe-client";
 import type { PortalSession } from "@/lib/portal-security";
 import { leads as devLeads, leadStatuses, type Country, type LeadStatus } from "@/lib/sample-data";
 import { getLeadOverrides } from "@/lib/dev-store";
+import { leadsScopeForFrappe } from "@/lib/security/leads-scope";
 
 export type PortalLead = {
   id: string;
@@ -101,7 +102,9 @@ export async function getUiLeads(session: PortalSession): Promise<UiDataResult<P
   }
 
   try {
-    const result = await frappeBackendClient.handle({ resource: "leads", method: "get" });
+    // Scope the Frappe query itself (mirrors the REST leads route) — scopeLeads
+    // below stays as defense-in-depth, not the only filter.
+    const result = await frappeBackendClient.handle({ resource: "leads", method: "get", payload: leadsScopeForFrappe(session) });
     if (!result) {
       return { source: "frappe", data: [], error: "The Frappe leads endpoint is unavailable." };
     }
@@ -130,6 +133,12 @@ function normalizeLead(row: Record<string, unknown>): PortalLead | null {
   const status = leadStatuses.includes(rawStatus as LeadStatus) ? (rawStatus as LeadStatus) : "New Lead (Uncontacted)";
   const firstName = String(row.contact_first_name ?? row.contactFirstName ?? "");
   const lastName = String(row.contact_last_name ?? row.contactLastName ?? "");
+  // acquired_* mirrors the Partner Lead DocType fields (frappe_app/.../partner_lead.json) —
+  // mapped defensively (empty string if absent) so a stale/older Frappe still degrades gracefully.
+  const acquiredPhone = String(row.acquired_phone ?? row.acquiredPhone ?? "");
+  const acquiredEmail = String(row.acquired_email ?? row.acquiredEmail ?? "");
+  const acquiredBy = String(row.acquired_by ?? row.acquiredBy ?? "");
+  const acquiredAt = String(row.acquired_at ?? row.acquiredAt ?? "");
 
   return {
     id: String(row.name ?? row.id ?? ""),
@@ -146,6 +155,10 @@ function normalizeLead(row: Record<string, unknown>): PortalLead | null {
     followUp: String(row.follow_up_date ?? row.followUpDate ?? row.followUp ?? "Unscheduled"),
     source: String(row.source ?? "Frappe"),
     notes: String(row.notes ?? ""),
+    ...(acquiredPhone ? { acquiredPhone } : {}),
+    ...(acquiredEmail ? { acquiredEmail } : {}),
+    ...(acquiredBy ? { acquiredBy } : {}),
+    ...(acquiredAt ? { acquiredAt } : {}),
   };
 }
 

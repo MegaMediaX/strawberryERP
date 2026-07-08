@@ -1,15 +1,18 @@
 import { NextResponse } from "next/server";
 
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
+import { maybeRouteToFrappe } from "@/lib/backend/backend-router";
 import { appendApiLog, appendAudit, upsertCallRecord } from "@/lib/dev-store";
 import { customers } from "@/lib/phase2-data";
-import { leads } from "@/lib/sample-data";
+import type { PortalSession, PortalUser } from "@/lib/portal-security";
+import { allowedCountries } from "@/lib/sample-data";
 import { authorizeApiRequest } from "@/lib/security/permissions";
 import {
   buildCallRecord,
   isBlockedPhone,
   linkCall,
   parseCallPayload,
+  type CallRecord,
   type LinkableEntity,
 } from "@/lib/telephony/call-record";
 import {
@@ -17,6 +20,7 @@ import {
   verifyIngestSignature,
   type RateLimitBucket,
 } from "@/lib/telephony/ingest-auth";
+import { getUiLeads } from "@/lib/ui-data";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +32,61 @@ const EXTENSION = process.env.TELEPHONY_EXTENSION ?? "1001";
 // check skipped (dev). Set in production so a leaked key alone can't forge logs.
 const INGEST_SECRET = process.env.TELEPHONY_INGEST_SECRET || undefined;
 const RATE_LIMIT_PER_MIN = Number(process.env.TELEPHONY_RATE_LIMIT ?? "120");
+
+/**
+ * Ingest is authenticated by the API-key + HMAC layers above (authorizeApiRequest,
+ * verifyIngestSignature) — never by a portal user. Linking a call still needs a
+ * PortalSession to call getUiLeads, so this is an internal, unscoped identity
+ * (global read across every country) used ONLY to fetch the linking candidate
+ * set. It is never returned to the caller or used for any authorization decision.
+ */
+function ingestSession(): PortalSession {
+  const user: PortalUser = {
+    id: "SYS-TELEPHONY-INGEST",
+    name: "Telephony Ingest",
+    email: "",
+    role: "Super Admin",
+    countries: [...allowedCountries],
+    active: true,
+  };
+  return {
+    user,
+    effectiveUser: user,
+    startedAt: new Date().toISOString(),
+    source: "dev-header",
+    auditLabel: "Telephony ingest (system)",
+  };
+}
+
+/** CallRecord -> the snake_case payload upsert_call (frappe_app/.../api/calls.py) expects. */
+function mapCallRecordToFrappe(record: CallRecord) {
+  return {
+    external_id: record.externalId,
+    direction: record.direction,
+    from_number: record.fromNumber,
+    to_number: record.toNumber,
+    contact_number: record.contactNumber,
+    outcome: record.outcome,
+    answered: record.answered,
+    ring_seconds: record.ringSeconds,
+    talk_seconds: record.talkSeconds,
+    duration_seconds: record.durationSeconds,
+    started_at: record.startedAt,
+    recording_file: record.recordingFile,
+    account: record.account,
+    extension: record.extension,
+    link_state: record.linkState,
+    ...(record.leadId ? { lead: record.leadId } : {}),
+    ...(record.customerId ? { customer: record.customerId } : {}),
+    ...(record.reseller ? { reseller: record.reseller } : {}),
+    ...(record.country ? { country: record.country } : {}),
+    ...(record.assignedTo ? { assigned_to: record.assignedTo } : {}),
+    ...(record.agent ? { agent: record.agent } : {}),
+    ...(record.acquiredPhone ? { acquired_phone: record.acquiredPhone } : {}),
+    ...(record.acquiredEmail ? { acquired_email: record.acquiredEmail } : {}),
+    logged_at: record.loggedAt,
+  };
+}
 
 // Fixed-window rate-limit state, per server instance (Phase 2).
 const rateBucket: RateLimitBucket = new Map();
@@ -118,7 +177,15 @@ export async function POST(request: Request) {
     return jsonError("Calls to or from blocked countries are not accepted.", 403);
   }
 
-  const leadEntities: LinkableEntity[] = leads.map((l) => ({
+  // Live linking (Frappe seam): leads via getUiLeads, which returns the real
+  // dev-store/Frappe-backed lead set (including Super-Admin reassign overrides)
+  // instead of the frozen sample-data seed. Customers stay on the static seed —
+  // no getUiRows-based customer fetch exists yet, and the seed customers have
+  // no `phone` field so this branch of linkCall is already a no-op today; leads
+  // are the KPI-critical link (T6a). Trade-off: this is a full lead scan per
+  // ingest — acceptable at current call volume; index by phone if that grows.
+  const leadsResult = await getUiLeads(ingestSession());
+  const leadEntities: LinkableEntity[] = leadsResult.data.map((l) => ({
     id: l.id,
     phone: l.phone,
     country: l.country,
@@ -140,6 +207,18 @@ export async function POST(request: Request) {
   });
 
   const { created } = upsertCallRecord(record);
+
+  // Durable write: forward to Frappe when configured. A failed proxy MUST
+  // surface to the caller (mirrors the leads/disposition routes) — silently
+  // keeping only the in-memory dev-store copy would look like success while a
+  // live Frappe-backed KPI query never sees this call. The 502 is intentional:
+  // it makes the middleware retry the POST (idempotent by external_id), so a
+  // transient Frappe outage self-heals.
+  const proxied = await maybeRouteToFrappe("calls", "post", mapCallRecordToFrappe(record));
+  if (proxied && !proxied.ok) {
+    logIngest(request, proxied.status);
+    return proxied;
+  }
 
   // Audit trail: the call appears on its linked entity (or as an unlinked call).
   appendAudit({
