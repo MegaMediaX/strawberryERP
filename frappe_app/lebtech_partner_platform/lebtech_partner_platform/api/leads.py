@@ -215,11 +215,7 @@ def validate_lead_payload(payload, partial: bool = False):
         "company_name",
         "country",
         "assigned_user",
-        "contact_first_name",
-        "contact_last_name",
-        "gender",
         "phone",
-        "email",
     ]
 
     if not partial:

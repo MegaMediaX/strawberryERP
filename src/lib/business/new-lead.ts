@@ -41,11 +41,7 @@ const REQUIRED: Array<keyof NewLeadInput> = [
   "companyName",
   "country",
   "assignedUser",
-  "contactFirstName",
-  "contactLastName",
-  "gender",
   "phone",
-  "email",
 ];
 
 const FIELD_LABELS: Partial<Record<keyof NewLeadInput, string>> = {
@@ -75,7 +71,7 @@ export function validateNewLeadInput(input: NewLeadInput): string | null {
     return "Country is not enabled for the platform.";
   }
 
-  if (!EMAIL_RE.test(input.email.trim())) {
+  if (input.email.trim() && !EMAIL_RE.test(input.email.trim())) {
     return "Enter a valid email address.";
   }
 

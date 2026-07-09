@@ -20,11 +20,7 @@ class PartnerLead(Document):
             "company_name",
             "country",
             "assigned_user",
-            "contact_first_name",
-            "contact_last_name",
-            "gender",
             "phone",
-            "email",
         ]
         missing = [field for field in required if not self.get(field)]
         if missing:
@@ -32,7 +28,7 @@ class PartnerLead(Document):
 
         validate_country_value(self.country)
 
-        if self.gender not in {"Male", "Female"}:
+        if self.gender and self.gender not in {"Male", "Female"}:
             frappe.throw(_("Gender must be Male or Female."), frappe.ValidationError)
 
         if self.status and self.status not in LEAD_STATUSES:
