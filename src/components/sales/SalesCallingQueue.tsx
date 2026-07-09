@@ -17,9 +17,12 @@ import type { PortalLead } from "@/lib/ui-data";
 export function SalesCallingQueue({
   leads,
   actingUser,
+  telephonyMode,
 }: {
   leads: PortalLead[];
   actingUser: { id: string; role: PortalRole; countries: string[]; reseller?: string };
+  /** "webrtc" → in-browser softphone; "tinyphone" → CRM dial-queue (matches LeadCallScreen). */
+  telephonyMode?: "tinyphone" | "webrtc";
 }) {
   const [index, setIndex] = useState(0);
   const [done, setDone] = useState(false);
@@ -89,6 +92,7 @@ export function SalesCallingQueue({
         timeline={buildTimeline(lead)}
         importantDetails={importantDetailsFor(lead.reseller)}
         actingUser={actingUser}
+        telephonyMode={telephonyMode}
       />
     </div>
   );
