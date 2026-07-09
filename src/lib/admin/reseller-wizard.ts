@@ -128,8 +128,13 @@ export function validateWizardStep(step: number, s: ResellerWizardState, ctx: Wi
 
 /** First step index that fails validation (for the Review/Create gate), or -1. */
 export function firstInvalidStep(s: ResellerWizardState, ctx: WizardContext): number {
+  // Tolerate partial/empty/malformed request bodies (e.g. a probe POST with `{}`
+  // or missing arrays): fill missing fields with safe defaults so validation
+  // surfaces the normal step error instead of a TypeError (500) from calling
+  // .trim()/.length on undefined.
+  const safe: ResellerWizardState = { ...emptyWizardState(), ...(s && typeof s === "object" ? s : {}) };
   for (let i = 0; i < 7; i += 1) {
-    if (validateWizardStep(i, s, ctx)) return i;
+    if (validateWizardStep(i, safe, ctx)) return i;
   }
   return -1;
 }

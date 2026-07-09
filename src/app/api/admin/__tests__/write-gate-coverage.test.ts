@@ -191,6 +191,8 @@ describe("resellers/wizard", () => {
     }))));
   it("POST 400 for an incomplete wizard (guard before gate)", async () =>
     expectGuard(await wizardPOST(adminReq("POST", emptyWizardState())), 400));
+  it("POST 400 (not 500) for a partial body missing fields entirely", async () =>
+    expectGuard(await wizardPOST(adminReq("POST", { name: "Partial Co" })), 400));
 });
 
 describe("settings", () => {

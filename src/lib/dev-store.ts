@@ -549,12 +549,12 @@ export function setUserActive(id: string, active: boolean): PortalUser | undefin
 }
 
 /** Update a user's scope (countries/reseller) (§11 Edit). Returns the updated user. */
-export function updateUserScope(id: string, patch: { countries?: string[]; reseller?: string | undefined }): PortalUser | undefined {
+export function updateUserScope(id: string, patch: { countries?: string[]; reseller?: string | undefined; phone?: string }): PortalUser | undefined {
   const store = getDevStore();
   let updated: PortalUser | undefined;
   store.users = store.users.map((u) => {
     if (u.id !== id) return u;
-    updated = { ...u, countries: (patch.countries ?? u.countries) as PortalUser["countries"], reseller: "reseller" in patch ? patch.reseller : u.reseller };
+    updated = { ...u, countries: (patch.countries ?? u.countries) as PortalUser["countries"], reseller: "reseller" in patch ? patch.reseller : u.reseller, phone: "phone" in patch ? patch.phone : u.phone };
     return updated;
   });
   return updated;

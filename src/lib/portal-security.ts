@@ -5,6 +5,7 @@ export type PortalUser = {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   role: Role;
   countries: Country[];
   reseller?: string;
