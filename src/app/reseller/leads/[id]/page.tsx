@@ -8,6 +8,7 @@ import { getImportantDetails, getUsers } from "@/lib/dev-store";
 import { invoices as seedInvoices, receipts as seedReceipts } from "@/lib/phase2-data";
 import { buildTimeline } from "@/lib/sales/timeline-builder";
 import { getPortalUiSession } from "@/lib/security/ui-session";
+import { isWebrtcMode } from "@/lib/telephony/webrtc";
 import { getUiLeads } from "@/lib/ui-data";
 
 export default async function ResellerLeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -44,6 +45,7 @@ export default async function ResellerLeadDetailPage({ params }: { params: Promi
         importantDetails={resolveImportantDetails(lead, getImportantDetails(lead.reseller))}
         timeline={buildTimeline(lead)}
         related={related}
+        telephonyMode={isWebrtcMode() ? "webrtc" : "tinyphone"}
       />
     </div>
   );
