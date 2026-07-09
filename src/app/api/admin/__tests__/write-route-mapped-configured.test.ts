@@ -31,4 +31,46 @@ describe("admin mapped write (Frappe CONFIGURED) routes to Frappe, not the fail-
     expect(body.ok).toBe(true);
     expect(body.source).toBe("frappe");
   });
+
+  it("country create routes to Frappe (countries.post → create_country)", async () => {
+    const { POST } = await import("@/app/api/admin/countries/route");
+    const req = new Request("https://portal.local/api/admin/countries", {
+      method: "POST",
+      headers: { "x-platform-user-id": "USR-SUPER", "content-type": "application/json" },
+      body: JSON.stringify({ name: "Kuwait", currency: "KWD", timezone: "UTC", invoicePrefix: "KW-INV", paymentMethods: ["Cash"] }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { ok: boolean; source: string };
+    expect(body.ok).toBe(true);
+    expect(body.source).toBe("frappe");
+  });
+
+  it("reseller create routes to Frappe (resellers.post → create_reseller)", async () => {
+    const { POST } = await import("@/app/api/admin/resellers/route");
+    const req = new Request("https://portal.local/api/admin/resellers", {
+      method: "POST",
+      headers: { "x-platform-user-id": "USR-SUPER", "content-type": "application/json" },
+      body: JSON.stringify({ name: "New Reseller Co", countries: ["Lebanon"], defaultCurrency: "USD", defaultCommissionPercentage: 10, defaultCommissionTrigger: "Fully Paid", visibility: "Assigned Countries", isActive: true }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { ok: boolean; source: string };
+    expect(body.ok).toBe(true);
+    expect(body.source).toBe("frappe");
+  });
+
+  it("white-label save routes to Frappe (white-label.patch → save_white_label)", async () => {
+    const { PATCH } = await import("@/app/api/admin/white-label/route");
+    const req = new Request("https://portal.local/api/admin/white-label", {
+      method: "PATCH",
+      headers: { "x-platform-user-id": "USR-SUPER", "content-type": "application/json" },
+      body: JSON.stringify({ platformName: "LebTech Partner Platform" }),
+    });
+    const res = await PATCH(req);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { ok: boolean; source: string };
+    expect(body.ok).toBe(true);
+    expect(body.source).toBe("frappe");
+  });
 });

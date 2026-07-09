@@ -39,6 +39,16 @@ export const frappeMethodMap: Record<string, { get?: string; post?: string; patc
   },
   resellers: {
     get: "lebtech_partner_platform.api.operations.list_resellers",
+    post: "lebtech_partner_platform.api.operations.create_reseller",
+    patch: "lebtech_partner_platform.api.operations.update_reseller",
+  },
+  countries: {
+    post: "lebtech_partner_platform.api.countries.create_country",
+    patch: "lebtech_partner_platform.api.countries.update_country",
+  },
+  "white-label": {
+    get: "lebtech_partner_platform.api.settings.get_white_label",
+    patch: "lebtech_partner_platform.api.settings.save_white_label",
   },
   contracts: {
     get: "lebtech_partner_platform.api.operations.list_contracts",

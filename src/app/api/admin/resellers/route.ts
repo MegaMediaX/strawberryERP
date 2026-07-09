@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
+import { devStoreResponse, maybeRouteToFrappe } from "@/lib/backend/backend-router";
 import { appendAudit, getDevStore, upsertReseller } from "@/lib/dev-store";
 import { requireSuperAdmin } from "@/lib/security/admin-guard";
 import { currencySettings } from "@/lib/phase2-data";
@@ -8,8 +8,20 @@ import { validateReseller, type Reseller } from "@/lib/business/reseller-default
 /**
  * Super Admin reseller management (spec §10). Super-Admin-only writes; every
  * create/update/deactivate is audited. No-DELETE — resellers are deactivated,
- * never removed. dev-store only.
+ * never removed. Persists to the Frappe "Reseller" doctype (with its
+ * "Reseller Country" child table) when configured; dev-store fallback otherwise.
  */
+
+/** Map a dev-store Reseller to the Frappe create/update payload. */
+function toFrappeReseller(r: Pick<Reseller, "countries" | "defaultCurrency" | "defaultCommissionPercentage" | "defaultCommissionTrigger" | "visibility">) {
+  return {
+    countries: r.countries,
+    default_currency: r.defaultCurrency,
+    commission_rate: r.defaultCommissionPercentage,
+    commission_trigger: r.defaultCommissionTrigger,
+    visibility_rules_json: JSON.stringify({ visibility: r.visibility }),
+  };
+}
 
 const validCurrencies = () => currencySettings.filter((c) => c.isActive).map((c) => c.currencyCode);
 
@@ -30,9 +42,6 @@ export async function POST(request: Request) {
   const invalid = validateReseller(payload, validCurrencies());
   if (invalid) return jsonError(invalid);
 
-  const gate = writeRequiresBackend();
-  if (gate) return gate;
-
   const record: Reseller = {
     name: String(payload.name).trim(),
     countries: payload.countries!,
@@ -42,6 +51,14 @@ export async function POST(request: Request) {
     visibility: payload.visibility!,
     isActive: payload.isActive ?? true,
   };
+
+  const proxied = await maybeRouteToFrappe("resellers", "post", {
+    reseller_name: record.name,
+    ...toFrappeReseller(record),
+    is_active: record.isActive ? 1 : 0,
+  });
+  if (proxied) return proxied;
+
   upsertReseller(record);
   const audit = appendAudit({ entityType: "Reseller", entityId: record.name, action: "create", oldValue: "", newValue: `${record.countries.join(", ")} · ${record.defaultCommissionPercentage}%`, performedBy: session.auditLabel });
   return devStoreResponse({ reseller: record, message: `Reseller "${record.name}" created.` }, { status: 201, audit });
@@ -59,8 +76,8 @@ export async function PATCH(request: Request) {
 
   // Deactivate / reactivate toggle.
   if (typeof payload.active === "boolean") {
-    const gate = writeRequiresBackend();
-    if (gate) return gate;
+    const proxied = await maybeRouteToFrappe("resellers", "patch", { reseller_name: name, is_active: payload.active ? 1 : 0 });
+    if (proxied) return proxied;
     const updated: Reseller = { ...current, isActive: payload.active };
     upsertReseller(updated);
     const audit = appendAudit({ entityType: "Reseller", entityId: name, action: payload.active ? "activate" : "deactivate", oldValue: String(current.isActive), newValue: String(payload.active), performedBy: session.auditLabel });
@@ -77,8 +94,13 @@ export async function PATCH(request: Request) {
   };
   const invalid = validateReseller(candidate, validCurrencies());
   if (invalid) return jsonError(invalid);
-  const gate = writeRequiresBackend();
-  if (gate) return gate;
+
+  const proxied = await maybeRouteToFrappe("resellers", "patch", {
+    reseller_name: name,
+    ...toFrappeReseller(candidate),
+  });
+  if (proxied) return proxied;
+
   upsertReseller(candidate);
   const audit = appendAudit({ entityType: "Reseller", entityId: name, action: "update", oldValue: `${current.defaultCommissionPercentage}% · ${current.defaultCurrency}`, newValue: `${candidate.defaultCommissionPercentage}% · ${candidate.defaultCurrency}`, performedBy: session.auditLabel });
   return devStoreResponse({ reseller: candidate, message: `Reseller "${name}" updated.` }, { audit });

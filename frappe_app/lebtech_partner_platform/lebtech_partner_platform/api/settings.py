@@ -1,8 +1,33 @@
 from __future__ import annotations
 
-import frappe
+import json
 
-from lebtech_partner_platform.validators import write_activity
+import frappe
+from frappe import _
+
+from lebtech_partner_platform.validators import get_portal_assignment, write_activity
+
+# White-label / branding is a single global blob stored on Global Portal Setting
+# under this key (the DocType is a generic key->JSON store), so the rich
+# WhiteLabelSettings shape persists without per-field schema.
+WHITE_LABEL_KEY = "white_label"
+
+
+def _require_super_admin():
+    assignment = get_portal_assignment(frappe.session.user)
+    if "Super Admin" not in frappe.get_roles() and assignment.get("role") != "Super Admin":
+        frappe.throw(_("Super Admin only."), frappe.PermissionError)
+
+
+def _load_json(value):
+    if not value:
+        return {}
+    if isinstance(value, dict):
+        return value
+    try:
+        return json.loads(value)
+    except Exception:
+        return {}
 
 
 @frappe.whitelist(methods=["GET"])
@@ -71,6 +96,41 @@ def list_notification_rules():
         ],
         order_by="modified desc",
     )
+
+
+@frappe.whitelist(methods=["GET"])
+def get_white_label():
+    _require_super_admin()
+    existing = frappe.db.get_value(
+        "Global Portal Setting", {"setting_key": WHITE_LABEL_KEY}, "setting_json"
+    )
+    return _load_json(existing)
+
+
+@frappe.whitelist(methods=["POST", "PUT", "PATCH"])
+def save_white_label(**payload):
+    """Persist the full (already-merged) white-label settings blob."""
+    _require_super_admin()
+    settings = payload.get("settings")
+    settings = _load_json(settings) if isinstance(settings, str) else (settings or {})
+
+    existing = frappe.db.get_value("Global Portal Setting", {"setting_key": WHITE_LABEL_KEY}, "name")
+    if existing:
+        doc = frappe.get_doc("Global Portal Setting", existing)
+        action = "update"
+    else:
+        doc = frappe.get_doc({"doctype": "Global Portal Setting", "setting_key": WHITE_LABEL_KEY})
+        action = "create"
+
+    doc.setting_json = json.dumps(settings)
+    doc.is_enabled = 1
+    if existing:
+        doc.save()
+    else:
+        doc.insert()
+    frappe.db.commit()
+    write_activity("Global Portal Setting", doc.name, action, "", str(settings.get("platformName", "")))
+    return _load_json(doc.setting_json)
 
 
 def mask_secret_config(config_json):

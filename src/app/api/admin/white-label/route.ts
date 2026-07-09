@@ -1,10 +1,14 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
+import { devStoreResponse, maybeRouteToFrappe } from "@/lib/backend/backend-router";
 import { appendAudit, getWhiteLabel, setWhiteLabel } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { mergeWhiteLabel, validateWhiteLabel, type WhiteLabelSettings } from "@/lib/admin/white-label";
 
-/** §30 save white-label / branding settings — Super-Admin-only, audited. */
+/**
+ * §30 save white-label / branding settings — Super-Admin-only, audited. Persists
+ * the full merged blob to the Frappe "Global Portal Setting" doctype (key
+ * "white_label") when configured; dev-store fallback otherwise.
+ */
 export async function PATCH(request: Request) {
   const session = resolvePortalSession(request);
   if (session.user.role !== "Super Admin") return jsonError("Super Admin only.", 403);
@@ -16,8 +20,9 @@ export async function PATCH(request: Request) {
   const invalid = validateWhiteLabel(merged);
   if (invalid) return jsonError(invalid);
 
-  const gate = writeRequiresBackend();
-  if (gate) return gate;
+  // Send the full merged settings so a partial patch never clobbers stored keys.
+  const proxied = await maybeRouteToFrappe("white-label", "patch", { settings: merged });
+  if (proxied) return proxied;
 
   const updated = setWhiteLabel(patch);
   const audit = appendAudit({ entityType: "WhiteLabel", entityId: "platform", action: "update", oldValue: "", newValue: `${updated.platformName} · ${updated.enabledModules.length} modules`, performedBy: session.auditLabel });

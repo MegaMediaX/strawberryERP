@@ -18,7 +18,8 @@
     { "fieldname": "commission_trigger", "fieldtype": "Select", "label": "Commission Trigger", "options": "invoice created\ndeposit paid\nfully paid invoice", "default": "deposit paid" },
     { "fieldname": "commission_rate", "fieldtype": "Percent", "label": "Commission Rate" },
     { "fieldname": "portal_branding_json", "fieldtype": "JSON", "label": "Portal Branding" },
-    { "fieldname": "visibility_rules_json", "fieldtype": "JSON", "label": "Visibility Rules" }
+    { "fieldname": "visibility_rules_json", "fieldtype": "JSON", "label": "Visibility Rules" },
+    { "fieldname": "is_active", "fieldtype": "Check", "label": "Is Active", "default": 1 }
   ],
   "permissions": [
     { "role": "Super Admin", "read": 1, "write": 1, "create": 1, "delete": 1 },

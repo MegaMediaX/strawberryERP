@@ -61,6 +61,19 @@ async function expectGuard(res: Response, status: number) {
   expect(res.status).not.toBe(501);
 }
 
+/**
+ * Assert a resource that HAS a Frappe write path but is running with Frappe
+ * unconfigured (default test env) falls back to a durable-shaped dev-store
+ * success — never the 501 gate. Used by countries / resellers / white-label,
+ * whose writes route to Frappe when configured (see write-route-mapped-configured).
+ */
+async function expectDevStore(res: Response, status = 200) {
+  expect(res.status).toBe(status);
+  const body = (await res.json()) as { ok: boolean; source: string };
+  expect(body.ok).toBe(true);
+  expect(body.source).toBe("dev-store");
+}
+
 describe("accounting/currencies", () => {
   it("POST 501 for a valid new currency", async () =>
     expectGate(await currenciesPOST(adminReq("POST", { currencyCode: "AED", currencyName: "UAE Dirham", symbol: "AED", decimalPrecision: 2, isActive: true, manualExchangeRate: 0.27 }))));
@@ -108,8 +121,8 @@ describe("commissions", () => {
 });
 
 describe("countries", () => {
-  it("POST 501 for a valid new country", async () =>
-    expectGate(await countriesPOST(adminReq("POST", { name: "Kuwait", currency: "KWD", timezone: "UTC", invoicePrefix: "KW-INV", paymentMethods: ["Cash"] }))));
+  it("POST 201 dev-store fallback when Frappe unconfigured (has a Frappe write path)", async () =>
+    expectDevStore(await countriesPOST(adminReq("POST", { name: "Kuwait", currency: "KWD", timezone: "UTC", invoicePrefix: "KW-INV", paymentMethods: ["Cash"] })), 201));
   it("POST 400 for a blocked country (guard before gate)", async () =>
     expectGuard(await countriesPOST(adminReq("POST", { name: "Israel", currency: "USD", timezone: "UTC", invoicePrefix: "IL-INV" })), 400));
   it("PATCH 404 for an unknown country (guard before gate)", async () =>
@@ -168,15 +181,15 @@ describe("permissions", () => {
 });
 
 describe("resellers", () => {
-  it("POST 501 for a valid reseller definition", async () =>
-    expectGate(await resellersPOST(adminReq("POST", { name: "New Reseller Co", countries: ["Lebanon"], defaultCurrency: "USD", defaultCommissionPercentage: 10, defaultCommissionTrigger: "Fully Paid", visibility: "Assigned Countries", isActive: true }))));
-  it("PATCH 404 for an unknown reseller (guard before gate)", async () =>
+  it("POST 201 dev-store fallback when Frappe unconfigured (has a Frappe write path)", async () =>
+    expectDevStore(await resellersPOST(adminReq("POST", { name: "New Reseller Co", countries: ["Lebanon"], defaultCurrency: "USD", defaultCommissionPercentage: 10, defaultCommissionTrigger: "Fully Paid", visibility: "Assigned Countries", isActive: true })), 201));
+  it("PATCH 404 for an unknown reseller (guard before routing)", async () =>
     expectGuard(await resellersPATCH(adminReq("PATCH", { name: "No Such Reseller", active: false })), 404));
 });
 
 describe("resellers/wizard", () => {
-  it("POST 501 for a fully valid wizard state", async () =>
-    expectGate(await wizardPOST(adminReq("POST", {
+  it("POST 201 dev-store fallback for a fully valid wizard state (Frappe unconfigured)", async () =>
+    expectDevStore(await wizardPOST(adminReq("POST", {
       ...emptyWizardState(),
       name: "Tripoli Tech Partners",
       email: "contact@tripolitech.example",
@@ -188,7 +201,7 @@ describe("resellers/wizard", () => {
       currencies: ["USD"],
       defaultCurrency: "USD",
       paymentMethods: ["Cash"],
-    }))));
+    })), 201));
   it("POST 400 for an incomplete wizard (guard before gate)", async () =>
     expectGuard(await wizardPOST(adminReq("POST", emptyWizardState())), 400));
   it("POST 400 (not 500) for a partial body missing fields entirely", async () =>
@@ -225,8 +238,8 @@ describe("users/[id]", () => {
 });
 
 describe("white-label", () => {
-  it("PATCH 501 for a valid branding patch", async () =>
-    expectGate(await whiteLabelPATCH(adminReq("PATCH", { platformName: "LebTech Partner Platform" }))));
-  it("PATCH 403 for a non-Super-Admin (guard before gate)", async () =>
+  it("PATCH 200 dev-store fallback when Frappe unconfigured (has a Frappe write path)", async () =>
+    expectDevStore(await whiteLabelPATCH(adminReq("PATCH", { platformName: "LebTech Partner Platform" }))));
+  it("PATCH 403 for a non-Super-Admin (guard before routing)", async () =>
     expectGuard(await whiteLabelPATCH(adminReq("PATCH", {}, "USR-SALES-MARVEN")), 403));
 });

@@ -26,6 +26,26 @@
       "label": "ISO 3"
     },
     {
+      "fieldname": "currency",
+      "fieldtype": "Data",
+      "label": "Currency"
+    },
+    {
+      "fieldname": "timezone",
+      "fieldtype": "Data",
+      "label": "Timezone"
+    },
+    {
+      "fieldname": "invoice_prefix",
+      "fieldtype": "Data",
+      "label": "Invoice Prefix"
+    },
+    {
+      "fieldname": "payment_methods",
+      "fieldtype": "Small Text",
+      "label": "Payment Methods (JSON)"
+    },
+    {
       "fieldname": "is_enabled",
       "fieldtype": "Check",
       "label": "Is Enabled",
