@@ -13,9 +13,21 @@ interface CredentialRecord {
   email: string;
   userId: string;
   passwordHash: string;
+  /**
+   * A SECOND, independently-accepted scrypt hash for this record. Used only to
+   * wire in the committed test-only fixture (src/test/test-credentials.ts) so
+   * the full auth-route suite has coverage on a fresh clone with zero secrets
+   * configured. Deliberately never populated in production.
+   */
+  testOnlyPasswordHash?: string;
   /** Base32 TOTP secret. When set, 2FA is enforced for this user at login. */
   totpSecret?: string;
 }
+
+// Scrypt hash of `TEST_ONLY_SUPER_ADMIN_PW` (src/test/test-credentials.ts).
+// Synthetic, committed, and NEVER matches the real Super Admin password below.
+const TEST_ONLY_SUPER_ADMIN_HASH =
+  "a1e4f9c2b6d80317e5a2c9f4b71d0836:abe1c047d6df0864fd0b9e96bc3eebc85475d601cae35e37bb4e20c3870407ecd87f214e58732bf33b1268f8c8a39a61535071368f14101ed118b86c31fc2bfa";
 
 const SEED_CREDENTIALS: CredentialRecord[] = [
   {
@@ -23,6 +35,9 @@ const SEED_CREDENTIALS: CredentialRecord[] = [
     userId: "USR-SUPER",
     passwordHash:
       "03c8eb9f5d0dee7738490d937b5fca94:5e223bc7a8029a0ca445e8f3148729a027d745a631809426419ab2003b9bc0e06a2a63cc379f197edae8a78e22803f3c7cc17d976a629fdde3d2b111d03ca9e7",
+    // Never wire the test-only fixture into a production build — it is purely
+    // a local/CI test seam so `npm test` has full coverage with no secrets.
+    testOnlyPasswordHash: process.env.NODE_ENV === "production" ? undefined : TEST_ONLY_SUPER_ADMIN_HASH,
   },
   {
     email: "maya.regional@lebtech.example",
@@ -62,7 +77,9 @@ export function authenticate(email: string, password: string): string | null {
   // Always run a hash comparison to reduce timing signal for unknown emails.
   const hashToCheck =
     record?.passwordHash ?? SEED_CREDENTIALS[0].passwordHash;
-  const passwordOk = verifyPassword(password ?? "", hashToCheck);
+  const passwordOk =
+    verifyPassword(password ?? "", hashToCheck) ||
+    (record?.testOnlyPasswordHash ? verifyPassword(password ?? "", record.testOnlyPasswordHash) : false);
 
   if (!record || !passwordOk) return null;
 

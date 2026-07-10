@@ -7,9 +7,13 @@ import { POST as login } from "@/app/api/auth/login/route";
 import { totp } from "@/lib/auth/totp";
 import { loginTwoFactorState } from "@/lib/auth/two-factor-store";
 import { SEED_ADMIN_PW, SEED_SUPER_EMAIL } from "@/test/seed-credentials";
+import { TEST_ONLY_SUPER_ADMIN_PW } from "@/test/test-credentials";
 
 const SUPER = SEED_SUPER_EMAIL;
-const PW = SEED_ADMIN_PW;
+// TI-4: the committed, deterministic test-only credential — the whole 2FA
+// lifecycle below runs with full coverage on a fresh clone with zero
+// secrets. TI-3 adds a lightweight real-secret parity check at the bottom.
+const PW = TEST_ONLY_SUPER_ADMIN_PW;
 
 function authed(handler: (r: Request) => Promise<Response>, userId: string, body?: unknown) {
   return handler(
@@ -75,5 +79,20 @@ describe("2FA enrollment → enforced login → disable (full flow)", () => {
     expect((await authed(disable, "USR-SUPER", { code: totp(data.secret) })).status).toBe(200);
     expect(await loginTwoFactorState("USR-SUPER", undefined)).toBe("ok");
     expect((await loginReq({ email: SUPER, password: PW })).status).toBe(200);
+  });
+});
+
+// TI-3: parity check against the REAL Super Admin secret. Runs after the
+// lifecycle test above, which always ends with 2FA disabled again, so this
+// starts from the same clean "ok" state. Only runs when SEED_ADMIN_PW is
+// configured (local .env/.env.test or CI secret); skips cleanly otherwise.
+describe.skipIf(!SEED_ADMIN_PW)("login (real secret parity, no 2FA active)", () => {
+  if (!SEED_ADMIN_PW) {
+    console.warn("[two-factor.test.ts] SEED_ADMIN_PW not set — skipping real-secret parity check.");
+  }
+
+  it("authenticates the super admin with the real seeded password", async () => {
+    expect(await loginTwoFactorState("USR-SUPER", undefined)).toBe("ok");
+    expect((await loginReq({ email: SUPER, password: SEED_ADMIN_PW as string })).status).toBe(200);
   });
 });

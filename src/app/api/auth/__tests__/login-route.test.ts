@@ -5,6 +5,13 @@ import { POST as logout } from "@/app/api/auth/logout/route";
 import { SESSION_COOKIE } from "@/lib/auth/session-token";
 import { resolveExplicitPortalSession } from "@/lib/portal-security";
 import { SEED_ADMIN_PW } from "@/test/seed-credentials";
+import { TEST_ONLY_SUPER_ADMIN_PW } from "@/test/test-credentials";
+
+// TI-4: use the committed, deterministic test-only credential as the default
+// so this whole suite runs with full coverage on a fresh clone with zero
+// secrets. TI-3 below separately confirms the real secret (when configured)
+// authenticates through the same route.
+const PW = TEST_ONLY_SUPER_ADMIN_PW;
 
 function loginReq(body: unknown) {
   return login(
@@ -24,7 +31,7 @@ function cookieValue(setCookie: string | null): string {
 
 describe("POST /api/auth/login", () => {
   it("authenticates the super admin and sets a session cookie", async () => {
-    const res = await loginReq({ email: "ggkhoueiry@gmail.com", password: SEED_ADMIN_PW });
+    const res = await loginReq({ email: "ggkhoueiry@gmail.com", password: PW });
     expect(res.status).toBe(200);
     const body = (await res.json()) as { ok: boolean; data: { role: string } };
     expect(body.ok).toBe(true);
@@ -50,7 +57,7 @@ describe("POST /api/auth/login", () => {
 
 describe("login → session cookie resolves a verified identity", () => {
   it("a cookie from a successful login resolves to the Super Admin session", async () => {
-    const res = await loginReq({ email: "ggkhoueiry@gmail.com", password: SEED_ADMIN_PW });
+    const res = await loginReq({ email: "ggkhoueiry@gmail.com", password: PW });
     const token = cookieValue(res.headers.get("set-cookie"));
     expect(token).not.toBe("");
 
@@ -95,5 +102,22 @@ describe("POST /api/auth/logout", () => {
     const setCookie = res.headers.get("set-cookie");
     expect(setCookie).toContain(`${SESSION_COOKIE}=`);
     expect(setCookie?.toLowerCase()).toMatch(/max-age=0/);
+  });
+});
+
+// TI-3: parity check against the REAL Super Admin secret (matches the
+// prod-identical scrypt hash). Only runs when SEED_ADMIN_PW is configured
+// (local .env/.env.test or CI secret); skips cleanly otherwise.
+describe.skipIf(!SEED_ADMIN_PW)("POST /api/auth/login (real secret parity)", () => {
+  if (!SEED_ADMIN_PW) {
+    console.warn("[login-route.test.ts] SEED_ADMIN_PW not set — skipping real-secret parity check.");
+  }
+
+  it("authenticates the super admin with the real seeded password", async () => {
+    const res = await loginReq({ email: "ggkhoueiry@gmail.com", password: SEED_ADMIN_PW });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { ok: boolean; data: { role: string } };
+    expect(body.ok).toBe(true);
+    expect(body.data.role).toBe("Super Admin");
   });
 });

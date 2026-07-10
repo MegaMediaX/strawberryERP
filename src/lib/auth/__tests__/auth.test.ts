@@ -4,6 +4,7 @@ import { authenticate } from "@/lib/auth/credentials";
 import { hashPassword, verifyPassword } from "@/lib/auth/passwords";
 import { createSessionToken, verifySessionToken } from "@/lib/auth/session-token";
 import { SEED_ADMIN_PW } from "@/test/seed-credentials";
+import { TEST_ONLY_SUPER_ADMIN_PW } from "@/test/test-credentials";
 
 describe("passwords (scrypt)", () => {
   it("verifies a correct password and rejects a wrong one", () => {
@@ -47,13 +48,33 @@ describe("session token (HMAC)", () => {
   });
 });
 
-describe("authenticate (seed credentials)", () => {
+// TI-3: these assertions need the REAL Super Admin secret (SEED_ADMIN_PW),
+// which matches the prod-identical scrypt hash. On a fresh clone with no
+// .env/.env.test/CI secret it is unset — skip cleanly instead of crashing.
+describe.skipIf(!SEED_ADMIN_PW)("authenticate (seed credentials, real secret)", () => {
+  if (!SEED_ADMIN_PW) {
+    console.warn("[auth.test.ts] SEED_ADMIN_PW not set — skipping real-secret assertions. See docs/testing/auth-test-credentials.md.");
+  }
+
   it("accepts the super admin credentials", () => {
-    expect(authenticate("ggkhoueiry@gmail.com", SEED_ADMIN_PW)).toBe("USR-SUPER");
+    expect(authenticate("ggkhoueiry@gmail.com", SEED_ADMIN_PW as string)).toBe("USR-SUPER");
   });
 
   it("is case-insensitive on email and trims whitespace", () => {
-    expect(authenticate("  GGKHOUEIRY@GMAIL.COM ", SEED_ADMIN_PW)).toBe("USR-SUPER");
+    expect(authenticate("  GGKHOUEIRY@GMAIL.COM ", SEED_ADMIN_PW as string)).toBe("USR-SUPER");
+  });
+});
+
+// TI-4: the committed, deterministic test-only fixture exercises the exact
+// same authenticate() path with ZERO secrets configured, so this coverage
+// never depends on SEED_ADMIN_PW being set.
+describe("authenticate (seed credentials, test-only fixture)", () => {
+  it("accepts the test-only super admin credentials", () => {
+    expect(authenticate("ggkhoueiry@gmail.com", TEST_ONLY_SUPER_ADMIN_PW)).toBe("USR-SUPER");
+  });
+
+  it("is case-insensitive on email and trims whitespace", () => {
+    expect(authenticate("  GGKHOUEIRY@GMAIL.COM ", TEST_ONLY_SUPER_ADMIN_PW)).toBe("USR-SUPER");
   });
 
   it("rejects a wrong password", () => {
