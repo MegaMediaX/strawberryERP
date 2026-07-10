@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
  * ADM-W6 (NEVER-CUT): Frappe is configured but the write itself throws
@@ -13,6 +13,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * backend-router-routing.test.ts (TC-03); this file only proves the ADMIN
  * routes are wired to that mechanism and never bypass it with their own
  * dev-store fallback once Frappe is configured.
+ *
+ * countries/resellers/white-label are quarantined behind
+ * ADMIN_FRAPPE_WRITE_VERIFIED even when Frappe is configured (PR #22's write
+ * path is still HOLD-MERGE/unverified — see backend-router.ts and
+ * admin-write-quarantine.test.ts). This file needs the write to actually
+ * attempt routing to Frappe (so it can throw), so it opts in explicitly.
  */
 vi.mock("@/lib/frappe-client", () => ({
   isFrappeConfigured: () => true,
@@ -41,6 +47,13 @@ async function expectConnectionError(res: Response) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Quarantined by default (see backend-router.ts) — opt in so these writes
+  // actually attempt to route to Frappe and can throw.
+  process.env.ADMIN_FRAPPE_WRITE_VERIFIED = "true";
+});
+
+afterEach(() => {
+  delete process.env.ADMIN_FRAPPE_WRITE_VERIFIED;
 });
 
 describe("ADM-W6: admin writes surface 502 on a Frappe write failure (never a dev-store fake-success)", () => {

@@ -37,6 +37,13 @@ export const frappeMethodMap: Record<string, { get?: string; post?: string; patc
     post: "lebtech_partner_platform.api.customers.create_customer",
     patch: "lebtech_partner_platform.api.customers.update_customer",
   },
+  // NOTE: resellers.post/patch, countries.*, and "white-label" are PR #22's
+  // still-HOLD-MERGE / prod-unverified write path (memory:
+  // prod-write-backend-gap). Being mapped here does NOT mean they route to
+  // Frappe — maybeRouteToFrappe() (backend-router.ts) additionally quarantines
+  // writes to these three resources behind ADMIN_FRAPPE_WRITE_VERIFIED=true
+  // until a human confirms scripts/frappe-admin-write-smoke.mjs passes against
+  // staging. resellers.get (list_resellers) pre-dates PR #22 and is exempt.
   resellers: {
     get: "lebtech_partner_platform.api.operations.list_resellers",
     post: "lebtech_partner_platform.api.operations.create_reseller",

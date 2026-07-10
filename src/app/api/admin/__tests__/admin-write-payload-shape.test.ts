@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
  * ADM-W5: with Frappe CONFIGURED, assert the *exact* field-mapped payload
@@ -8,6 +8,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * still silently dropping/mis-naming fields (is_enabled, payment_methods,
  * commission_rate/trigger, visibility_rules_json, the merged white-label
  * blob) — the exact bug class PR #22 fixes for Partner Country writes.
+ *
+ * countries/resellers/white-label are quarantined behind
+ * ADMIN_FRAPPE_WRITE_VERIFIED even when Frappe is configured (PR #22's write
+ * path is still HOLD-MERGE/unverified — see backend-router.ts and
+ * admin-write-quarantine.test.ts). This file is specifically about proving
+ * the payload SHAPE once that flag is set, so it opts in explicitly.
  */
 const frappeRequest = vi.fn(async (_path: string, _init?: { method: string; body?: unknown }) => ({ name: "OK" }));
 vi.mock("@/lib/frappe-client", () => ({
@@ -32,6 +38,13 @@ function lastCall() {
 
 beforeEach(() => {
   frappeRequest.mockClear();
+  // Quarantined by default (see backend-router.ts) — opt in for this file's
+  // payload-shape assertions.
+  process.env.ADMIN_FRAPPE_WRITE_VERIFIED = "true";
+});
+
+afterEach(() => {
+  delete process.env.ADMIN_FRAPPE_WRITE_VERIFIED;
 });
 
 describe("ADM-W5: countries payload shape", () => {
