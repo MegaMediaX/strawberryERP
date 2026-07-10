@@ -47,3 +47,8 @@ next-env.d.ts
 # Python bytecode
 __pycache__/
 *.pyc
+
+# lead data & review artifacts — NEVER commit (real PII + prod-security findings; remote is PUBLIC)
+/Leads.csv
+/reviews/
+/.claude/reviews/
