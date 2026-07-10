@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { filterByPermission, type PermissionContext } from "@/lib/phase2-data";
+import type { Country } from "@/lib/sample-data";
 
 /**
  * SEC6-03 — filterByPermission (phase2-data.ts) is the dev-store row-level
@@ -11,7 +12,7 @@ import { filterByPermission, type PermissionContext } from "@/lib/phase2-data";
  * here, so this test documents/pins it for an explicit product decision.
  */
 
-type Row = { id: string; country?: string; reseller?: string; assignedTo?: string };
+type Row = { id: string; country?: Country; reseller?: string; assignedTo?: string };
 
 const rows: Row[] = [
   { id: "LB-BDP-MARVEN", country: "Lebanon", reseller: "Beirut Digital Partners", assignedTo: "Marven El Mouallem" },
