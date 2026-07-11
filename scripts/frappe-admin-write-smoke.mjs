@@ -18,11 +18,22 @@
  *     /api/calls — telephony is out of scope here.
  *
  * Exercises the actual whitelisted methods the 501->persist fix wires up
- * (create_country / update_country toggle+edit, create_reseller /
- * update_reseller, save_white_label / get_white_label round-trip) end-to-end
+ * (create_country allow-list guard, update_country toggle+edit, create_reseller
+ * / update_reseller, save_white_label / get_white_label round-trip) end-to-end
  * against a real Frappe site — the fix's own gate-coverage/payload-shape unit
  * tests only prove the Next.js route mocks frappeRequest correctly, not that
  * the Python side actually persists.
+ *
+ * NON-DESTRUCTIVE by construction:
+ *   - create_country can only ever succeed for the 4 seeded ALLOWED_COUNTRIES
+ *     (Lebanon/Cyprus/Jordan/Syria), so this smoke never creates a throwaway
+ *     country. It asserts the allow-list guard rejects a non-listed name, then
+ *     exercises the update write-path on a seeded country (Cyprus), snapshotting
+ *     and restoring its pre-smoke state in a finally block.
+ *   - The smoke reseller it creates is deleted afterward; the white-label
+ *     singleton is snapshotted and restored.
+ *   - get_white_label is whitelisted for GET only — it is fetched with GET,
+ *     never POSTed (a POST is rejected as "Not permitted").
  *
  * Run manually (never wired into an npm script or CI by this lane — those
  * files are owned elsewhere; see PM directive):
@@ -59,8 +70,12 @@ if (baseUrl.includes(PROD_HOST)) {
 const results = [];
 
 async function main() {
-  const countryName = `Smoke Country ${runId}`;
   const resellerName = `Smoke Reseller ${runId}`;
+  // Cyprus is a seeded ALLOWED_COUNTRIES member. create_country only ever
+  // succeeds for the 4 allow-listed countries, all of which are seeded, so the
+  // update write-path is exercised on this existing one (snapshot + restore)
+  // rather than on a throwaway country the app's validator would reject.
+  const COUNTRY = "Cyprus";
 
   // ---- ADM-W9: DocType field-presence check (skipped bench migrate must fail loud) ----
   await test("Partner Country DocType has currency/timezone/invoice_prefix/payment_methods fields", async () => {
@@ -70,69 +85,100 @@ async function main() {
     await assertDoctypeHasFields("Reseller", ["is_active"]);
   });
 
-  // ---- ADM-W7: create_country -> toggle -> update_country round-trip ----
-  let country;
-  await test("create_country persists via the whitelisted method", async () => {
-    country = await callMethod("lebtech_partner_platform.api.countries.create_country", {
-      country_name: countryName,
-      currency: "USD",
-      timezone: "Asia/Beirut",
-      invoice_prefix: `SMK${String(runId).slice(-4)}`,
-      payment_methods: ["Cash"],
-    });
-    assert(country.name === countryName, "create_country did not return the created country");
-    assert(Number(country.is_enabled) === 1, "a newly created country must default to enabled");
+  // ---- ADM-W7: create_country enforces the country allow-list ----
+  await test("create_country rejects a country outside the allow-list (ALLOWED_COUNTRIES guard)", async () => {
+    let rejected = false;
+    try {
+      await callMethod("lebtech_partner_platform.api.countries.create_country", {
+        country_name: `Smoke Country ${runId}`,
+        currency: "USD",
+        timezone: "Asia/Beirut",
+      });
+    } catch {
+      rejected = true;
+    }
+    assert(rejected, "create_country must reject a non-allow-listed country name");
   });
 
-  await test("update_country toggle (is_enabled) persists and round-trips", async () => {
-    const toggled = await callMethod("lebtech_partner_platform.api.countries.update_country", {
-      country_name: countryName,
-      is_enabled: 0,
+  // ---- ADM-W7: update_country toggle + settings-edit round-trip on a seeded country ----
+  const countrySnapshot = await getResource("Partner Country", COUNTRY);
+  try {
+    await test("update_country toggle (is_enabled) persists and round-trips", async () => {
+      const toggled = await callMethod("lebtech_partner_platform.api.countries.update_country", {
+        country_name: COUNTRY,
+        is_enabled: 0,
+      });
+      assert(Number(toggled.is_enabled) === 0, "is_enabled toggle did not persist");
+      const fetched = await getResource("Partner Country", COUNTRY);
+      assert(Number(fetched.is_enabled) === 0, "toggled is_enabled did not round-trip on read-back");
     });
-    assert(Number(toggled.is_enabled) === 0, "is_enabled toggle did not persist");
-    const fetched = await getResource("Partner Country", countryName);
-    assert(Number(fetched.is_enabled) === 0, "toggled is_enabled did not round-trip on read-back");
-  });
 
-  await test("update_country settings-edit updates currency without re-enabling", async () => {
-    const updated = await callMethod("lebtech_partner_platform.api.countries.update_country", {
-      country_name: countryName,
-      currency: "EUR",
+    await test("update_country settings-edit updates currency without re-enabling", async () => {
+      const updated = await callMethod("lebtech_partner_platform.api.countries.update_country", {
+        country_name: COUNTRY,
+        currency: "EUR",
+      });
+      assert(updated.currency === "EUR", "currency edit did not persist");
+      assert(Number(updated.is_enabled) === 0, "a settings-only edit must not silently re-enable a disabled country");
     });
-    assert(updated.currency === "EUR", "currency edit did not persist");
-    assert(Number(updated.is_enabled) === 0, "a settings-only edit must not silently re-enable a disabled country");
-  });
+  } finally {
+    // Restore the seeded country to its pre-smoke state.
+    await callMethod("lebtech_partner_platform.api.countries.update_country", {
+      country_name: COUNTRY,
+      is_enabled: Number(countrySnapshot.is_enabled),
+      currency: countrySnapshot.currency ?? null,
+    });
+  }
 
-  // ---- ADM-W7: create_reseller -> update_reseller round-trip ----
+  // ---- ADM-W7: create_reseller -> update_reseller round-trip (deleted afterward) ----
   let reseller;
-  await test("create_reseller persists via the whitelisted method", async () => {
-    reseller = await callMethod("lebtech_partner_platform.api.operations.create_reseller", {
-      reseller_name: resellerName,
-      default_currency: "USD",
-      commission_rate: 10,
-      commission_trigger: "Fully Paid",
-      countries: ["Lebanon"],
+  try {
+    await test("create_reseller persists via the whitelisted method", async () => {
+      reseller = await callMethod("lebtech_partner_platform.api.operations.create_reseller", {
+        reseller_name: resellerName,
+        default_currency: "USD",
+        commission_rate: 10,
+        commission_trigger: "Fully Paid",
+        countries: ["Lebanon"],
+      });
+      assert(reseller.name === resellerName, "create_reseller did not return the created reseller");
     });
-    assert(reseller.name === resellerName, "create_reseller did not return the created reseller");
-  });
 
-  await test("update_reseller is_active toggle persists", async () => {
-    const toggled = await callMethod("lebtech_partner_platform.api.operations.update_reseller", {
-      reseller_name: resellerName,
-      is_active: 0,
+    await test("update_reseller is_active toggle persists", async () => {
+      const toggled = await callMethod("lebtech_partner_platform.api.operations.update_reseller", {
+        reseller_name: resellerName,
+        is_active: 0,
+      });
+      assert(Number(toggled.is_active) === 0, "is_active toggle did not persist");
     });
-    assert(Number(toggled.is_active) === 0, "is_active toggle did not persist");
-  });
+  } finally {
+    if (reseller) {
+      try {
+        await deleteResource("Reseller", resellerName);
+      } catch (error) {
+        console.warn(`WARN could not delete smoke reseller ${resellerName}: ${error instanceof Error ? error.message : error}`);
+      }
+    }
+  }
 
-  // ---- ADM-W7: save_white_label -> get_white_label round-trip ----
-  await test("save_white_label -> get_white_label round-trips the full blob", async () => {
-    const blob = { platformName: `Smoke Platform ${runId}`, primaryColor: "#123456" };
-    const saved = await callMethod("lebtech_partner_platform.api.settings.save_white_label", { settings: blob });
-    assert(saved.platformName === blob.platformName, "save_white_label did not return the saved blob");
-    const fetched = await callMethod("lebtech_partner_platform.api.settings.get_white_label");
-    assert(fetched.platformName === blob.platformName, "get_white_label did not round-trip the saved platformName");
-    assert(fetched.primaryColor === blob.primaryColor, "get_white_label did not round-trip the saved primaryColor");
-  });
+  // ---- ADM-W7: save_white_label -> get_white_label round-trip (snapshot + restore) ----
+  const whiteLabelSnapshot = await getMethod("lebtech_partner_platform.api.settings.get_white_label");
+  try {
+    await test("save_white_label -> get_white_label round-trips the full blob", async () => {
+      const blob = { platformName: `Smoke Platform ${runId}`, primaryColor: "#123456" };
+      const saved = await callMethod("lebtech_partner_platform.api.settings.save_white_label", { settings: blob });
+      assert(saved.platformName === blob.platformName, "save_white_label did not return the saved blob");
+      // get_white_label is whitelisted for GET only — must be fetched, not POSTed.
+      const fetched = await getMethod("lebtech_partner_platform.api.settings.get_white_label");
+      assert(fetched.platformName === blob.platformName, "get_white_label did not round-trip the saved platformName");
+      assert(fetched.primaryColor === blob.primaryColor, "get_white_label did not round-trip the saved primaryColor");
+    });
+  } finally {
+    // Restore the white-label singleton to its pre-smoke value.
+    await callMethod("lebtech_partner_platform.api.settings.save_white_label", {
+      settings: whiteLabelSnapshot ?? {},
+    });
+  }
 
   const failed = results.filter((result) => !result.ok);
   console.log(`\n${results.length - failed.length}/${results.length} admin-write smoke checks passed.`);
@@ -172,6 +218,16 @@ async function callMethod(method, args = {}) {
 async function getResource(doctype, name) {
   const response = await frappe(`/api/resource/${encodeURIComponent(doctype)}/${encodeURIComponent(name)}`);
   return response.data ?? response;
+}
+
+// GET a whitelisted method (for methods restricted to GET, e.g. get_white_label).
+async function getMethod(method) {
+  const response = await frappe(`/api/method/${method}`);
+  return response.message ?? response;
+}
+
+async function deleteResource(doctype, name) {
+  return frappe(`/api/resource/${encodeURIComponent(doctype)}/${encodeURIComponent(name)}`, { method: "DELETE" });
 }
 
 async function frappe(path, options = {}) {
