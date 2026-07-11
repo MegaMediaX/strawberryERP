@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { pathToFileURL } from "node:url";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { loadConfig, ConfigError, type McpConfig } from "./config.js";
@@ -46,7 +47,7 @@ async function main() {
 }
 
 // Only start the transport when executed directly (not when imported by tests).
-const isDirectRun = process.argv[1]?.endsWith("index.js") || process.argv[1]?.endsWith("index.ts");
+const isDirectRun = process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (isDirectRun) {
   main().catch((err) => {
     console.error("lebtech-mcp fatal:", err instanceof Error ? err.message : err);

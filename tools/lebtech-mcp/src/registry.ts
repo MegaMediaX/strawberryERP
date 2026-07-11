@@ -13,8 +13,7 @@ export interface ToolContext {
   frappe: FrappeClient;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface ToolSpec<S extends z.ZodRawShape = any> {
+export interface ToolSpec<S extends z.ZodRawShape = z.ZodRawShape> {
   name: string;
   description: string;
   tier: Tier;
