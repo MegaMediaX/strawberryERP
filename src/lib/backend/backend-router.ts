@@ -41,8 +41,35 @@ export function writeRequiresBackend(): NextResponse | null {
   );
 }
 
+/**
+ * Countries / resellers / white-label got a real Frappe write path
+ * (create_country/update_country, create_reseller/update_reseller,
+ * save_white_label) from PR #22, which is HOLD-MERGE per
+ * docs/production-readiness-plan.md — the live prod write path has not been
+ * verified end-to-end against a real Frappe site (see
+ * scripts/frappe-admin-write-smoke.mjs, which is env-gated + default-skip and
+ * has not been run against staging/prod). Wiring the method map alone would
+ * let these three resources silently start persisting to Frappe the moment
+ * Frappe is configured for *anything else* (leads/customers already are, in
+ * prod) — exactly the kind of unverified write PR #22 itself was raised to
+ * fix responsibly. So writes (not reads) to these resources stay quarantined
+ * behind an explicit, separate opt-in even when Frappe is configured: only
+ * once a human has run the staging smoke and confirmed the round-trip should
+ * ADMIN_FRAPPE_WRITE_VERIFIED=true be set (mirrors the TELEPHONY_LIVE_DIAL
+ * pattern — default OFF, explicit human opt-in). Until then these writes keep
+ * falling back to the dev-store, unchanged from pre-PR-#22 behavior.
+ */
+const QUARANTINED_FRAPPE_WRITE_RESOURCES = new Set(["countries", "resellers", "white-label"]);
+
+function isQuarantinedWriteVerified(): boolean {
+  return process.env.ADMIN_FRAPPE_WRITE_VERIFIED === "true";
+}
+
 export async function maybeRouteToFrappe(resource: string, method: BackendMethod, payload?: unknown) {
   if (!isFrappeConfigured()) {
+    return null;
+  }
+  if (method !== "get" && QUARANTINED_FRAPPE_WRITE_RESOURCES.has(resource) && !isQuarantinedWriteVerified()) {
     return null;
   }
 

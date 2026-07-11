@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
  * APP-9 positive-path guard. The safety argument for the fail-loud gate rests on
@@ -8,6 +8,14 @@ import { describe, expect, it, vi } from "vitest";
  * frappeMethodMap["leads"].patch) must return 200 source:"frappe" — NOT the
  * 501 the gate would produce. Guards against a future regression that reorders a
  * maybeRouteToFrappe call after the gate.
+ *
+ * countries/resellers/white-label are additionally quarantined behind
+ * ADMIN_FRAPPE_WRITE_VERIFIED (see backend-router.ts) because their Frappe write
+ * path is PR #22's still-HOLD-MERGE, not-yet-prod-verified code — see
+ * admin-write-quarantine.test.ts for the (more important) proof that they do
+ * NOT route to Frappe by default even when Frappe is configured. This file sets
+ * the flag explicitly to keep proving the wiring itself is correct once a human
+ * has verified the write path and opted in.
  */
 vi.mock("@/lib/frappe-client", () => ({
   isFrappeConfigured: () => true,
@@ -16,6 +24,15 @@ vi.mock("@/lib/frappe-client", () => ({
 }));
 
 describe("admin mapped write (Frappe CONFIGURED) routes to Frappe, not the fail-loud gate — APP-9", () => {
+  beforeEach(() => {
+    // countries/resellers/white-label are quarantined by default — opt in for
+    // this positive-path wiring proof (see file header).
+    process.env.ADMIN_FRAPPE_WRITE_VERIFIED = "true";
+  });
+  afterEach(() => {
+    delete process.env.ADMIN_FRAPPE_WRITE_VERIFIED;
+  });
+
   it("lead reassign returns 200 source:frappe (short-circuits before writeRequiresBackend)", async () => {
     const { PATCH } = await import("@/app/api/admin/leads/route");
 
