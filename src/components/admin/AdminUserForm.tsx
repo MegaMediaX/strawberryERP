@@ -12,7 +12,7 @@ import {
 } from "@/lib/admin/users";
 import type { Role } from "@/lib/sample-data";
 
-interface EditInitial { id: string; name: string; email: string; role: Role; countries: string[]; reseller?: string }
+interface EditInitial { id: string; name: string; email: string; phone?: string; role: Role; countries: string[]; reseller?: string }
 
 function Pill({ on, label, onClick }: { on: boolean; label: string; onClick: () => void }) {
   return <button type="button" aria-pressed={on} onClick={onClick} className={`inline-flex h-8 items-center rounded-full px-3 text-xs font-semibold transition ${on ? "bg-[var(--brand)] text-white" : "border border-[var(--border)] text-[var(--muted)] hover:bg-[var(--background)]"}`}>{label}</button>;
@@ -24,7 +24,7 @@ export function AdminUserForm({ resellers, countries, initial }: { resellers: st
   const [s, setS] = useState<AdminUserFormInput>(() => {
     if (!initial) return emptyAdminUserForm();
     const [first, ...rest] = initial.name.split(" ");
-    return { firstName: first, lastName: rest.join(" "), email: initial.email, phone: "", role: initial.role, countries: [...initial.countries], reseller: initial.reseller ?? "", password: "" };
+    return { firstName: first, lastName: rest.join(" "), email: initial.email, phone: initial.phone ?? "", role: initial.role, countries: [...initial.countries], reseller: initial.reseller ?? "", password: "" };
   });
   const [status, setStatus] = useState<"idle" | "saving">("idle");
   const [error, setError] = useState("");
@@ -39,7 +39,7 @@ export function AdminUserForm({ resellers, countries, initial }: { resellers: st
     setStatus("saving"); setError("");
     try {
       const res = isEdit
-        ? await fetch(`/api/admin/users/${initial!.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ countries: s.countries, reseller: roleRequiresReseller(initial!.role) ? s.reseller : undefined }) })
+        ? await fetch(`/api/admin/users/${initial!.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ countries: s.countries, reseller: roleRequiresReseller(initial!.role) ? s.reseller : undefined, phone: s.phone }) })
         : await fetch("/api/admin/users", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(s) });
       const data = (await res.json()) as { error?: string };
       if (!res.ok) { setStatus("idle"); setError(data.error ?? "Save failed."); return; }

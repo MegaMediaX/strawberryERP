@@ -48,8 +48,11 @@ next-env.d.ts
 __pycache__/
 *.pyc
 
-# PII / internal findings — this remote is PUBLIC. Raw lead exports and
-# review/QA artifacts must never be committable (SEC6-01).
+# lead data & review artifacts — NEVER commit (real PII + prod-security findings; remote is PUBLIC).
+# Broad patterns (SEC6-01) plus explicit root-anchored entries as belt-and-suspenders.
 *.csv
+/Leads.csv
 reviews/
+/reviews/
 .claude/reviews/
+/.claude/reviews/

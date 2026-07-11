@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
+import { devStoreResponse, maybeRouteToFrappe } from "@/lib/backend/backend-router";
 import { appendAudit, getCountries, setCountryActive, upsertCountry } from "@/lib/dev-store";
 import { requireSuperAdmin } from "@/lib/security/admin-guard";
 import { validateCountryForm, type CountryFormInput, type CountryRecord } from "@/lib/admin/countries";
@@ -8,7 +8,8 @@ import { validateCountryForm, type CountryFormInput, type CountryRecord } from "
  * Super Admin country management (spec §9 + §42). Super-Admin-only writes; every
  * create/update/deactivate writes an audit entry. Israel (and variants) is
  * blocked by validateCountryForm. No-DELETE (countries are deactivated, never
- * removed). dev-store only — no Frappe persistence.
+ * removed). Persists to the Frappe "Partner Country" doctype when configured;
+ * falls back to the dev-store otherwise (local dev).
  */
 
 export function GET(request: Request) {
@@ -32,9 +33,6 @@ export async function POST(request: Request) {
   });
   if (invalid) return jsonError(invalid);
 
-  const gate = writeRequiresBackend();
-  if (gate) return gate;
-
   const record: CountryRecord = {
     name: String(payload.name).trim(),
     currency: String(payload.currency),
@@ -43,6 +41,17 @@ export async function POST(request: Request) {
     active: true,
     paymentMethods: Array.isArray(payload.paymentMethods) ? payload.paymentMethods : [],
   };
+
+  const proxied = await maybeRouteToFrappe("countries", "post", {
+    country_name: record.name,
+    currency: record.currency,
+    timezone: record.timezone,
+    invoice_prefix: record.invoicePrefix,
+    payment_methods: record.paymentMethods,
+    is_enabled: 1,
+  });
+  if (proxied) return proxied;
+
   upsertCountry(record);
   const audit = appendAudit({ entityType: "Country", entityId: record.name, action: "create", oldValue: "", newValue: `${record.currency} · ${record.invoicePrefix} · ${record.timezone}`, performedBy: session.auditLabel });
   return devStoreResponse({ country: record, message: `Country "${record.name}" created.` }, { status: 201, audit });
@@ -64,8 +73,8 @@ export async function PATCH(request: Request) {
   if (typeof payload.active === "boolean" || payload.deactivate) {
     const active = payload.deactivate ? false : Boolean(payload.active);
 
-    const gate = writeRequiresBackend();
-    if (gate) return gate;
+    const proxied = await maybeRouteToFrappe("countries", "patch", { country_name: name, is_enabled: active ? 1 : 0 });
+    if (proxied) return proxied;
 
     const updated = setCountryActive(name, active);
     const audit = appendAudit({ entityType: "Country", entityId: name, action: active ? "activate" : "deactivate", oldValue: String(current.active), newValue: String(active), performedBy: session.auditLabel });
@@ -80,9 +89,6 @@ export async function PATCH(request: Request) {
   });
   if (invalid) return jsonError(invalid);
 
-  const gate = writeRequiresBackend();
-  if (gate) return gate;
-
   const updated: CountryRecord = {
     ...current,
     currency: String(payload.currency ?? current.currency),
@@ -90,6 +96,16 @@ export async function PATCH(request: Request) {
     invoicePrefix: String(payload.invoicePrefix ?? current.invoicePrefix).trim().toUpperCase(),
     paymentMethods: Array.isArray(payload.paymentMethods) ? payload.paymentMethods : current.paymentMethods,
   };
+
+  const proxied = await maybeRouteToFrappe("countries", "patch", {
+    country_name: name,
+    currency: updated.currency,
+    timezone: updated.timezone,
+    invoice_prefix: updated.invoicePrefix,
+    payment_methods: updated.paymentMethods,
+  });
+  if (proxied) return proxied;
+
   upsertCountry(updated);
   const audit = appendAudit({ entityType: "Country", entityId: name, action: "update", oldValue: `${current.currency} · ${current.invoicePrefix}`, newValue: `${updated.currency} · ${updated.invoicePrefix}`, performedBy: session.auditLabel });
   return devStoreResponse({ country: updated, message: `Country "${name}" updated.` }, { audit });

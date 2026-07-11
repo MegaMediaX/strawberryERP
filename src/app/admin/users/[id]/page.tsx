@@ -20,5 +20,5 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
   }
   const resellers = getDevStore().resellerRecords.map((r) => r.name);
   const countries = getCountries().filter((c) => c.active).map((c) => c.name);
-  return <AdminUserForm resellers={resellers} countries={countries} initial={{ id: user.id, name: user.name, email: user.email, role: user.role, countries: [...user.countries], reseller: user.reseller }} />;
+  return <AdminUserForm resellers={resellers} countries={countries} initial={{ id: user.id, name: user.name, email: user.email, phone: user.phone, role: user.role, countries: [...user.countries], reseller: user.reseller }} />;
 }

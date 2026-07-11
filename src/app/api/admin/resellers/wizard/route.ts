@@ -1,5 +1,5 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
+import { devStoreResponse, maybeRouteToFrappe } from "@/lib/backend/backend-router";
 import { appendAudit, appendUser, getDevStore, upsertReseller, upsertResellerMetadata } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { currencySettings } from "@/lib/phase2-data";
@@ -30,10 +30,24 @@ export async function POST(request: Request) {
   const bad = firstInvalidStep(state, ctx);
   if (bad !== -1) return jsonError(`Step "${WIZARD_STEPS[bad]}" is incomplete. Please review it.`, 400, "WIZARD_STEP_INVALID");
 
-  const gate = writeRequiresBackend();
-  if (gate) return gate;
-
   const built = buildResellerFromWizard(state, String(Date.now()));
+
+  // Persist the Reseller record to Frappe when configured (branding + visibility
+  // captured into the reseller's JSON fields). The reseller-admin user + extended
+  // ResellerConfig stay dev-store — portal users are not Frappe Users, and the
+  // config's legalName/email/phone/notes have no Reseller doctype field yet.
+  const proxied = await maybeRouteToFrappe("resellers", "post", {
+    reseller_name: built.reseller.name,
+    countries: built.reseller.countries,
+    default_currency: built.reseller.defaultCurrency,
+    commission_rate: built.reseller.defaultCommissionPercentage,
+    commission_trigger: built.reseller.defaultCommissionTrigger,
+    is_active: built.reseller.isActive ? 1 : 0,
+    visibility_rules_json: JSON.stringify(built.config.visibility),
+    portal_branding_json: JSON.stringify(built.config.branding),
+  });
+  if (proxied) return proxied;
+
   upsertReseller(built.reseller);
   upsertResellerMetadata(built.config);
   // The reseller-admin user (countries scoped to the reseller). dev-store only.

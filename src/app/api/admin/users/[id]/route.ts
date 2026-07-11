@@ -17,7 +17,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const current = getUserById(id);
   if (!current) return jsonError("User not found.", 404);
 
-  let payload: { action?: string; password?: string; active?: boolean; countries?: string[]; reseller?: string };
+  let payload: { action?: string; password?: string; active?: boolean; countries?: string[]; reseller?: string; phone?: string };
   try { payload = (await request.json()) as typeof payload; } catch { return jsonError("Invalid request body."); }
 
   if (payload.action === "reset_password") {
@@ -44,7 +44,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   // Edit scope.
   const gated = writeRequiresBackend();
   if (gated) return gated;
-  const updated = updateUserScope(id, { countries: payload.countries, reseller: payload.reseller });
+  const updated = updateUserScope(id, { countries: payload.countries, reseller: payload.reseller, ...(payload.phone !== undefined ? { phone: payload.phone } : {}) });
   const audit = appendAudit({ entityType: "User", entityId: id, action: "update", oldValue: `${current.countries.join(", ")}${current.reseller ? ` · ${current.reseller}` : ""}`, newValue: `${(payload.countries ?? current.countries).join(", ")}${(payload.reseller ?? current.reseller) ? ` · ${payload.reseller ?? current.reseller}` : ""}`, performedBy: session.auditLabel });
   return devStoreResponse({ user: updated, message: `${current.name} updated.` }, { audit });
 }
