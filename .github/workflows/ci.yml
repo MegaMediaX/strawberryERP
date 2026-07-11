@@ -60,7 +60,15 @@ jobs:
           # SEED_ADMIN_PW is the real Super Admin login password (matches the
           # seeded scrypt hash for ggkhoueiry@gmail.com), so it is injected from a
           # repo secret — never hardcoded here. Add it under Settings → Secrets →
-          # Actions as SEED_ADMIN_PW. The others are test-only fixtures.
+          # Actions as SEED_ADMIN_PW. The others are test-only fixtures (kept in
+          # sync with the fallbacks in vitest.setup.ts / src/test/seed-credentials.ts).
+          #
+          # CI-6: the suite no longer NEEDS this secret to pass — a committed,
+          # deterministic test-only credential (src/test/test-credentials.ts)
+          # gives full login/session/2FA coverage without it. When the secret is
+          # unset, the real-secret parity assertions (describe.skipIf) print a
+          # clear console note and skip instead of failing or silently vanishing.
+          # See docs/testing/auth-test-credentials.md.
           SEED_ADMIN_PW: ${{ secrets.SEED_ADMIN_PW }}
           SEED_REGIONAL_PW: LebTech!Regional#2026
           SEED_RESELLER_PW: LebTech!Reseller#2026

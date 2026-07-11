@@ -48,7 +48,11 @@ next-env.d.ts
 __pycache__/
 *.pyc
 
-# lead data & review artifacts — NEVER commit (real PII + prod-security findings; remote is PUBLIC)
+# lead data & review artifacts — NEVER commit (real PII + prod-security findings; remote is PUBLIC).
+# Broad patterns (SEC6-01) plus explicit root-anchored entries as belt-and-suspenders.
+*.csv
 /Leads.csv
+reviews/
 /reviews/
+.claude/reviews/
 /.claude/reviews/

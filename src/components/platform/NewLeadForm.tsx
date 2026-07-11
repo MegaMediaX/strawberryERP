@@ -103,13 +103,13 @@ export function NewLeadForm({
               ))}
             </Select>
           </Field>
-          <Field label="First name">
+          <Field label="First name (optional)">
             <Input value={form.contactFirstName} onChange={(e) => set("contactFirstName", e.target.value)} placeholder="Rami" />
           </Field>
-          <Field label="Last name">
+          <Field label="Last name (optional)">
             <Input value={form.contactLastName} onChange={(e) => set("contactLastName", e.target.value)} placeholder="Khoury" />
           </Field>
-          <Field label="Gender">
+          <Field label="Gender (optional)">
             <Select value={form.gender} onChange={(e) => set("gender", e.target.value as NewLeadInput["gender"])}>
               <option value="">Select…</option>
               <option>Male</option>
@@ -139,7 +139,7 @@ export function NewLeadForm({
           <Field label="Phone">
             <Input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+961 70 123 456" inputMode="tel" />
           </Field>
-          <Field label="Email">
+          <Field label="Email (optional)">
             <Input value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="contact@company.com" type="email" />
           </Field>
           <Field label="Status">

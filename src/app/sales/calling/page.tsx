@@ -1,6 +1,7 @@
 import { SalesCallingQueue } from "@/components/sales/SalesCallingQueue";
 import { orderLeadsForCalling } from "@/lib/sales/order-calling-queue";
 import { getPortalUiSession } from "@/lib/security/ui-session";
+import { isWebrtcMode } from "@/lib/telephony/webrtc";
 import { getUiLeads } from "@/lib/ui-data";
 
 export default async function SalesCallingPage() {
@@ -11,6 +12,7 @@ export default async function SalesCallingPage() {
   return (
     <SalesCallingQueue
       leads={ordered}
+      telephonyMode={isWebrtcMode() ? "webrtc" : "tinyphone"}
       actingUser={{
         id: session.effectiveUser.id,
         role: session.effectiveUser.role,

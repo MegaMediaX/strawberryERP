@@ -180,11 +180,7 @@ function validateLeadPayload(payload: LeadPayload) {
     "companyName",
     "country",
     "assignedUser",
-    "contactFirstName",
-    "contactLastName",
-    "gender",
     "phone",
-    "email",
   ];
 
   const missing = required.filter((field) => !payload[field]);

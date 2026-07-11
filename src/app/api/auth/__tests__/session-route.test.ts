@@ -4,6 +4,11 @@ import { POST as login } from "@/app/api/auth/login/route";
 import { GET as session } from "@/app/api/auth/session/route";
 import { SESSION_COOKIE } from "@/lib/auth/session-token";
 import { SEED_ADMIN_PW } from "@/test/seed-credentials";
+import { TEST_ONLY_SUPER_ADMIN_PW } from "@/test/test-credentials";
+
+// TI-4: the committed, deterministic test-only credential — full coverage
+// with zero secrets configured. See docs/testing/auth-test-credentials.md.
+const PW = TEST_ONLY_SUPER_ADMIN_PW;
 
 function getSession(headers: Record<string, string>) {
   return session(new Request("https://portal.local/api/auth/session", { headers }));
@@ -25,7 +30,7 @@ describe("GET /api/auth/session", () => {
       new Request("https://portal.local/api/auth/login", {
         method: "POST",
         headers: { "content-type": "application/json", "x-forwarded-for": "5.5.5.1" },
-        body: JSON.stringify({ email: "ggkhoueiry@gmail.com", password: SEED_ADMIN_PW }),
+        body: JSON.stringify({ email: "ggkhoueiry@gmail.com", password: PW }),
       }),
     );
     const token = cookieFrom(loginRes.headers.get("set-cookie"));
@@ -51,5 +56,30 @@ describe("GET /api/auth/session", () => {
     const body = (await res.json()) as { data: { effectiveRole: string; impersonating: boolean } };
     expect(body.data.effectiveRole).toBe("Sales Team User");
     expect(body.data.impersonating).toBe(true);
+  });
+});
+
+// TI-3: parity check against the REAL Super Admin secret. Only runs when
+// SEED_ADMIN_PW is configured (local .env/.env.test or CI secret).
+describe.skipIf(!SEED_ADMIN_PW)("GET /api/auth/session (real secret parity)", () => {
+  if (!SEED_ADMIN_PW) {
+    console.warn("[session-route.test.ts] SEED_ADMIN_PW not set — skipping real-secret parity check.");
+  }
+
+  it("resolves a session from a login cookie minted with the real seeded password", async () => {
+    const loginRes = await login(
+      new Request("https://portal.local/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: "ggkhoueiry@gmail.com", password: SEED_ADMIN_PW }),
+      }),
+    );
+    const token = cookieFrom(loginRes.headers.get("set-cookie"));
+    expect(token).not.toBe("");
+
+    const res = await getSession({ cookie: `${SESSION_COOKIE}=${token}` });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { data: { user: { role: string } } };
+    expect(body.data.user.role).toBe("Super Admin");
   });
 });

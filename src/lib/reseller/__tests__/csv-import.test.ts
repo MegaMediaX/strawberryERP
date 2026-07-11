@@ -79,6 +79,14 @@ describe("csv-import: validateRecords", () => {
     expect(recs[5].errors).toContain("Missing Company Name");
   });
 
+  it("accepts a company lead with blank contact/gender/email (only company/country/assignedUser/phone required)", () => {
+    const recs = validateRecords(
+      [{ ...base, contactFirstName: "", contactLastName: "", gender: "" as const, email: "" }],
+      CTX,
+    );
+    expect(recs[0].errors).toEqual([]);
+  });
+
   it("detects duplicates within the file and against existing keys", () => {
     const recs = validateRecords([{ ...base }, { ...base }], CTX);
     expect(recs[0].duplicate).toBe(false);

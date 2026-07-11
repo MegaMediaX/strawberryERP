@@ -21,7 +21,7 @@ function payTone(s: string): "green" | "amber" | "rose" | "neutral" {
 const rowAction = "inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[var(--border)] px-3 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--background)]";
 
 export function ResellerLeadDetail({
-  lead, users, actingUser, importantDetails, timeline, related,
+  lead, users, actingUser, importantDetails, timeline, related, telephonyMode,
 }: {
   lead: PortalLead;
   users: PortalUser[];
@@ -29,6 +29,8 @@ export function ResellerLeadDetail({
   importantDetails: string[];
   timeline: TimelineEntry[];
   related: { invoices: RelatedInvoice[]; receipts: RelatedReceipt[] };
+  /** "webrtc" → in-browser softphone; "tinyphone" → CRM dial-queue (matches LeadCallScreen). */
+  telephonyMode?: "tinyphone" | "webrtc";
 }) {
   const [toast, setToast] = useState<string | null>(null);
 
@@ -50,6 +52,7 @@ export function ResellerLeadDetail({
           enableQuickOutcomes
           enableNotesCompose
           timeline={timeline}
+          telephonyMode={telephonyMode}
         />
       </div>
 

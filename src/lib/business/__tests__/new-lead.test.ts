@@ -33,8 +33,24 @@ describe("validateNewLeadInput", () => {
   it("lists all missing required fields by label", () => {
     const err = validateNewLeadInput(emptyNewLead);
     expect(err).toContain("Company name");
-    expect(err).toContain("Email");
-    expect(err).toContain("Gender");
+    expect(err).toContain("Assigned user");
+    expect(err).toContain("Phone");
+  });
+
+  it("does not list the per-person fields as required", () => {
+    const err = validateNewLeadInput(emptyNewLead);
+    expect(err).not.toContain("First name");
+    expect(err).not.toContain("Last name");
+    expect(err).not.toContain("Gender");
+    expect(err).not.toContain("Email");
+  });
+
+  it("accepts a company lead with only company_name/country/assignedUser/phone (blank contact/gender/email)", () => {
+    expect(
+      validateNewLeadInput(
+        validLead({ contactFirstName: "", contactLastName: "", gender: "", email: "" }),
+      ),
+    ).toBeNull();
   });
 
   it("rejects a blocked / unknown country", () => {
