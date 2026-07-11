@@ -77,12 +77,17 @@ describe("frappeBackendClient.handle() — resource+method routing", () => {
     expect(result).toBeNull();
   });
 
-  it("returns null for a mapped resource missing this specific method (e.g. resellers has no 'post')", async () => {
+  it("returns null for a mapped resource missing this specific method (e.g. contracts has no 'post')", async () => {
+    // NOTE: this previously used resellers/'post' as the example, but the
+    // admin write-path fix (ADM-W5, admin lane) legitimately added
+    // resellers.post to frappeMethodMap so that resource is now mapped for
+    // 'post' too — swapped to `contracts`, which remains read-only (list
+    // only) and is unaffected by that change.
     const { isFrappeConfigured } = await import("@/lib/frappe-client");
     vi.mocked(isFrappeConfigured).mockReturnValue(true);
 
     const { frappeBackendClient } = await loadClient();
-    const result = await frappeBackendClient.handle({ resource: "resellers", method: "post", payload: {} });
+    const result = await frappeBackendClient.handle({ resource: "contracts", method: "post", payload: {} });
 
     expect(result).toBeNull();
   });
