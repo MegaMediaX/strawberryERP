@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { ResellerContractUpload, type ContractFile } from "@/components/reseller/ResellerContractUpload";
 import { Card, CardContent } from "@/components/ui/card";
-import { getContractsFor } from "@/lib/dev-store";
+import { getContractsFor, getPlatformTimeZone } from "@/lib/dev-store";
 import { contractsForCustomer } from "@/lib/reseller/contract-upload";
 import { customers as seedCustomers } from "@/lib/phase2-data";
 import { getPortalUiSession } from "@/lib/security/ui-session";
@@ -42,6 +42,7 @@ export default async function ResellerCustomerContractsPage({ params }: { params
       customerName={name}
       country={String(raw.country)}
       initialContracts={initialContracts}
+      timeZone={getPlatformTimeZone()}
     />
   );
 }

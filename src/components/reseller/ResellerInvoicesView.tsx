@@ -9,13 +9,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Input, Select } from "@/components/ui/field";
 import type { InvoiceRow, PlainStatus } from "@/lib/reseller/invoice-payment-state";
+import { formatMoney } from "@/lib/money-ui";
 
 export interface InvoiceListItem extends InvoiceRow { pdfUrl?: string; phone?: string; email?: string }
 
 const STATUSES: PlainStatus[] = ["Unpaid", "Partially Paid", "Paid"];
 const statusTone = (s: PlainStatus) => (s === "Paid" ? "green" : s === "Partially Paid" ? "amber" : "rose");
 const wa = (phone: string) => `https://wa.me/${phone.replace(/[^\d]/g, "")}`;
-const money = (n: number, c: string) => `${c} ${n.toLocaleString()}`;
+const money = (n: number, c: string) => formatMoney(n, c);
 
 const iconBtn = "inline-flex h-9 items-center justify-center gap-1 rounded-lg border border-[var(--border)] px-2.5 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--background)]";
 const openBtn = "inline-flex h-9 items-center justify-center rounded-lg border border-[var(--border)] px-3 text-xs font-semibold text-[var(--foreground)]";

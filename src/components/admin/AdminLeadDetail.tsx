@@ -12,6 +12,7 @@ import { Field, Select } from "@/components/ui/field";
 import type { RelatedInvoice, RelatedReceipt } from "@/lib/business/related-records";
 import type { TimelineEntry } from "@/lib/sales/timeline-builder";
 import type { PortalLead } from "@/lib/ui-data";
+import { formatMoney } from "@/lib/money-ui";
 
 const tel = (p: string) => `tel:${p.replace(/[^\d+]/g, "")}`;
 const wa = (p: string) => `https://wa.me/${p.replace(/[^\d]/g, "")}`;
@@ -83,8 +84,8 @@ export function AdminLeadDetail({
           {(related.invoices.length > 0 || related.receipts.length > 0) && (
             <Card><CardHeader className="pb-2"><CardTitle className="text-base">Related billing</CardTitle></CardHeader>
               <CardContent className="grid gap-2 text-sm">
-                {related.invoices.map((i) => <div key={i.id} className="flex justify-between rounded-xl border border-[var(--border)] px-3 py-2"><span className="font-semibold">{i.invoiceNumber}</span><span className="text-[var(--muted)]">{i.currency} {i.total.toLocaleString()} · {i.paymentStatus}</span></div>)}
-                {related.receipts.map((r) => <div key={r.id} className="flex justify-between rounded-xl border border-[var(--border)] px-3 py-2"><span className="font-semibold">{r.receiptNumber}</span><span className="text-[var(--muted)]">{r.currency} {r.amount.toLocaleString()} · {r.paymentMethod}</span></div>)}
+                {related.invoices.map((i) => <div key={i.id} className="flex justify-between rounded-xl border border-[var(--border)] px-3 py-2"><span className="font-semibold">{i.invoiceNumber}</span><span className="text-[var(--muted)]">{formatMoney(i.total, i.currency)} · {i.paymentStatus}</span></div>)}
+                {related.receipts.map((r) => <div key={r.id} className="flex justify-between rounded-xl border border-[var(--border)] px-3 py-2"><span className="font-semibold">{r.receiptNumber}</span><span className="text-[var(--muted)]">{formatMoney(r.amount, r.currency)} · {r.paymentMethod}</span></div>)}
               </CardContent>
             </Card>
           )}

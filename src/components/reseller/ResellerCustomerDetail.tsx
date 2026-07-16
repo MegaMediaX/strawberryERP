@@ -3,7 +3,9 @@ import { FileText, MessageCircle, Plus, Receipt as ReceiptIcon, Upload } from "l
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatInstantDayLong } from "@/lib/datetime-ui";
 import { PROGRESS_STAGES, type CustomerRollup } from "@/lib/reseller/customer-rollup";
+import { formatAmount, formatMoney } from "@/lib/money-ui";
 
 export interface CustomerContract {
   contractStatus: "Not Signed" | "Signed";
@@ -14,20 +16,21 @@ export interface CustomerContract {
 export interface CustomerInvoice { id: string; invoiceNumber: string; currency: string; total: number; paymentStatus: string }
 export interface CustomerReceipt { id: string; receiptNumber: string; currency: string; amount: number; paymentMethod: string }
 
-const money = (n: number) => `$${n.toLocaleString()}`;
+const money = (n: number) => `$${formatAmount(n)}`;
 const wa = (phone: string) => `https://wa.me/${phone.replace(/[^\d]/g, "")}`;
 
 const action = "inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-[var(--border)] px-3 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--background)]";
 const actionDisabled = "inline-flex h-10 cursor-not-allowed items-center justify-center gap-1.5 rounded-xl border border-[var(--border)] px-3 text-sm font-semibold text-[var(--muted)] opacity-60";
 
 export function ResellerCustomerDetail({
-  customer, contract, invoices, receipts, phone,
+  customer, contract, invoices, receipts, phone, timeZone,
 }: {
   customer: CustomerRollup;
   contract?: CustomerContract;
   invoices: CustomerInvoice[];
   receipts: CustomerReceipt[];
   phone?: string;
+  timeZone: string;
 }) {
   const currentStage = PROGRESS_STAGES.indexOf(customer.progress);
 
@@ -78,7 +81,7 @@ export function ResellerCustomerDetail({
           <CardContent className="grid gap-2 text-sm">
             <div className="flex items-center gap-2"><Badge tone={customer.contractStatus === "Signed" ? "green" : "neutral"}>{customer.contractStatus}</Badge></div>
             {contract && contract.fileUrl ? (
-              <p className="text-xs text-[var(--muted)]">Uploaded by {contract.uploadedBy} · {new Date(contract.uploadedAt).toLocaleDateString()} · <a href={contract.fileUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--brand)]">View file</a></p>
+              <p className="text-xs text-[var(--muted)]">Uploaded by {contract.uploadedBy} · {formatInstantDayLong(contract.uploadedAt, timeZone)} ·<a href={contract.fileUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--brand)]">View file</a></p>
             ) : <p className="text-xs text-[var(--muted)]">No contract file uploaded yet.</p>}
             <Link href={`/reseller/customers/${customer.id}/contracts`} className="text-sm font-semibold text-[var(--brand)]">Manage contracts →</Link>
           </CardContent>
@@ -90,7 +93,7 @@ export function ResellerCustomerDetail({
             {invoices.length === 0 ? <p className="text-sm text-[var(--muted)]">No invoices yet.</p> : invoices.map((i) => (
               <div key={i.id} className="flex items-center justify-between gap-2 rounded-xl border border-[var(--border)] px-3 py-2">
                 <p className="flex items-center gap-1.5 text-sm font-semibold"><FileText className="size-3.5 text-[var(--muted)]" />{i.invoiceNumber}</p>
-                <span className="text-sm text-[var(--muted)]">{i.currency} {i.total.toLocaleString()} · {i.paymentStatus}</span>
+                <span className="text-sm text-[var(--muted)]">{formatMoney(i.total, i.currency)} · {i.paymentStatus}</span>
               </div>
             ))}
           </CardContent>
@@ -102,7 +105,7 @@ export function ResellerCustomerDetail({
             {receipts.length === 0 ? <p className="text-sm text-[var(--muted)]">No receipts yet.</p> : receipts.map((r) => (
               <div key={r.id} className="flex items-center justify-between gap-2 rounded-xl border border-[var(--border)] px-3 py-2">
                 <p className="flex items-center gap-1.5 text-sm font-semibold"><ReceiptIcon className="size-3.5 text-[var(--muted)]" />{r.receiptNumber}</p>
-                <span className="text-sm text-[var(--muted)]">{r.currency} {r.amount.toLocaleString()} · {r.paymentMethod}</span>
+                <span className="text-sm text-[var(--muted)]">{formatMoney(r.amount, r.currency)} · {r.paymentMethod}</span>
               </div>
             ))}
           </CardContent>

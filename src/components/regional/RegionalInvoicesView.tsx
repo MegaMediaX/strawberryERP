@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Input, Select } from "@/components/ui/field";
 import { EscalationButton } from "@/components/regional/EscalationModal";
 import { useStickyFilters } from "@/components/regional/useStickyFilters";
+import { formatMoney } from "@/lib/money-ui";
 import {
   filterInvoices,
   overdueInvoiceCount,
@@ -92,7 +93,7 @@ export function RegionalInvoicesView({
                     </div>
                     <Badge tone={statusTone(i.businessStatus)}>{i.businessStatus}</Badge>
                   </div>
-                  <p className="text-xs text-[var(--muted)]">{i.currency} {i.total.toLocaleString()} · {i.progress}% paid · due {i.dueDate ?? "—"}</p>
+                  <p className="text-xs text-[var(--muted)]">{formatMoney(i.total, i.currency)} · {i.progress}% paid · due {i.dueDate ?? "—"}</p>
                   <div className="grid grid-cols-2 gap-2">
                     {customerHref(i.customer) ? <Link href={customerHref(i.customer)!} className={linkBtn}>Customer</Link> : <span className={`${linkBtn} opacity-50`}>Customer</span>}
                     <EscalationButton compact context={{ entityType: "Invoice", entityId: i.id, entityLabel: i.invoiceNumber, country: i.country, reseller: i.reseller }} />
@@ -118,7 +119,7 @@ export function RegionalInvoicesView({
                       <td className="py-3 pr-4 align-middle">{customerHref(i.customer) ? <Link href={customerHref(i.customer)!} className="text-[var(--brand)] hover:underline">{i.customer}</Link> : i.customer}</td>
                       <td className="py-3 pr-4 align-middle">{i.country}</td>
                       <td className="py-3 pr-4 align-middle">{i.reseller}</td>
-                      <td className="py-3 pr-4 align-middle">{i.currency} {i.total.toLocaleString()}</td>
+                      <td className="py-3 pr-4 align-middle">{formatMoney(i.total, i.currency)}</td>
                       <td className="py-3 pr-4 align-middle"><Badge tone={statusTone(i.businessStatus)}>{i.businessStatus}</Badge></td>
                       <td className="py-3 pr-4 align-middle">{i.dueDate ?? "—"}</td>
                       <td className="py-3 pr-4 align-middle text-[var(--muted)]">{i.createdBy}</td>

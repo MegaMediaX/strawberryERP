@@ -9,8 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Select } from "@/components/ui/field";
 import { useStickyFilters } from "@/components/regional/useStickyFilters";
+import { formatInZone } from "@/lib/datetime-ui";
 import { STATUS_META, type SlotStatus } from "@/lib/admin/slot-status";
 import type { FloorPlanData, FloorPlanSlot } from "@/lib/admin/floor-plan";
+import { formatAmount } from "@/lib/money-ui";
 
 const ICON: Record<SlotStatus, typeof Clock> = { Available: CircleCheck, OnHold: Clock, Reserved: Lock, Inactive: CircleSlash };
 const BG: Record<SlotStatus, string> = {
@@ -21,7 +23,7 @@ const BG: Record<SlotStatus, string> = {
 };
 const DOT: Record<SlotStatus, string> = { Available: "bg-emerald-500", OnHold: "bg-amber-500", Reserved: "bg-rose-500", Inactive: "bg-slate-400" };
 
-const money = (n: number) => `$${n.toLocaleString()}`;
+const money = (n: number) => `$${formatAmount(n)}`;
 
 /** Plain calendar time until the (already working-hours-correct) expiry instant. */
 function countdown(expiresAt: string, now: number): string {
@@ -133,7 +135,7 @@ export function FloorPlanMap({ data, role, actor, isAdmin }: { data: FloorPlanDa
         <Card><CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base">Slot {sel.label} <Badge tone={STATUS_META[sel.status].tone}>{STATUS_META[sel.status].label}</Badge></CardTitle></CardHeader>
           <CardContent className="grid gap-2 pt-1 text-sm">
             <p className="text-[var(--muted)]">Price {money(sel.price)} · {sel.active ? "active" : "inactive"}{sel.heldBy ? ` · held by ${sel.heldBy}` : ""}</p>
-            {sel.status === "OnHold" && sel.expiresAt && <p className="text-amber-700 dark:text-amber-400">Expires {sel.expiresAt.slice(0, 16).replace("T", " ")} · {countdown(sel.expiresAt, now)}</p>}
+            {sel.status === "OnHold" && sel.expiresAt && <p className="text-amber-700 dark:text-amber-400">Expires {formatInZone(sel.expiresAt, data.calendar.timezone)} · {countdown(sel.expiresAt, now)}</p>}
             {sel.status === "Reserved" && sel.reservedInvoice && <p className="text-[var(--muted)]">Invoice {sel.reservedInvoice} · approved by {sel.approvedBy ?? "—"}</p>}
             {actionsFor(sel).length > 0 && (
               <div className="mt-1 flex flex-wrap gap-2">

@@ -1,5 +1,5 @@
 import { ResellerCommissionsView, type CommissionRow } from "@/components/reseller/ResellerCommissionsView";
-import { getDevStore } from "@/lib/dev-store";
+import { getDevStore, getPlatformTimeZone } from "@/lib/dev-store";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 import { getUiCommissionEntries } from "@/lib/ui-data";
 
@@ -35,6 +35,7 @@ export default async function ResellerCommissionsPage() {
       rows={rows}
       resellerName={session.effectiveUser.reseller ?? "Reseller"}
       now={new Date().toISOString()}
+      timeZone={getPlatformTimeZone()}
     />
   );
 }

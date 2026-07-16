@@ -8,8 +8,9 @@ import { Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import type { AdminCountryRow } from "@/lib/admin/countries-data";
+import { formatAmount } from "@/lib/money-ui";
 
-const money = (n: number) => `$${n.toLocaleString()}`;
+const money = (n: number) => `$${formatAmount(n)}`;
 const linkBtn = "inline-flex h-8 items-center rounded-lg border border-[var(--border)] px-2.5 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--background)]";
 
 export function AdminCountriesView({ rows }: { rows: AdminCountryRow[] }) {

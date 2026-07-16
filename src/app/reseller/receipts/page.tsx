@@ -1,5 +1,5 @@
 import { ResellerReceiptsView } from "@/components/reseller/ResellerReceiptsView";
-import { getDevStore } from "@/lib/dev-store";
+import { getDevStore, getPlatformTimeZone } from "@/lib/dev-store";
 import type { ReceiptRow } from "@/lib/reseller/receipt-list";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 import { getUiRows } from "@/lib/ui-data";
@@ -28,5 +28,5 @@ export default async function ResellerReceiptsPage() {
     pdfUrl: String(r.receiptPdfUrl ?? ""),
   }));
 
-  return <ResellerReceiptsView receipts={receipts} resellerName={session.effectiveUser.reseller ?? "Reseller"} />;
+  return <ResellerReceiptsView receipts={receipts} resellerName={session.effectiveUser.reseller ?? "Reseller"} timeZone={getPlatformTimeZone()} />;
 }

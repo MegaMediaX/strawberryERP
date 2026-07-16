@@ -6,6 +6,7 @@ import { ArrowLeft, FileText, Info, UploadCloud } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatInstant } from "@/lib/datetime-ui";
 import { validateContractUpload } from "@/lib/reseller/contract-upload";
 
 export interface ContractFile {
@@ -19,12 +20,13 @@ export interface ContractFile {
 const fileName = (url: string) => decodeURIComponent(url.split("/").pop() ?? url);
 
 export function ResellerContractUpload({
-  customerId, customerName, country, initialContracts,
+  customerId, customerName, country, initialContracts, timeZone,
 }: {
   customerId: string;
   customerName: string;
   country: string;
   initialContracts: ContractFile[];
+  timeZone: string;
 }) {
   const [contracts, setContracts] = useState(initialContracts);
   const [picked, setPicked] = useState<string>("");
@@ -93,7 +95,7 @@ export function ResellerContractUpload({
             <div key={c.id} className="flex items-center justify-between gap-2 rounded-xl border border-[var(--border)] px-3 py-2.5">
               <div className="min-w-0">
                 <p className="flex items-center gap-1.5 truncate text-sm font-semibold"><FileText className="size-3.5 shrink-0 text-[var(--muted)]" />{c.fileUrl ? fileName(c.fileUrl) : "(template-generated)"}</p>
-                <p className="text-xs text-[var(--muted)]">{c.uploadedBy || "—"}{c.uploadedAt ? ` · ${new Date(c.uploadedAt).toLocaleString()}` : ""}</p>
+                <p className="text-xs text-[var(--muted)]">{c.uploadedBy || "—"}{c.uploadedAt ? ` · ${formatInstant(c.uploadedAt, timeZone)}` : ""}</p>
               </div>
               {c.fileUrl ? <a href={c.fileUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-[var(--brand)]">Drive link</a> : null}
             </div>

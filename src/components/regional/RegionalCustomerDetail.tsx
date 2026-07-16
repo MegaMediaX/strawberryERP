@@ -6,9 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EscalationButton } from "@/components/regional/EscalationModal";
 import type { RelatedInvoice, RelatedReceipt } from "@/lib/business/related-records";
 import { PROGRESS_STAGES, type CustomerRollup } from "@/lib/reseller/customer-rollup";
+import { formatAmount, formatMoney } from "@/lib/money-ui";
 
 const action = "inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-[var(--border)] px-3 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--background)]";
-const money = (n: number) => `$${n.toLocaleString()}`;
+const money = (n: number) => `$${formatAmount(n)}`;
 const wa = (p: string) => `https://wa.me/${p.replace(/[^\d]/g, "")}`;
 
 function Detail({ label, value }: { label: string; value: string }) {
@@ -93,7 +94,7 @@ export function RegionalCustomerDetail({
           <CardHeader className="pb-2"><CardTitle className="text-base">Invoices</CardTitle></CardHeader>
           <CardContent className="grid gap-2">
             {invoices.length === 0 ? <p className="text-sm text-[var(--muted)]">No invoices recorded.</p> : invoices.map((i) => (
-              <div key={i.id} className="flex items-center justify-between gap-2 rounded-xl border border-[var(--border)] px-3 py-2 text-sm"><span className="flex items-center gap-1.5 font-semibold"><FileText className="size-3.5 text-[var(--muted)]" />{i.invoiceNumber}</span><span className="text-[var(--muted)]">{i.currency} {i.total.toLocaleString()} · {i.paymentStatus}</span></div>
+              <div key={i.id} className="flex items-center justify-between gap-2 rounded-xl border border-[var(--border)] px-3 py-2 text-sm"><span className="flex items-center gap-1.5 font-semibold"><FileText className="size-3.5 text-[var(--muted)]" />{i.invoiceNumber}</span><span className="text-[var(--muted)]">{formatMoney(i.total, i.currency)} · {i.paymentStatus}</span></div>
             ))}
           </CardContent>
         </Card>
@@ -102,7 +103,7 @@ export function RegionalCustomerDetail({
           <CardHeader className="pb-2"><CardTitle className="text-base">Receipts</CardTitle></CardHeader>
           <CardContent className="grid gap-2">
             {receipts.length === 0 ? <p className="text-sm text-[var(--muted)]">No receipts recorded.</p> : receipts.map((r) => (
-              <div key={r.id} className="flex items-center justify-between gap-2 rounded-xl border border-[var(--border)] px-3 py-2 text-sm"><span className="flex items-center gap-1.5 font-semibold"><Receipt className="size-3.5 text-[var(--muted)]" />{r.receiptNumber}</span><span className="text-[var(--muted)]">{r.currency} {r.amount.toLocaleString()} · {r.paymentMethod}</span></div>
+              <div key={r.id} className="flex items-center justify-between gap-2 rounded-xl border border-[var(--border)] px-3 py-2 text-sm"><span className="flex items-center gap-1.5 font-semibold"><Receipt className="size-3.5 text-[var(--muted)]" />{r.receiptNumber}</span><span className="text-[var(--muted)]">{formatMoney(r.amount, r.currency)} · {r.paymentMethod}</span></div>
             ))}
           </CardContent>
         </Card>

@@ -1,6 +1,6 @@
 import { AdminIntegrationForm } from "@/components/admin/AdminIntegrationForm";
 import { AdminIntegrationsNav } from "@/components/admin/AdminIntegrationsNav";
-import { getDevStore } from "@/lib/dev-store";
+import { getDevStore, getPlatformTimeZone } from "@/lib/dev-store";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 import type { IntegrationType } from "@/lib/phase2-data";
 
@@ -15,7 +15,7 @@ export default async function Page() {
     <div className="grid gap-5">
       <div><h1 className="text-xl font-bold tracking-tight">Google Drive</h1><p className="text-sm text-[var(--muted)]">Configure + run a simulated connection test</p></div>
       <AdminIntegrationsNav />
-      <AdminIntegrationForm type={TYPE} setting={setting} />
+      <AdminIntegrationForm type={TYPE} setting={setting} timeZone={getPlatformTimeZone()} />
     </div>
   );
 }

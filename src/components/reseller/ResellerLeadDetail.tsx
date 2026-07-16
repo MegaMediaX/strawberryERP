@@ -10,6 +10,7 @@ import type { PortalRole, PortalUser } from "@/lib/portal-security";
 import type { RelatedInvoice, RelatedReceipt } from "@/lib/business/related-records";
 import type { TimelineEntry } from "@/lib/sales/timeline-builder";
 import type { PortalLead } from "@/lib/ui-data";
+import { formatMoney } from "@/lib/money-ui";
 
 function payTone(s: string): "green" | "amber" | "rose" | "neutral" {
   if (s === "Fully Paid") return "green";
@@ -66,7 +67,7 @@ export function ResellerLeadDetail({
               <div key={i.id} className="flex items-center justify-between gap-2 rounded-xl border border-[var(--border)] px-3 py-2">
                 <div className="min-w-0">
                   <p className="flex items-center gap-1.5 truncate text-sm font-semibold"><FileText className="size-3.5 shrink-0 text-[var(--muted)]" />{i.invoiceNumber}</p>
-                  <p className="text-xs text-[var(--muted)]">{i.currency} {i.total.toLocaleString()}{i.dueDate ? ` · due ${i.dueDate}` : ""}</p>
+                  <p className="text-xs text-[var(--muted)]">{formatMoney(i.total, i.currency)}{i.dueDate ? ` · due ${i.dueDate}` : ""}</p>
                 </div>
                 <Badge tone={payTone(i.paymentStatus)}>{i.paymentStatus}</Badge>
               </div>
@@ -83,7 +84,7 @@ export function ResellerLeadDetail({
               <div key={r.id} className="flex items-center justify-between gap-2 rounded-xl border border-[var(--border)] px-3 py-2">
                 <div className="min-w-0">
                   <p className="flex items-center gap-1.5 truncate text-sm font-semibold"><ReceiptIcon className="size-3.5 shrink-0 text-[var(--muted)]" />{r.receiptNumber}</p>
-                  <p className="text-xs text-[var(--muted)]">{r.currency} {r.amount.toLocaleString()} · {r.paymentMethod}</p>
+                  <p className="text-xs text-[var(--muted)]">{formatMoney(r.amount, r.currency)} · {r.paymentMethod}</p>
                 </div>
               </div>
             ))}

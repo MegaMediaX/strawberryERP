@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Input, Select } from "@/components/ui/field";
 import { useStickyFilters } from "@/components/regional/useStickyFilters";
+import { formatInstant } from "@/lib/datetime-ui";
 import { filterAdminNotifications, type AdminNotification } from "@/lib/admin/notifications";
 import {
   CATEGORY_LABELS,
@@ -24,9 +25,7 @@ import {
 } from "@/lib/admin/notifications-ui";
 import type { NotificationRule } from "@/lib/phase2-data";
 
-const fmt = (iso: string) => (iso ? iso.slice(0, 16).replace("T", " ") : "—");
-
-export function AdminNotificationsView({ rules, inbox }: { rules: NotificationRule[]; inbox: AdminNotification[] }) {
+export function AdminNotificationsView({ rules, inbox, timeZone }: { rules: NotificationRule[]; inbox: AdminNotification[]; timeZone: string }) {
   const router = useRouter();
   const [tab, setTab] = useState<"rules" | "inbox">("rules");
   const [busy, setBusy] = useState(false);
@@ -142,7 +141,7 @@ export function AdminNotificationsView({ rules, inbox }: { rules: NotificationRu
                       <div className="flex flex-wrap items-center gap-2"><Badge tone={SEVERITY_TONE[n.severity]}>{n.severity}</Badge><Badge tone="neutral">{CATEGORY_LABELS[n.category]}</Badge><span className="text-sm font-semibold">{n.title}</span></div>
                       <p className="mt-1 truncate text-xs text-[var(--muted)]">{n.detail}</p>
                     </div>
-                    <span className="shrink-0 text-xs text-[var(--muted)]">{fmt(n.at)}</span>
+                    <span className="shrink-0 text-xs text-[var(--muted)]">{formatInstant(n.at, timeZone)}</span>
                   </CardContent></Card>
                 </Link>
               ))}

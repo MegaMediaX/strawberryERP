@@ -1,5 +1,6 @@
 import { AdminReceiptsView } from "@/components/admin/AdminReceiptsView";
 import { adminBillingData } from "@/lib/admin/billing-data";
+import { getPlatformTimeZone } from "@/lib/dev-store";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 
 export default async function AdminReceiptsPage() {
@@ -9,7 +10,7 @@ export default async function AdminReceiptsPage() {
   return (
     <div className="grid gap-5">
       <div><h1 className="text-xl font-bold tracking-tight">Receipts</h1><p className="text-sm text-[var(--muted)]">Every payment receipt across all countries and resellers</p></div>
-      <AdminReceiptsView rows={d.receipts} />
+      <AdminReceiptsView rows={d.receipts} timeZone={getPlatformTimeZone()} />
     </div>
   );
 }

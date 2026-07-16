@@ -4,8 +4,9 @@ import { ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ResellerProfile } from "@/lib/regional/reseller-list";
+import { formatAmount, formatMoney } from "@/lib/money-ui";
 
-const money = (n: number) => `$${n.toLocaleString()}`;
+const money = (n: number) => `$${formatAmount(n)}`;
 const id = (name: string) => encodeURIComponent(name);
 const quick = "inline-flex h-9 items-center justify-center rounded-lg border border-[var(--border)] px-3 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--background)]";
 
@@ -121,7 +122,7 @@ export function RegionalResellerProfile({ reseller, profile, lists, scopeLabel }
             {lists.invoices.length === 0 ? <p className="text-sm text-[var(--muted)]">No invoices.</p> : lists.invoices.slice(0, 6).map((i) => (
               <div key={i.id} className="flex items-center justify-between gap-2 rounded-xl border border-[var(--border)] px-3 py-2 text-sm">
                 <span className="min-w-0 truncate font-semibold">{i.invoiceNumber}<span className="ml-2 text-xs font-normal text-[var(--muted)]">{i.country}</span></span>
-                <span className="shrink-0 text-[var(--muted)]">{i.currency} {i.total.toLocaleString()} · {i.paymentStatus}</span>
+                <span className="shrink-0 text-[var(--muted)]">{formatMoney(i.total, i.currency)} · {i.paymentStatus}</span>
               </div>
             ))}
           </CardContent>
@@ -144,7 +145,7 @@ export function RegionalResellerProfile({ reseller, profile, lists, scopeLabel }
           <CardHeader className="pb-2"><CardTitle className="text-base">Receipts ({lists.receipts.length}) &amp; commissions ({lists.commissions.length})</CardTitle></CardHeader>
           <CardContent className="grid gap-2">
             {lists.receipts.slice(0, 3).map((r) => (
-              <div key={r.id} className="flex items-center justify-between gap-2 rounded-xl border border-[var(--border)] px-3 py-2 text-sm"><span className="truncate font-semibold">{r.receiptNumber}</span><span className="text-xs text-[var(--muted)]">{r.currency} {r.amount.toLocaleString()} · {r.paymentMethod}</span></div>
+              <div key={r.id} className="flex items-center justify-between gap-2 rounded-xl border border-[var(--border)] px-3 py-2 text-sm"><span className="truncate font-semibold">{r.receiptNumber}</span><span className="text-xs text-[var(--muted)]">{formatMoney(r.amount, r.currency)} · {r.paymentMethod}</span></div>
             ))}
             {lists.commissions.slice(0, 3).map((c) => (
               <div key={c.id} className="flex items-center justify-between gap-2 rounded-xl border border-[var(--border)] px-3 py-2 text-sm"><span className="truncate font-semibold">{money(c.commissionAmount)}</span><Badge tone={c.status === "Paid" ? "green" : c.status === "Approved" ? "blue" : "amber"}>{c.status}</Badge></div>

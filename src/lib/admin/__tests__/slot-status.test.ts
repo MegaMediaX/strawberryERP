@@ -24,6 +24,51 @@ describe("canActOnSlot (fail-closed, role-gated)", () => {
     expect(canActOnSlot("Super Admin", "release", { status: "Reserved" })).toBe(true);
     expect(canActOnSlot("Super Admin", "requestHold", avail)).toBe(false);
   });
+  it("Sales Team User holds on the same terms as Reseller Admin", () => {
+    expect(canActOnSlot("Sales Team User", "requestHold", avail)).toBe(true);
+    expect(canActOnSlot("Sales Team User", "cancel", { status: "OnHold", heldBy: "Lina" }, "Lina")).toBe(true);
+    expect(canActOnSlot("Sales Team User", "approve", { status: "OnHold" })).toBe(false);
+  });
+  // Spec grants cancel to the HOLDER only ("reseller: requestHold/cancel(own)");
+  // Super Admin's list is approve/reject/release/setInactive/setActive. Reject is
+  // their equivalent-effect action — cancel is not theirs to call.
+  it("Super Admin cannot cancel a reseller's hold", () => {
+    expect(canActOnSlot("Super Admin", "cancel", { status: "OnHold", heldBy: "Rami" }, "Georges")).toBe(false);
+  });
+  // Regional Director is a real role with no slot rights at all in the spec matrix.
+  it("a role outside the matrix can do nothing", () => {
+    expect(canActOnSlot("Regional Director", "requestHold", avail)).toBe(false);
+    expect(canActOnSlot("Regional Director", "cancel", { status: "OnHold", heldBy: "RD" }, "RD")).toBe(false);
+    expect(canActOnSlot("Regional Director", "approve", { status: "OnHold" })).toBe(false);
+  });
+  it("an unknown or empty role is denied every action", () => {
+    for (const action of ["requestHold", "cancel", "approve", "reject", "release", "setInactive", "setActive"] as const) {
+      expect(canActOnSlot("Intern", action, avail)).toBe(false);
+      expect(canActOnSlot("", action, avail)).toBe(false);
+    }
+  });
+  // A bare ROLE_ACTIONS[role] lookup would resolve these off Object.prototype and
+  // throw on .includes() rather than denying. Must deny, never throw.
+  it("denies Object.prototype keys instead of throwing", () => {
+    for (const role of ["constructor", "toString", "hasOwnProperty", "__proto__"]) {
+      expect(canActOnSlot(role, "requestHold", avail)).toBe(false);
+    }
+  });
+  // Ownership must be checked, never skipped: an earlier `!actor || …` treated a
+  // missing actor as "no ownership check needed" rather than as a denial.
+  it("cancel demands a matching, non-blank actor", () => {
+    const held: SlotStatusRecord = { status: "OnHold", heldBy: "Rami" };
+    expect(canActOnSlot("Reseller Admin", "cancel", held, "Rami")).toBe(true);
+    expect(canActOnSlot("Reseller Admin", "cancel", held, "Other")).toBe(false);
+    expect(canActOnSlot("Reseller Admin", "cancel", held)).toBe(false); // omitted actor: was a skip
+    expect(canActOnSlot("Reseller Admin", "cancel", held, "")).toBe(false); // blank actor: was a skip
+  });
+  it("cancel denies when nobody is named as the holder", () => {
+    // heldBy and actor both absent previously satisfied `undefined === undefined`.
+    expect(canActOnSlot("Reseller Admin", "cancel", { status: "OnHold" })).toBe(false);
+    expect(canActOnSlot("Reseller Admin", "cancel", { status: "OnHold" }, "")).toBe(false);
+    expect(canActOnSlot("Reseller Admin", "cancel", { status: "OnHold" }, "Rami")).toBe(false);
+  });
 });
 
 describe("applyTransition (valid edges only)", () => {
@@ -50,6 +95,30 @@ describe("applyTransition (valid edges only)", () => {
     const r = applyTransition({ status: "OnHold" }, "approve", { role: "Reseller Admin", actor: "Rami", now });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error).toMatch(/not allowed/i);
+  });
+  it("rejects a Super Admin cancelling a reseller's hold (they must reject instead)", () => {
+    const r = applyTransition({ status: "OnHold", heldBy: "Rami", heldAt: now }, "cancel", { role: "Super Admin", actor: "Georges", now });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toMatch(/not allowed/i);
+  });
+  it("rejects a Regional Director requesting a hold", () => {
+    const r = applyTransition(avail, "requestHold", { role: "Regional Director", actor: "Nadia", now });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toMatch(/not allowed/i);
+  });
+  it("rejects a reseller cancelling someone else's hold", () => {
+    const r = applyTransition({ status: "OnHold", heldBy: "Rami", heldAt: now }, "cancel", { role: "Reseller Admin", actor: "Lina", now });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toMatch(/not allowed/i);
+  });
+  it("rejects a cancel carrying a blank actor", () => {
+    const r = applyTransition({ status: "OnHold", heldBy: "Rami", heldAt: now }, "cancel", { role: "Reseller Admin", actor: "", now });
+    expect(r.ok).toBe(false);
+  });
+  it("lets the holder cancel their own hold", () => {
+    const r = applyTransition({ status: "OnHold", heldBy: "Rami", heldAt: now }, "cancel", { role: "Reseller Admin", actor: "Rami", now });
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.next.status).toBe("Available");
   });
   it("Available ⇄ Inactive", () => {
     expect(applyTransition(avail, "setInactive", { role: "Super Admin", actor: "SA", now })).toMatchObject({ ok: true, next: { status: "Inactive" } });

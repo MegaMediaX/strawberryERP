@@ -10,6 +10,7 @@ import { Field, Input, Select } from "@/components/ui/field";
 import { useStickyFilters } from "@/components/regional/useStickyFilters";
 import { filterRegionalCustomers, stuckCustomerCount, type RegionalCustomerFilters } from "@/lib/regional/customer-list";
 import type { CustomerRollup } from "@/lib/reseller/customer-rollup";
+import { formatAmount } from "@/lib/money-ui";
 
 const wa = (p: string) => `https://wa.me/${p.replace(/[^\d]/g, "")}`;
 const waBtn = "inline-flex h-9 items-center justify-center rounded-lg bg-emerald-600 px-3 text-xs font-semibold text-white";
@@ -27,7 +28,7 @@ function invoiceTone(s: CustomerRollup["invoiceStatus"]): "rose" | "amber" | "gr
   if (s === "Fully Paid") return "green";
   return "neutral";
 }
-const money = (n: number) => `$${n.toLocaleString()}`;
+const money = (n: number) => `$${formatAmount(n)}`;
 
 export function RegionalCustomersView({
   rows,

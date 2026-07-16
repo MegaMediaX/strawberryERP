@@ -10,8 +10,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Textarea } from "@/components/ui/field";
 import type { RelatedInvoice, RelatedReceipt } from "@/lib/business/related-records";
 import { PROGRESS_STAGES, type CustomerRollup } from "@/lib/reseller/customer-rollup";
+import { formatAmount, formatMoney } from "@/lib/money-ui";
 
-const money = (n: number) => `$${n.toLocaleString()}`;
+const money = (n: number) => `$${formatAmount(n)}`;
 function Detail({ label, value }: { label: string; value: string }) {
   return <div><p className="text-xs text-[var(--muted)]">{label}</p><p className="text-sm font-medium">{value || "—"}</p></div>;
 }
@@ -65,10 +66,10 @@ export function AdminCustomerDetail({
             </CardContent>
           </Card>
           <Card><CardHeader className="pb-2"><CardTitle className="text-base">Invoices</CardTitle></CardHeader>
-            <CardContent className="grid gap-2">{invoices.length === 0 ? <p className="text-sm text-[var(--muted)]">No invoices.</p> : invoices.map((i) => <div key={i.id} className="flex justify-between rounded-xl border border-[var(--border)] px-3 py-2 text-sm"><span className="flex items-center gap-1.5 font-semibold"><FileText className="size-3.5 text-[var(--muted)]" />{i.invoiceNumber}</span><span className="text-[var(--muted)]">{i.currency} {i.total.toLocaleString()} · {i.paymentStatus}</span></div>)}</CardContent>
+            <CardContent className="grid gap-2">{invoices.length === 0 ? <p className="text-sm text-[var(--muted)]">No invoices.</p> : invoices.map((i) => <div key={i.id} className="flex justify-between rounded-xl border border-[var(--border)] px-3 py-2 text-sm"><span className="flex items-center gap-1.5 font-semibold"><FileText className="size-3.5 text-[var(--muted)]" />{i.invoiceNumber}</span><span className="text-[var(--muted)]">{formatMoney(i.total, i.currency)} · {i.paymentStatus}</span></div>)}</CardContent>
           </Card>
           <Card><CardHeader className="pb-2"><CardTitle className="text-base">Receipts</CardTitle></CardHeader>
-            <CardContent className="grid gap-2">{receipts.length === 0 ? <p className="text-sm text-[var(--muted)]">No receipts.</p> : receipts.map((r) => <div key={r.id} className="flex justify-between rounded-xl border border-[var(--border)] px-3 py-2 text-sm"><span className="flex items-center gap-1.5 font-semibold"><Receipt className="size-3.5 text-[var(--muted)]" />{r.receiptNumber}</span><span className="text-[var(--muted)]">{r.currency} {r.amount.toLocaleString()} · {r.paymentMethod}</span></div>)}</CardContent>
+            <CardContent className="grid gap-2">{receipts.length === 0 ? <p className="text-sm text-[var(--muted)]">No receipts.</p> : receipts.map((r) => <div key={r.id} className="flex justify-between rounded-xl border border-[var(--border)] px-3 py-2 text-sm"><span className="flex items-center gap-1.5 font-semibold"><Receipt className="size-3.5 text-[var(--muted)]" />{r.receiptNumber}</span><span className="text-[var(--muted)]">{formatMoney(r.amount, r.currency)} · {r.paymentMethod}</span></div>)}</CardContent>
           </Card>
           <Card><CardHeader className="pb-2"><CardTitle className="text-base">Notes &amp; timeline</CardTitle></CardHeader>
             <CardContent className="grid gap-2">{notes.length === 0 ? <p className="text-sm text-[var(--muted)]">No notes recorded.</p> : notes.map((n, i) => <div key={i} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm">{n}</div>)}</CardContent>

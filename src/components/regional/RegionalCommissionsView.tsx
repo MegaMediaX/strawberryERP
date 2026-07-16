@@ -16,9 +16,10 @@ import {
   type RegionalCommissionFilters,
   type RegionalCommissionRow,
 } from "@/lib/regional/commission-list";
+import { formatInstantDate } from "@/lib/datetime-ui";
+import { formatAmount } from "@/lib/money-ui";
 
-const money = (n: number) => `$${n.toLocaleString()}`;
-const fmtDate = (iso: string) => (iso ? iso.slice(0, 10) : "—");
+const money = (n: number) => `$${formatAmount(n)}`;
 
 function statusTone(s: CommissionStatus): "amber" | "blue" | "green" | "neutral" {
   if (s === "Pending") return "amber";
@@ -42,11 +43,13 @@ export function RegionalCommissionsView({
   rows,
   scopeLabel,
   canViewPercent,
+  timeZone,
   initialFilters = {},
 }: {
   rows: RegionalCommissionRow[];
   scopeLabel: string;
   canViewPercent: boolean;
+  timeZone: string;
   initialFilters?: RegionalCommissionFilters;
 }) {
   const [filters, setFilters] = useStickyFilters<RegionalCommissionFilters>("lebtech.regional.commissions.filters", initialFilters);
@@ -113,7 +116,7 @@ export function RegionalCommissionsView({
                     </div>
                     <Badge tone={statusTone(c.status)}>{c.status}</Badge>
                   </div>
-                  <p className="text-xs text-[var(--muted)]">{fmtDate(c.date)} · {c.trigger} · invoice {money(c.invoiceAmount)}</p>
+                  <p className="text-xs text-[var(--muted)]">{formatInstantDate(c.date, timeZone)} · {c.trigger} · invoice {money(c.invoiceAmount)}</p>
                 </CardContent>
               </Card>
             ))}
@@ -131,7 +134,7 @@ export function RegionalCommissionsView({
                 <tbody>
                   {visible.map((c) => (
                     <tr key={c.id} className="border-b border-[var(--border)] last:border-0">
-                      <td className="py-3 pr-4 align-middle">{fmtDate(c.date)}</td>
+                      <td className="py-3 pr-4 align-middle">{formatInstantDate(c.date, timeZone)}</td>
                       <td className="py-3 pr-4 align-middle">{c.reseller}</td>
                       <td className="py-3 pr-4 align-middle">{c.country}</td>
                       <td className="py-3 pr-4 align-middle">{c.invoice}</td>

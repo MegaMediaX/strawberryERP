@@ -16,10 +16,9 @@ import {
   type AuditLogFilters,
   type AuditLogRow,
 } from "@/lib/admin/audit-log";
+import { formatInstant } from "@/lib/datetime-ui";
 
-const fmt = (iso: string) => (iso ? iso.slice(0, 16).replace("T", " ") : "—");
-
-export function AdminAuditLogsView({ rows }: { rows: AuditLogRow[] }) {
+export function AdminAuditLogsView({ rows, timeZone }: { rows: AuditLogRow[]; timeZone: string }) {
   const [filters, setFilters] = useStickyFilters<AuditLogFilters>("lebtech.admin.auditlogs.filters", {});
   const modules = useMemo(() => auditModules(rows), [rows]);
   const actions = useMemo(() => auditActions(rows), [rows]);
@@ -63,7 +62,7 @@ export function AdminAuditLogsView({ rows }: { rows: AuditLogRow[] }) {
             <tbody>
               {visible.map((r) => (
                 <tr key={r.id} className="border-b border-[var(--border)] last:border-0">
-                  <td className="py-3 pr-4 align-middle text-[var(--muted)]">{fmt(r.timestamp)}</td>
+                  <td className="py-3 pr-4 align-middle text-[var(--muted)]">{formatInstant(r.timestamp, timeZone)}</td>
                   <td className="py-3 pr-4 align-middle font-medium">{r.user}</td>
                   <td className="py-3 pr-4 align-middle text-[var(--muted)]">{r.role}</td>
                   <td className="py-3 pr-4 align-middle">{r.action}</td>

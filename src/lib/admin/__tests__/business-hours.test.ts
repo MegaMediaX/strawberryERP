@@ -9,6 +9,8 @@ import {
 } from "@/lib/admin/business-hours";
 
 // 2026-06-15 is a Monday. Calendar: Mon–Fri (1–5), 09:00–17:00 UTC = 8 working hrs/day.
+// These UTC-zone cases are the control group: in "UTC" the instant IS the wall-clock,
+// so they must stay byte-identical across the timezone fix.
 const cal: BusinessCalendar = { timezone: "UTC", workingDays: [1, 2, 3, 4, 5], startHour: 9, endHour: 17, holidays: [] };
 const iso = (s: string) => `${s}:00.000Z`;
 
@@ -82,5 +84,66 @@ describe("defaultBusinessCalendar", () => {
     expect(d.workingDays).toEqual([1, 2, 3, 4, 5]);
     expect([d.startHour, d.endHour]).toEqual([9, 17]);
     expect(d.timezone).toBe("Asia/Beirut");
+  });
+});
+
+/**
+ * The production calendar is Asia/Beirut, not UTC. Every ISO here is a real
+ * instant (what `new Date().toISOString()` produces); the Beirut wall-clock it
+ * denotes is in the comment. Beirut is UTC+3 in summer (EEST) and UTC+2 in
+ * winter (EET) — the offset must be read per-instant, never assumed.
+ *
+ * Before the timezone fix these all failed: the 09:00–17:00 window was applied
+ * in UTC, i.e. 12:00–20:00 Beirut.
+ */
+describe("Asia/Beirut — the window is local, not UTC", () => {
+  const beirut: BusinessCalendar = { timezone: "Asia/Beirut", workingDays: [1, 2, 3, 4, 5], startHour: 9, endHour: 17, holidays: [] };
+
+  it("counts a morning inside the LOCAL working window", () => {
+    // Mon 09:00 → 12:00 Beirut. Applied as UTC this window hasn't opened yet (0 hrs).
+    expect(workingHoursElapsed("2026-06-15T06:00:00.000Z", "2026-06-15T09:00:00.000Z", beirut)).toBeCloseTo(3);
+  });
+
+  it("counts a full local working day as 8 hours", () => {
+    // Mon 09:00 → 17:00 Beirut.
+    expect(workingHoursElapsed("2026-06-15T06:00:00.000Z", "2026-06-15T14:00:00.000Z", beirut)).toBeCloseTo(8);
+  });
+
+  it("ignores local out-of-hours time", () => {
+    // Mon 06:00 → 22:00 Beirut spans the whole day but only 09:00–17:00 counts.
+    expect(workingHoursElapsed("2026-06-15T03:00:00.000Z", "2026-06-15T19:00:00.000Z", beirut)).toBeCloseTo(8);
+  });
+
+  it("expires 24 working hours after a Monday 09:00 local hold, at Wednesday 17:00 local", () => {
+    // Mon 09:00 Beirut = 06:00Z; Wed 17:00 Beirut = 14:00Z.
+    expect(holdExpiresAt("2026-06-15T06:00:00.000Z", 24, beirut)).toBe("2026-06-17T14:00:00.000Z");
+  });
+
+  it("holds the exact 24-working-hour boundary in local terms (both sides)", () => {
+    const held = "2026-06-15T06:00:00.000Z"; // Mon 09:00 Beirut
+    expect(isHoldExpired(held, "2026-06-17T13:59:00.000Z", beirut, 24)).toBe(false); // Wed 16:59 local
+    expect(isHoldExpired(held, "2026-06-17T14:00:00.000Z", beirut, 24)).toBe(true); //  Wed 17:00 local
+  });
+
+  it("reads the winter offset (UTC+2), not a fixed summer one", () => {
+    // Mon 2026-01-05: 06:00Z = 08:00 Beirut (before opening), 10:00Z = 12:00 Beirut.
+    // So 09:00→12:00 local = 3 hrs. A hardcoded +3 would wrongly yield 4.
+    expect(workingHoursElapsed("2026-01-05T06:00:00.000Z", "2026-01-05T10:00:00.000Z", beirut)).toBeCloseTo(3);
+  });
+
+  it("holdExpiresAt and isHoldExpired agree on the instant they return", () => {
+    const held = "2026-06-15T06:00:00.000Z";
+    const expires = holdExpiresAt(held, 24, beirut);
+    expect(isHoldExpired(held, expires, beirut, 24)).toBe(true);
+    // A minute, not a millisecond: workingHoursElapsed rounds to 1e-6 hours
+    // (~3.6ms), so a 1ms step would round straight back to 24 and read expired.
+    const aMinuteEarlier = new Date(new Date(expires).getTime() - 60_000).toISOString();
+    expect(isHoldExpired(held, aMinuteEarlier, beirut, 24)).toBe(false);
+  });
+
+  it("falls back to UTC rather than throwing on an unknown zone", () => {
+    const bogus: BusinessCalendar = { ...beirut, timezone: "Not/AZone" };
+    expect(() => workingHoursElapsed(iso("2026-06-15T09:00"), iso("2026-06-15T12:00"), bogus)).not.toThrow();
+    expect(workingHoursElapsed(iso("2026-06-15T09:00"), iso("2026-06-15T12:00"), bogus)).toBeCloseTo(3);
   });
 });

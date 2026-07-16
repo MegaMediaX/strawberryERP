@@ -11,8 +11,9 @@ import { Field, Input, Select } from "@/components/ui/field";
 import { useStickyFilters } from "@/components/regional/useStickyFilters";
 import { filterRegionalCustomers, type RegionalCustomerFilters } from "@/lib/regional/customer-list";
 import type { CustomerRollup } from "@/lib/reseller/customer-rollup";
+import { formatAmount } from "@/lib/money-ui";
 
-const money = (n: number) => `$${n.toLocaleString()}`;
+const money = (n: number) => `$${formatAmount(n)}`;
 const actionBtn = "inline-flex h-8 items-center rounded-lg border border-[var(--border)] px-2.5 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--background)]";
 
 function progressTone(p: CustomerRollup["progress"]): "rose" | "amber" | "blue" | "green" {

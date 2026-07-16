@@ -5,8 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { CountryPerformanceRow } from "@/lib/regional/regional-reports";
+import { formatAmount } from "@/lib/money-ui";
 
-const money = (n: number) => `$${n.toLocaleString()}`;
+const money = (n: number) => `$${formatAmount(n)}`;
 
 function Kpi({ label, value, tone = "" }: { label: string; value: string; tone?: string }) {
   return <div className="rounded-xl border border-[var(--border)] px-3 py-2"><p className="text-[11px] uppercase tracking-[0.06em] text-[var(--muted)]">{label}</p><p className={`text-base font-bold ${tone}`}>{value}</p></div>;

@@ -8,8 +8,9 @@ import { Field, Select } from "@/components/ui/field";
 import type { CommissionLike } from "@/lib/reseller/commission-summary";
 import { resellerReports, type CountBar, type ReportInvoiceRow } from "@/lib/reseller/reseller-reports";
 import type { PortalLead } from "@/lib/ui-data";
+import { formatAmount } from "@/lib/money-ui";
 
-const money = (n: number) => `$${n.toLocaleString()}`;
+const money = (n: number) => `$${formatAmount(n)}`;
 
 function BarList({ rows }: { rows: CountBar[] }) {
   const max = Math.max(1, ...rows.map((r) => r.count));

@@ -7,6 +7,7 @@ import { Search, Users, UserCheck, FileText, Receipt, Store, FileSignature } fro
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/field";
 import { regionalSearch, type RegionalSearchData } from "@/lib/regional/regional-search";
+import { formatMoney } from "@/lib/money-ui";
 
 const RECENT_KEY = "lebtech.regional.search.recent";
 
@@ -90,10 +91,10 @@ export function RegionalGlobalSearch({ data, scopeLabel }: { data: RegionalSearc
             {results.customers.map((c) => <Hit key={c.id} href={`/regional/customers/${c.id}`} title={c.name} sub="Customer" country={c.country} reseller={c.reseller} />)}
           </Section>
           <Section icon={FileText} title="Invoices" count={results.invoices.length}>
-            {results.invoices.map((i) => <Hit key={i.id} href="/regional/invoices" title={i.invoiceNumber} sub={`${i.customer} · ${i.currency} ${i.total.toLocaleString()}`} country={i.country} reseller={i.reseller} />)}
+            {results.invoices.map((i) => <Hit key={i.id} href="/regional/invoices" title={i.invoiceNumber} sub={`${i.customer} · ${formatMoney(i.total, i.currency)}`} country={i.country} reseller={i.reseller} />)}
           </Section>
           <Section icon={Receipt} title="Receipts" count={results.receipts.length}>
-            {results.receipts.map((r) => <Hit key={r.id} href="/regional/receipts" title={r.receiptNumber} sub={`${r.customer} · ${r.currency} ${r.amount.toLocaleString()}`} country={r.country} reseller={r.reseller} />)}
+            {results.receipts.map((r) => <Hit key={r.id} href="/regional/receipts" title={r.receiptNumber} sub={`${r.customer} · ${formatMoney(r.amount, r.currency)}`} country={r.country} reseller={r.reseller} />)}
           </Section>
           <Section icon={Store} title="Resellers" count={results.resellers.length}>
             {results.resellers.map((r) => <Hit key={r.id} href={`/regional/resellers/${encodeURIComponent(r.id)}`} title={r.name} sub="Reseller" country={r.countries.join(", ")} reseller={r.name} />)}

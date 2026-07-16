@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { EXPENSE_CATEGORIES, type ExpenseRecord } from "@/lib/admin/pnl";
+import { formatAmount } from "@/lib/money-ui";
 
 export function AdminExpensesView({ expenses, currencies }: { expenses: ExpenseRecord[]; currencies: string[] }) {
   const router = useRouter();
@@ -49,7 +50,7 @@ export function AdminExpensesView({ expenses, currencies }: { expenses: ExpenseR
                 <tr key={e.id} className="border-b border-[var(--border)] last:border-0">
                   <td className="py-3 pr-4 align-middle">{e.date}</td>
                   <td className="py-3 pr-4 align-middle"><Badge tone="neutral">{e.category}</Badge></td>
-                  <td className="py-3 pr-4 align-middle font-medium">{e.amount.toLocaleString()}</td>
+                  <td className="py-3 pr-4 align-middle font-medium">{formatAmount(e.amount)}</td>
                   <td className="py-3 pr-4 align-middle">{e.currency}</td>
                   <td className="py-3 pr-4 align-middle text-[var(--muted)]">{e.country ?? "—"}</td>
                   <td className="py-3 pr-4 align-middle text-[var(--muted)]">{e.reseller ?? "—"}</td>

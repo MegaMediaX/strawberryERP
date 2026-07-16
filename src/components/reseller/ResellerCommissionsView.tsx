@@ -7,7 +7,9 @@ import { Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Select } from "@/components/ui/field";
+import { formatInstantDayLong } from "@/lib/datetime-ui";
 import { commissionSummary } from "@/lib/reseller/commission-summary";
+import { formatMoney } from "@/lib/money-ui";
 
 export interface CommissionRow {
   id: string;
@@ -25,23 +27,22 @@ export interface CommissionRow {
 
 const STATUSES = ["Pending", "Approved", "Paid", "Cancelled"] as const;
 const statusTone = (s: string) => (s === "Paid" ? "green" : s === "Approved" ? "blue" : s === "Cancelled" ? "neutral" : "amber");
-const money = (n: number, c = "USD") => `${c} ${n.toLocaleString()}`;
-const fmtDate = (iso: string) => new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+const money = (n: number, c = "USD") => formatMoney(n, c);
 
-function toCsv(rows: CommissionRow[]): string {
+function toCsv(rows: CommissionRow[], timeZone: string): string {
   const head = "Date,Invoice,Customer,Country,Trigger,Invoice Amount,Commission %,Commission Amount,Status";
-  const lines = rows.map((r) => [fmtDate(r.date), r.invoice, `"${r.customer.replace(/"/g, '""')}"`, r.country, r.trigger, r.baseAmount, `${r.commissionPercentage}%`, r.commissionAmount, r.status].join(","));
+  const lines = rows.map((r) => [formatInstantDayLong(r.date, timeZone), r.invoice, `"${r.customer.replace(/"/g, '""')}"`, r.country, r.trigger, r.baseAmount, `${r.commissionPercentage}%`, r.commissionAmount, r.status].join(","));
   return [head, ...lines].join("\n") + "\n";
 }
 
-export function ResellerCommissionsView({ rows, resellerName, now }: { rows: CommissionRow[]; resellerName: string; now: string }) {
+export function ResellerCommissionsView({ rows, resellerName, now, timeZone }: { rows: CommissionRow[]; resellerName: string; now: string; timeZone: string }) {
   const [status, setStatus] = useState("");
   const summary = useMemo(() => commissionSummary(rows.map((r) => ({ status: r.status, commissionAmount: r.commissionAmount, calculatedAt: r.date })), new Date(now)), [rows, now]);
   const visible = useMemo(() => rows.filter((r) => !status || r.status === status), [rows, status]);
   const currency = rows[0]?.currency ?? "USD";
 
   function exportCsv() {
-    const url = URL.createObjectURL(new Blob([toCsv(visible)], { type: "text/csv" }));
+    const url = URL.createObjectURL(new Blob([toCsv(visible, timeZone)], { type: "text/csv" }));
     const a = document.createElement("a"); a.href = url; a.download = "commissions.csv"; a.click();
     URL.revokeObjectURL(url);
   }
@@ -87,7 +88,7 @@ export function ResellerCommissionsView({ rows, resellerName, now }: { rows: Com
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <Link href={`/reseller/invoices/${r.invoice}`} className="truncate font-semibold text-[var(--brand)]">{r.invoice}</Link>
-                      <p className="truncate text-xs text-[var(--muted)]">{r.customer} · {r.country} · {fmtDate(r.date)}</p>
+                      <p className="truncate text-xs text-[var(--muted)]">{r.customer} · {r.country} · {formatInstantDayLong(r.date, timeZone)}</p>
                     </div>
                     <Badge tone={statusTone(r.status)}>{r.status}</Badge>
                   </div>
@@ -117,7 +118,7 @@ export function ResellerCommissionsView({ rows, resellerName, now }: { rows: Com
                 <tbody>
                   {visible.map((r) => (
                     <tr key={r.id} className="border-b border-[var(--border)] last:border-0">
-                      <td className="py-3.5 pr-4 align-middle">{fmtDate(r.date)}</td>
+                      <td className="py-3.5 pr-4 align-middle">{formatInstantDayLong(r.date, timeZone)}</td>
                       <td className="py-3.5 pr-4 align-middle font-medium"><Link href={`/reseller/invoices/${r.invoice}`} className="text-[var(--brand)] hover:underline">{r.invoice}</Link></td>
                       <td className="py-3.5 pr-4 align-middle">{r.customer}</td>
                       <td className="py-3.5 pr-4 align-middle">{r.country}</td>

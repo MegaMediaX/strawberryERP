@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
+import { formatMoney } from "@/lib/money-ui";
 import type { ApiScope, Invoice, PaymentMethodName } from "@/lib/phase2-data";
 import type { DeleteQueueRecord, PortalUser } from "@/lib/portal-security";
 
@@ -193,11 +194,11 @@ export function InvoiceBuilder({
           <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
             <p className="text-sm text-slate-500 dark:text-slate-400">Subtotal</p>
             <p className="mt-1 text-2xl font-semibold">
-              {currency} {totals.subtotal.toLocaleString()}
+              {formatMoney(totals.subtotal, currency)}
             </p>
             <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Total after discount and tax</p>
             <p className="mt-1 text-3xl font-semibold">
-              {currency} {totals.total.toLocaleString()}
+              {formatMoney(totals.total, currency)}
             </p>
           </div>
 
@@ -341,7 +342,7 @@ export function ReceiptBuilder({
               <p className="font-semibold">{invoice.customer}</p>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{invoice.invoiceNumber}</p>
               <p className="mt-4 text-2xl font-semibold">
-                {invoice.currency} {invoice.total.toLocaleString()}
+                {formatMoney(invoice.total, invoice.currency)}
               </p>
               <Badge tone={invoice.paymentStatus === "Fully Paid" ? "green" : "amber"}>{invoice.paymentStatus}</Badge>
             </div>

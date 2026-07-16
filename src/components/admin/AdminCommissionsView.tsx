@@ -17,10 +17,11 @@ import {
   type AdminCommissionAction,
   type AdminCommissionFilters,
 } from "@/lib/admin/commissions";
+import { formatInstantDate } from "@/lib/datetime-ui";
 import type { CommissionEntry, CommissionStatus } from "@/lib/phase2-data";
+import { formatAmount } from "@/lib/money-ui";
 
-const money = (n: number) => `$${n.toLocaleString()}`;
-const fmtDate = (iso: string) => (iso ? iso.slice(0, 10) : "—");
+const money = (n: number) => `$${formatAmount(n)}`;
 
 function statusTone(s: CommissionStatus): "amber" | "blue" | "green" | "neutral" {
   if (s === "Pending") return "amber";
@@ -47,7 +48,7 @@ function SummaryCard({ label, value, tone }: { label: string; value: string; ton
   );
 }
 
-export function AdminCommissionsView({ entries }: { entries: CommissionEntry[] }) {
+export function AdminCommissionsView({ entries, timeZone }: { entries: CommissionEntry[]; timeZone: string }) {
   const router = useRouter();
   const [filters, setFilters] = useStickyFilters<AdminCommissionFilters>("lebtech.admin.commissions.filters", {});
   const [busy, setBusy] = useState<string | null>(null);
@@ -126,7 +127,7 @@ export function AdminCommissionsView({ entries }: { entries: CommissionEntry[] }
                     </div>
                     <Badge tone={statusTone(c.status)}>{c.status}</Badge>
                   </div>
-                  <p className="text-xs text-[var(--muted)]">{fmtDate(c.calculatedAt)}</p>
+                  <p className="text-xs text-[var(--muted)]">{formatInstantDate(c.calculatedAt, timeZone)}</p>
                   {actionsFor(c.status).length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {actionsFor(c.status).map((a) => (
@@ -148,7 +149,7 @@ export function AdminCommissionsView({ entries }: { entries: CommissionEntry[] }
               <tbody>
                 {visible.map((c) => (
                   <tr key={c.id} className="border-b border-[var(--border)] last:border-0">
-                    <td className="py-3 pr-4 align-middle">{fmtDate(c.calculatedAt)}</td>
+                    <td className="py-3 pr-4 align-middle">{formatInstantDate(c.calculatedAt, timeZone)}</td>
                     <td className="py-3 pr-4 align-middle">{c.reseller}</td>
                     <td className="py-3 pr-4 align-middle">{c.country}</td>
                     <td className="py-3 pr-4 align-middle">{c.invoice}</td>

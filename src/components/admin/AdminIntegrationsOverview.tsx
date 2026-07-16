@@ -4,6 +4,7 @@ import { MessageCircle, CalendarDays, HardDrive, Mail } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { formatInstant } from "@/lib/datetime-ui";
 import { statusTone, type IntegrationLogEntry } from "@/lib/admin/integrations";
 import type { IntegrationSetting, IntegrationType } from "@/lib/phase2-data";
 
@@ -21,9 +22,7 @@ const HREF: Record<IntegrationType, string> = {
   SMTP: "/admin/integrations/smtp",
 };
 
-const fmt = (iso: string) => (iso ? iso.slice(0, 16).replace("T", " ") : "—");
-
-export function AdminIntegrationsOverview({ settings, logs }: { settings: IntegrationSetting[]; logs: IntegrationLogEntry[] }) {
+export function AdminIntegrationsOverview({ settings, logs, timeZone }: { settings: IntegrationSetting[]; logs: IntegrationLogEntry[]; timeZone: string }) {
   const order: IntegrationType[] = ["WhatsApp", "Google Calendar", "Google Drive", "SMTP"];
   const byType = new Map(settings.map((s) => [s.integrationType, s]));
 
@@ -63,7 +62,7 @@ export function AdminIntegrationsOverview({ settings, logs }: { settings: Integr
                 <tbody>
                   {logs.map((l) => (
                     <tr key={l.id} className="border-b border-[var(--border)] last:border-0">
-                      <td className="py-3 pr-4 align-middle text-[var(--muted)]">{fmt(l.at)}</td>
+                      <td className="py-3 pr-4 align-middle text-[var(--muted)]">{formatInstant(l.at, timeZone)}</td>
                       <td className="py-3 pr-4 align-middle font-medium">{l.integration}</td>
                       <td className="py-3 pr-4 align-middle">{l.action}</td>
                       <td className="py-3 pr-4 align-middle text-[var(--muted)]">{l.detail}</td>

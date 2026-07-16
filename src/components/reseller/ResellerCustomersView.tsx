@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select } from "@/components/ui/field";
 import { PROGRESS_STAGES, type CustomerProgress, type CustomerRollup } from "@/lib/reseller/customer-rollup";
+import { formatAmount } from "@/lib/money-ui";
 
 export interface CustomerRow extends CustomerRollup { phone?: string }
 
@@ -15,7 +16,7 @@ const wa = (phone: string) => `https://wa.me/${phone.replace(/[^\d]/g, "")}`;
 function progressTone(p: CustomerProgress): "neutral" | "blue" | "amber" | "green" {
   return p === "Fully Paid" ? "green" : p === "Deposit Paid" ? "amber" : p === "Contract Signed" ? "blue" : "neutral";
 }
-const money = (n: number) => `$${n.toLocaleString()}`;
+const money = (n: number) => `$${formatAmount(n)}`;
 
 const openBtn = "inline-flex h-9 items-center justify-center rounded-lg border border-[var(--border)] px-3 text-xs font-semibold text-[var(--foreground)]";
 const waBtn = "inline-flex h-9 items-center justify-center rounded-lg bg-emerald-600 px-3 text-xs font-semibold text-white";

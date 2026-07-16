@@ -7,7 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Input, Select } from "@/components/ui/field";
+import { formatInstantDate } from "@/lib/datetime-ui";
 import { filterReceipts, type RegionalReceiptFilters, type RegionalReceiptRow } from "@/lib/regional/billing-list";
+import { formatMoney } from "@/lib/money-ui";
 
 const csvCell = (v: string | number) => `"${String(v).replaceAll('"', '""')}"`;
 function buildCsv(headers: string[], rows: (string | number)[][]) {
@@ -19,9 +21,7 @@ const METHOD_ICON: Record<string, typeof Banknote> = {
   "Credit/Debit Card": CreditCard, Crypto: Wallet,
 };
 const linkBtn = "inline-flex h-9 items-center justify-center gap-1 rounded-lg border border-[var(--border)] px-3 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--background)]";
-const fmtDate = (iso: string) => (iso ? iso.slice(0, 10) : "—");
-
-export function RegionalReceiptsView({ rows, scopeLabel }: { rows: RegionalReceiptRow[]; scopeLabel: string }) {
+export function RegionalReceiptsView({ rows, scopeLabel, timeZone }: { rows: RegionalReceiptRow[]; scopeLabel: string; timeZone: string }) {
   const [filters, setFilters] = useState<RegionalReceiptFilters>({});
 
   const resellers = useMemo(() => [...new Set(rows.map((r) => r.reseller))].sort(), [rows]);
@@ -37,7 +37,7 @@ export function RegionalReceiptsView({ rows, scopeLabel }: { rows: RegionalRecei
   function exportCsv() {
     const csv = buildCsv(
       ["Receipt #", "Customer", "Country", "Reseller", "Invoice #", "Amount", "Currency", "Method", "Date", "Created by"],
-      visible.map((r) => [r.receiptNumber, r.customer, r.country, r.reseller, r.invoice, r.amount, r.currency, r.paymentMethod, fmtDate(r.issuedAt), r.issuedBy]),
+      visible.map((r) => [r.receiptNumber, r.customer, r.country, r.reseller, r.invoice, r.amount, r.currency, r.paymentMethod, formatInstantDate(r.issuedAt, timeZone), r.issuedBy]),
     );
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
     const a = document.createElement("a");
@@ -84,7 +84,7 @@ export function RegionalReceiptsView({ rows, scopeLabel }: { rows: RegionalRecei
                       </div>
                       <Badge tone="neutral"><Icon className="mr-1 inline size-3" />{r.paymentMethod}</Badge>
                     </div>
-                    <p className="text-xs text-[var(--muted)]">{r.currency} {r.amount.toLocaleString()} · {fmtDate(r.issuedAt)} · {r.issuedBy}</p>
+                    <p className="text-xs text-[var(--muted)]">{formatMoney(r.amount, r.currency)} · {formatInstantDate(r.issuedAt, timeZone)} · {r.issuedBy}</p>
                   </CardContent>
                 </Card>
               );
@@ -110,9 +110,9 @@ export function RegionalReceiptsView({ rows, scopeLabel }: { rows: RegionalRecei
                         <td className="py-3 pr-4 align-middle">{r.country}</td>
                         <td className="py-3 pr-4 align-middle">{r.reseller}</td>
                         <td className="py-3 pr-4 align-middle">{r.invoice}</td>
-                        <td className="py-3 pr-4 align-middle">{r.currency} {r.amount.toLocaleString()}</td>
+                        <td className="py-3 pr-4 align-middle">{formatMoney(r.amount, r.currency)}</td>
                         <td className="py-3 pr-4 align-middle"><Badge tone="neutral"><Icon className="mr-1 inline size-3" />{r.paymentMethod}</Badge></td>
-                        <td className="py-3 pr-4 align-middle">{fmtDate(r.issuedAt)}</td>
+                        <td className="py-3 pr-4 align-middle">{formatInstantDate(r.issuedAt, timeZone)}</td>
                         <td className="py-3 pr-4 align-middle text-[var(--muted)]">{r.issuedBy}</td>
                       </tr>
                     );

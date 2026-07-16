@@ -7,6 +7,7 @@ import { EscalationButton } from "@/components/regional/EscalationModal";
 import type { RelatedInvoice, RelatedReceipt } from "@/lib/business/related-records";
 import type { TimelineEntry } from "@/lib/sales/timeline-builder";
 import type { PortalLead } from "@/lib/ui-data";
+import { formatMoney } from "@/lib/money-ui";
 
 const tel = (p: string) => `tel:${p.replace(/[^\d+]/g, "")}`;
 const wa = (p: string) => `https://wa.me/${p.replace(/[^\d]/g, "")}`;
@@ -105,10 +106,10 @@ export function RegionalLeadDetail({
           <CardHeader className="pb-2"><CardTitle className="text-base">Related billing</CardTitle></CardHeader>
           <CardContent className="grid gap-2">
             {related.invoices.map((i) => (
-              <div key={i.id} className="flex items-center justify-between gap-2 rounded-xl border border-[var(--border)] px-3 py-2 text-sm"><span className="flex items-center gap-1.5 font-semibold"><FileText className="size-3.5 text-[var(--muted)]" />{i.invoiceNumber}</span><span className="text-[var(--muted)]">{i.currency} {i.total.toLocaleString()} · {i.paymentStatus}</span></div>
+              <div key={i.id} className="flex items-center justify-between gap-2 rounded-xl border border-[var(--border)] px-3 py-2 text-sm"><span className="flex items-center gap-1.5 font-semibold"><FileText className="size-3.5 text-[var(--muted)]" />{i.invoiceNumber}</span><span className="text-[var(--muted)]">{formatMoney(i.total, i.currency)} · {i.paymentStatus}</span></div>
             ))}
             {related.receipts.map((r) => (
-              <div key={r.id} className="flex items-center justify-between gap-2 rounded-xl border border-[var(--border)] px-3 py-2 text-sm"><span className="flex items-center gap-1.5 font-semibold"><Receipt className="size-3.5 text-[var(--muted)]" />{r.receiptNumber}</span><span className="text-[var(--muted)]">{r.currency} {r.amount.toLocaleString()} · {r.paymentMethod}</span></div>
+              <div key={r.id} className="flex items-center justify-between gap-2 rounded-xl border border-[var(--border)] px-3 py-2 text-sm"><span className="flex items-center gap-1.5 font-semibold"><Receipt className="size-3.5 text-[var(--muted)]" />{r.receiptNumber}</span><span className="text-[var(--muted)]">{formatMoney(r.amount, r.currency)} · {r.paymentMethod}</span></div>
             ))}
           </CardContent>
         </Card>

@@ -1,5 +1,5 @@
 import { AdminCommissionsView } from "@/components/admin/AdminCommissionsView";
-import { getDevStore } from "@/lib/dev-store";
+import { getDevStore, getPlatformTimeZone } from "@/lib/dev-store";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 
 export default async function AdminCommissionsPage() {
@@ -7,7 +7,7 @@ export default async function AdminCommissionsPage() {
   if (!session) return null;
   return (
     <div className="grid gap-5">
-      <AdminCommissionsView entries={[...getDevStore().commissionEntries]} />
+      <AdminCommissionsView entries={[...getDevStore().commissionEntries]} timeZone={getPlatformTimeZone()} />
     </div>
   );
 }

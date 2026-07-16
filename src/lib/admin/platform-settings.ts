@@ -49,8 +49,39 @@ export type SettingsSection = "general" | "localization" | "security";
 
 const IPV4 = /^(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)$/;
 
+/**
+ * Does the runtime's Intl accept this as a time zone?
+ *
+ * That is the exact question worth asking: every date formatter and the
+ * working-hours calendar resolve zones through Intl, and they fall back to UTC
+ * rather than throwing (a bad zone must not 500 every page). So a zone Intl
+ * rejects would save cleanly here and then silently shift every hold expiry by
+ * the UTC offset, with no error anywhere. This is the boundary that has to catch
+ * it — the settings field is free text, so anything can arrive.
+ *
+ * Checked against Intl rather than a fixed list on purpose: Intl accepts
+ * case-insensitive spellings and aliases ("utc", "Asia/Calcutta") that work fine
+ * downstream, and the IANA database gains zones over time. A hardcoded allowlist
+ * would reject values the app handles correctly.
+ */
+function isValidTimeZone(timezone: string): boolean {
+  try {
+    // An unknown zone throws RangeError during construction; resolvedOptions()
+    // consumes the result so this isn't a bare `new` for side effects.
+    return Boolean(new Intl.DateTimeFormat("en-US", { timeZone: timezone }).resolvedOptions().timeZone);
+  } catch {
+    return false;
+  }
+}
+
 export function validateGeneral(s: GeneralSettings): string | null {
   if (!s.defaultTimezone?.trim()) return "Default timezone is required.";
+  // Validate the RAW value, not a trimmed copy: the raw value is what gets stored
+  // and later handed to Intl, so " Asia/Beirut" must fail here rather than pass
+  // validation and then fall back to UTC at render time.
+  if (!isValidTimeZone(s.defaultTimezone)) {
+    return `"${s.defaultTimezone}" is not a valid IANA time zone (for example "Asia/Beirut" or "UTC").`;
+  }
   if (!s.defaultCurrency?.trim()) return "Default currency is required.";
   if (s.supportEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.supportEmail)) return "Support email is invalid.";
   return null;
