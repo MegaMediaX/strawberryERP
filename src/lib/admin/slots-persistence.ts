@@ -74,8 +74,8 @@ function parseCalendar(json: string | undefined): BusinessCalendar {
   }
 }
 
-/** Rebuild the four in-memory shapes from Frappe's merged rows. */
-function adaptFrappe(data: FrappeFloorPlan): FloorPlanSnapshot {
+/** Rebuild the four in-memory shapes from Frappe's merged rows. Exported for tests. */
+export function adaptFrappeFloorPlan(data: FrappeFloorPlan): FloorPlanSnapshot {
   const rows = Array.isArray(data.slots) ? data.slots : [];
   const zones: SlotZone[] = (data.zones ?? [])
     .map((z) => ({ id: z.zone_id, name: z.zone_name ?? z.zone_id, order: z.sort_order ?? 0 }))
@@ -134,7 +134,7 @@ async function tryFrappe(resource: string, method: "get" | "post" | "patch", pay
 /** Whole-map read for every role. Frappe when durable, else dev-store. */
 export async function readFloorPlan(): Promise<FloorPlanSnapshot> {
   const data = await tryFrappe("slots/floor-plan", "get");
-  if (data && typeof data === "object") return adaptFrappe(data as FrappeFloorPlan);
+  if (data && typeof data === "object") return adaptFrappeFloorPlan(data as FrappeFloorPlan);
   return readDevStore();
 }
 
