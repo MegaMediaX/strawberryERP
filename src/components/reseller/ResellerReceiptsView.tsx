@@ -7,14 +7,15 @@ import { Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Input, Select } from "@/components/ui/field";
+import { formatInstantDayLong } from "@/lib/datetime-ui";
 import { filterReceipts, receiptsTotal, type ReceiptRow } from "@/lib/reseller/receipt-list";
+import { formatMoney } from "@/lib/money-ui";
 
-const money = (n: number, c: string) => `${c} ${n.toLocaleString()}`;
-const fmtDate = (iso: string) => (iso ? new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "—");
+const money = (n: number, c: string) => formatMoney(n, c);
 const openBtn = "inline-flex h-9 items-center justify-center rounded-lg border border-[var(--border)] px-3 text-xs font-semibold text-[var(--foreground)]";
 const iconBtn = "inline-flex h-9 items-center justify-center gap-1 rounded-lg border border-[var(--border)] px-2.5 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--background)]";
 
-export function ResellerReceiptsView({ receipts, resellerName }: { receipts: ReceiptRow[]; resellerName: string }) {
+export function ResellerReceiptsView({ receipts, resellerName, timeZone }: { receipts: ReceiptRow[]; resellerName: string; timeZone: string }) {
   const [search, setSearch] = useState("");
   const [method, setMethod] = useState("");
   const methods = useMemo(() => [...new Set(receipts.map((r) => r.paymentMethod))].sort(), [receipts]);
@@ -54,7 +55,7 @@ export function ResellerReceiptsView({ receipts, resellerName }: { receipts: Rec
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="truncate font-semibold">{r.receiptNumber}</p>
-                      <p className="truncate text-xs text-[var(--muted)]">{r.customer} · {fmtDate(r.issuedAt)}</p>
+                      <p className="truncate text-xs text-[var(--muted)]">{r.customer} · {formatInstantDayLong(r.issuedAt, timeZone)}</p>
                     </div>
                     <span className="shrink-0 text-sm font-semibold">{money(r.amount, r.currency)}</span>
                   </div>
@@ -95,7 +96,7 @@ export function ResellerReceiptsView({ receipts, resellerName }: { receipts: Rec
                       <td className="py-3.5 pr-4 align-middle">{r.paymentMethod}</td>
                       <td className="py-3.5 pr-4 align-middle text-[var(--muted)]">{r.paymentReference || "—"}</td>
                       <td className="py-3.5 pr-4 align-middle">{r.issuedBy || "—"}</td>
-                      <td className="py-3.5 pr-4 align-middle">{fmtDate(r.issuedAt)}</td>
+                      <td className="py-3.5 pr-4 align-middle">{formatInstantDayLong(r.issuedAt, timeZone)}</td>
                       <td className="py-3.5 pr-4 align-middle">
                         <div className="flex gap-1.5">
                           <Link href={`/reseller/invoices/${r.invoice}`} className={openBtn}>Open</Link>

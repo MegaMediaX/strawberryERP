@@ -4,8 +4,9 @@ import { AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { RegionalDashboard } from "@/lib/regional/dashboard-metrics";
+import { formatAmount } from "@/lib/money-ui";
 
-const money = (n: number) => `$${n.toLocaleString()}`;
+const money = (n: number) => `$${formatAmount(n)}`;
 const leadsHref = (q: string) => `/regional/leads?${q}`;
 
 function Kpi({ label, value, href, tone = "" }: { label: string; value: string; href: string; tone?: string }) {

@@ -1,5 +1,5 @@
 import { AdminDeleteQueueView } from "@/components/admin/AdminDeleteQueueView";
-import { getDevStore } from "@/lib/dev-store";
+import { getDevStore, getPlatformTimeZone } from "@/lib/dev-store";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 
 export default async function AdminDeleteQueuePage() {
@@ -8,7 +8,7 @@ export default async function AdminDeleteQueuePage() {
   return (
     <div className="grid gap-5">
       <div><h1 className="text-xl font-bold tracking-tight">Delete Queue</h1><p className="text-sm text-[var(--muted)]">Review deletion requests — restore or permanently delete (high-risk)</p></div>
-      <AdminDeleteQueueView records={[...getDevStore().deleteQueue]} />
+      <AdminDeleteQueueView records={[...getDevStore().deleteQueue]} timeZone={getPlatformTimeZone()} />
     </div>
   );
 }

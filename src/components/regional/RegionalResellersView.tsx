@@ -8,8 +8,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Select } from "@/components/ui/field";
 import { filterResellerRows, type ResellerRow, type ResellerStatus } from "@/lib/regional/reseller-list";
+import { formatAmount } from "@/lib/money-ui";
 
-const money = (n: number) => `$${n.toLocaleString()}`;
+const money = (n: number) => `$${formatAmount(n)}`;
 const STATUSES: ResellerStatus[] = ["Active", "At risk", "Pending payment"];
 const statusTone = (s: string) => (s === "At risk" ? "rose" : s === "Pending payment" ? "amber" : "green");
 const id = (name: string) => encodeURIComponent(name);

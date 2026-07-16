@@ -7,11 +7,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Input, Select } from "@/components/ui/field";
 import { useStickyFilters } from "@/components/regional/useStickyFilters";
+import { formatInstantDate } from "@/lib/datetime-ui";
 import { filterReceipts, type RegionalReceiptFilters, type RegionalReceiptRow } from "@/lib/regional/billing-list";
+import { formatMoney } from "@/lib/money-ui";
 
-const money = (n: number, c: string) => `${c} ${n.toLocaleString()}`;
+const money = (n: number, c: string) => formatMoney(n, c);
 
-export function AdminReceiptsView({ rows }: { rows: RegionalReceiptRow[] }) {
+export function AdminReceiptsView({ rows, timeZone }: { rows: RegionalReceiptRow[]; timeZone: string }) {
   const [filters, setFilters] = useStickyFilters<RegionalReceiptFilters>("lebtech.admin.receipts.filters", {});
   const countries = useMemo(() => [...new Set(rows.map((r) => r.country))].sort(), [rows]);
   const resellers = useMemo(() => [...new Set(rows.map((r) => r.reseller))].sort(), [rows]);
@@ -49,7 +51,7 @@ export function AdminReceiptsView({ rows }: { rows: RegionalReceiptRow[] }) {
                   <td className="py-3 pr-4 align-middle text-[var(--muted)]">{r.reseller}</td>
                   <td className="py-3 pr-4 align-middle">{money(r.amount, r.currency)}</td>
                   <td className="py-3 pr-4 align-middle text-[var(--muted)]">{r.paymentMethod}</td>
-                  <td className="py-3 pr-4 align-middle text-[var(--muted)]">{r.issuedAt?.slice(0, 10) || "—"}</td>
+                  <td className="py-3 pr-4 align-middle text-[var(--muted)]">{formatInstantDate(r.issuedAt ?? "", timeZone)}</td>
                   <td className="py-3 pr-4 align-middle"><Link href={`/admin/receipts/${r.id}`} className="text-xs font-semibold text-[var(--brand)] hover:underline">Open</Link></td>
                 </tr>
               ))}

@@ -1,4 +1,6 @@
 import { isHoldExpired, type BusinessCalendar } from "@/lib/admin/business-hours";
+// Type-only: erased at build, so this file stays client-safe for FloorPlanMap.
+import type { Role } from "@/lib/sample-data";
 
 /**
  * Slot reservation state machine (Exhibition Floor Plan, P1). Pure + fail-closed
@@ -40,13 +42,40 @@ export interface TransitionCtx {
   now: string;
 }
 
-/** Fail-closed authorization for a transition. */
+/**
+ * The locked spec matrix: exactly which actions each role may perform.
+ * Keyed by `Role`, so adding a role to `sample-data.roles` fails the build here
+ * until its slot rights are declared — a new role can never silently inherit
+ * another role's authority.
+ */
+const ROLE_ACTIONS: Record<Role, readonly SlotAction[]> = {
+  "Super Admin": ["approve", "reject", "release", "setInactive", "setActive"],
+  "Regional Director": [],
+  "Reseller Admin": ["requestHold", "cancel"],
+  "Sales Team User": ["requestHold", "cancel"],
+};
+
+/**
+ * Fail-closed authorization for a transition. An allowlist, never a blocklist:
+ * a role must be named in ROLE_ACTIONS *and* the action listed under it. Any
+ * role absent from the matrix — including one arriving as an unvalidated string
+ * off the wire — is denied everything.
+ */
 export function canActOnSlot(role: string, action: SlotAction, record: SlotStatusRecord, actor?: string): boolean {
-  if (role === "Super Admin") return action !== "requestHold"; // admins don't self-hold
-  // Resellers (and below) may only request a hold or cancel their OWN hold.
+  // Own-property check, not a bare lookup: a bare `ROLE_ACTIONS[role]` walks the
+  // prototype chain, so role="constructor" would yield a function and throw on
+  // .includes() instead of denying.
+  const allowed: readonly SlotAction[] = Object.hasOwn(ROLE_ACTIONS, role) ? ROLE_ACTIONS[role as Role] : [];
+  if (!allowed.includes(action)) return false;
   if (action === "requestHold") return record.status === "Available";
-  if (action === "cancel") return record.status === "OnHold" && (!actor || record.heldBy === actor);
-  return false;
+  if (action === "cancel") {
+    // Ownership is mandatory, not best-effort. An earlier `!actor || …` SKIPPED the
+    // check whenever the caller passed no actor, so any reseller could cancel any
+    // hold — and a heldBy-less record matched an actor-less caller outright
+    // (undefined === undefined). A missing or blank actor must DENY.
+    return record.status === "OnHold" && Boolean(actor) && record.heldBy === actor;
+  }
+  return true;
 }
 
 const VALID: Record<SlotAction, SlotStatus[]> = {

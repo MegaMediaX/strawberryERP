@@ -1,14 +1,16 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
 import { devStoreResponse } from "@/lib/backend/backend-router";
-import { appendAudit, appendSlotInvoiceLine, getSlotConfig, getSlotLayout, getSlotStatuses, setSlotStatus } from "@/lib/dev-store";
+import { appendAudit, appendSlotInvoiceLine, getSlotConfig, getSlotLayout, getSlotStatuses, removeSlotInvoiceLine, setSlotStatus } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { applyTransition, normalizeExpiredHolds, type SlotAction } from "@/lib/admin/slot-status";
 import { parseSlot } from "@/lib/admin/slots";
 
 /**
- * §slots P3 — Super-Admin approval actions (approve / reject / release).
- * Super-Admin-only + audited. Transitions are server-authoritative; the acted
- * slot is normalized for expiry first (an expired hold can't be approved).
+ * §slots P3 — Super-Admin slot actions (approve / reject / release /
+ * setInactive / setActive). Super-Admin-only + audited. Transitions are
+ * server-authoritative; the acted slot is normalized for expiry first (an
+ * expired hold can't be approved). §P4: approve attaches a draft invoice line
+ * and leaving Reserved removes it again.
  */
 const ADMIN_ACTIONS: SlotAction[] = ["approve", "reject", "release", "setInactive", "setActive"];
 
@@ -35,9 +37,25 @@ export async function PATCH(request: Request) {
     result.next.reservedInvoice = draftInvoice;
   }
 
+  // §P4 — and the inverse: a slot LEAVING Reserved must not strand that line.
+  // Keyed on the state we're leaving, not on the action name, because two actions
+  // reach it — release (→Available) and setInactive (→Inactive). `reject` never
+  // does: it's only valid from OnHold, i.e. before approval created any line.
+  // No Reserved→Reserved edge exists, so a Reserved `current` + an ok result
+  // always means we are leaving Reserved.
+  let removedInvoiceLine = false;
+  if (current.status === "Reserved" && current.reservedInvoice) {
+    removedInvoiceLine = removeSlotInvoiceLine({ invoiceId: current.reservedInvoice, label: p.label });
+  }
+
   setSlotStatus(p.label, result.next);
-  const audit = appendAudit({ entityType: "SlotStatus", entityId: p.label, action: p.action, oldValue: current.status, newValue: draftInvoice ? `${result.next.status} · ${draftInvoice}` : result.next.status, performedBy: session.auditLabel });
-  return devStoreResponse({ slot: p.label, status: result.next, draftInvoice, message: `Slot ${p.label} → ${result.next.status}.` }, { audit });
+  const auditValue = draftInvoice
+    ? `${result.next.status} · ${draftInvoice}`
+    : removedInvoiceLine
+      ? `${result.next.status} · draft line removed from ${current.reservedInvoice}`
+      : result.next.status;
+  const audit = appendAudit({ entityType: "SlotStatus", entityId: p.label, action: p.action, oldValue: current.status, newValue: auditValue, performedBy: session.auditLabel });
+  return devStoreResponse({ slot: p.label, status: result.next, draftInvoice, removedInvoiceLine, message: `Slot ${p.label} → ${result.next.status}.` }, { audit });
 }
 
 export function DELETE() {

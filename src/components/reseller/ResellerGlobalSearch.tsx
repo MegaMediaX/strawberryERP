@@ -8,10 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/field";
 import { resellerSearch, type ResellerSearchData } from "@/lib/reseller/reseller-search";
+import { formatMoney } from "@/lib/money-ui";
 
 const tel = (p: string) => `tel:${p.replace(/[^\d+]/g, "")}`;
 const wa = (p: string) => `https://wa.me/${p.replace(/[^\d]/g, "")}`;
-const money = (n: number, c: string) => `${c} ${n.toLocaleString()}`;
+const money = (n: number, c: string) => formatMoney(n, c);
 
 const pill = "inline-flex h-8 items-center justify-center rounded-lg border border-[var(--border)] px-2.5 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--background)]";
 const pillBrand = "inline-flex h-8 items-center justify-center rounded-lg border border-[var(--border)] px-2.5 text-xs font-semibold text-[var(--brand)] hover:bg-[var(--background)]";

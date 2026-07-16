@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Input } from "@/components/ui/field";
 import { useStickyFilters } from "@/components/regional/useStickyFilters";
 import type { AgentCallKpis, TeamCallKpis } from "@/lib/telephony/call-kpis";
+import { formatAmount } from "@/lib/money-ui";
 
 interface CallKpiFilters {
   /** YYYY-MM-DD (inclusive). */
@@ -164,13 +165,13 @@ export function CallCenterView() {
       ) : team ? (
         <>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            <SummaryCard label="Calls made" value={team.callsMade.toLocaleString()} hint={`${team.unanswered} unanswered`} />
+            <SummaryCard label="Calls made" value={formatAmount(team.callsMade)} hint={`${team.unanswered} unanswered`} />
             <SummaryCard label="Answer rate" value={`${team.answerRatePct}%`} hint={`${team.answered} answered`} />
-            <SummaryCard label="1m+ calls" value={team.callsOverOneMinute.toLocaleString()} hint="talk over 1 min" />
-            <SummaryCard label="Acquired info" value={team.infoAcquired.toLocaleString()} hint="new phone/email" />
+            <SummaryCard label="1m+ calls" value={formatAmount(team.callsOverOneMinute)} hint="talk over 1 min" />
+            <SummaryCard label="Acquired info" value={formatAmount(team.infoAcquired)} hint="new phone/email" />
             <SummaryCard label="Total talk" value={fmtTalk(team.totalTalkSeconds)} />
             <SummaryCard label="Avg talk" value={fmtTalk(team.avgTalkSeconds)} hint="per answered call" />
-            <SummaryCard label="Active agents" value={team.activeAgents.toLocaleString()} hint={team.unlinkedCount > 0 ? `${team.unlinkedCount} unlinked calls` : undefined} />
+            <SummaryCard label="Active agents" value={formatAmount(team.activeAgents)} hint={team.unlinkedCount > 0 ? `${team.unlinkedCount} unlinked calls` : undefined} />
           </div>
 
           {/* Mobile cards */}

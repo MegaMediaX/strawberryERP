@@ -4,7 +4,7 @@ import { ResellerCustomerDetail, type CustomerInvoice, type CustomerReceipt } fr
 import { Card, CardContent } from "@/components/ui/card";
 import { customerRollup, type ContractLike, type InvoiceLike, type ReceiptLike } from "@/lib/reseller/customer-rollup";
 import { customers as seedCustomers, invoices as seedInvoices, receipts as seedReceipts } from "@/lib/phase2-data";
-import { getDevStore } from "@/lib/dev-store";
+import { getDevStore, getPlatformTimeZone } from "@/lib/dev-store";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 import { getUiLeads, getUiRows } from "@/lib/ui-data";
 
@@ -58,6 +58,7 @@ export default async function ResellerCustomerDetailPage({ params }: { params: P
         invoices={invoices}
         receipts={receipts}
         phone={phone}
+        timeZone={getPlatformTimeZone()}
       />
     </div>
   );

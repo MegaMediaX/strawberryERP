@@ -7,12 +7,13 @@ import { Check, Clock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { formatInZone } from "@/lib/datetime-ui";
 import type { FloorPlanSlot } from "@/lib/admin/floor-plan";
+import { formatAmount } from "@/lib/money-ui";
 
-const money = (n: number) => `$${n.toLocaleString()}`;
-const fmt = (iso?: string) => (iso ? iso.slice(0, 16).replace("T", " ") : "—");
+const money = (n: number) => `$${formatAmount(n)}`;
 
-export function AdminSlotApprovalsView({ pending, zoneNames }: { pending: FloorPlanSlot[]; zoneNames: Record<string, string> }) {
+export function AdminSlotApprovalsView({ pending, zoneNames, timeZone }: { pending: FloorPlanSlot[]; zoneNames: Record<string, string>; timeZone: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState("");
@@ -46,8 +47,8 @@ export function AdminSlotApprovalsView({ pending, zoneNames }: { pending: FloorP
                 <td className="py-3 pr-4 align-middle text-[var(--muted)]">{zoneNames[s.zoneId] ?? s.zoneId}</td>
                 <td className="py-3 pr-4 align-middle">{s.heldBy ?? "—"}</td>
                 <td className="py-3 pr-4 align-middle">{money(s.price)}</td>
-                <td className="py-3 pr-4 align-middle text-[var(--muted)]">{fmt(s.heldAt)}</td>
-                <td className="py-3 pr-4 align-middle"><span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400"><Clock className="size-3.5" />{fmt(s.expiresAt)}</span></td>
+                <td className="py-3 pr-4 align-middle text-[var(--muted)]">{s.heldAt ? formatInZone(s.heldAt, timeZone) : "—"}</td>
+                <td className="py-3 pr-4 align-middle"><span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400"><Clock className="size-3.5" />{s.expiresAt ? formatInZone(s.expiresAt, timeZone) : "—"}</span></td>
                 <td className="py-3 pr-4 align-middle">
                   <div className="flex gap-1.5">
                     <Button variant="secondary" className="h-8 px-2.5 text-xs" disabled={busy === `${s.label}:approve`} onClick={() => act(s.label, "approve")}><Check className="mr-1 size-3.5" /> Approve</Button>

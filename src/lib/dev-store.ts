@@ -107,7 +107,10 @@ function seedSlots(): { config: SlotConfig; statuses: Record<string, SlotStatusR
     activeSlots: ["A1", "A2", "A3", "A4", "B1", "B2", "B3"],
     priceBySlot: { A1: 1500, A2: 1500, A3: 1200, A4: 1200, B1: 900, B2: 900, B3: 900 },
     currency: "USD",
-    calendar: defaultBusinessCalendar("Asia/Beirut"),
+    // Not hardcoded: the spec sources the global calendar's zone from platform
+    // settings. getSlotConfig() re-derives it on every read, so this is only the
+    // value at seed time.
+    calendar: defaultBusinessCalendar(defaultPlatformSettings.general.defaultTimezone),
   };
   const zones: SlotZone[] = [
     { id: "hall-a", name: "Hall A — Premium", order: 0 },
@@ -269,9 +272,27 @@ export function getDevStore() {
   return store;
 }
 
-/** §slots — config (catalog size, active, prices, calendar). */
+/**
+ * §slots — config (catalog size, active, prices, calendar).
+ *
+ * The calendar's TIMEZONE is DERIVED from platform settings on every read rather
+ * than stored independently: the spec locks "a single global calendar from
+ * platformSettings.general.defaultTimezone, admin-editable", and platform settings
+ * are editable at runtime via setPlatformSettingsSection. A zone frozen at seed
+ * time would silently go stale the first time an admin changed it — and because
+ * expiry math is timezone-sensitive, stale here means holds lapse at the wrong
+ * moment. Everything else in the calendar (working days, hours, holidays) stays
+ * slot config.
+ */
 export function getSlotConfig(): SlotConfig {
-  return getDevStore().slotConfig;
+  const store = getDevStore();
+  // One source of truth for the zone — see getPlatformTimeZone. Resolving it
+  // separately here is how the calendar and the admin tables drifted apart.
+  const timezone = getPlatformTimeZone();
+  const config = store.slotConfig;
+  // Preserve identity when nothing drifted — this runs on every render.
+  if (config.calendar.timezone === timezone) return config;
+  return { ...config, calendar: { ...config.calendar, timezone } };
 }
 export function setSlotConfig(patch: Partial<SlotConfig>): SlotConfig {
   const store = getDevStore();
@@ -316,11 +337,18 @@ export function setSlotZones(zones: SlotZone[]): SlotZone[] {
  * slot-reservation invoice (creating that draft once). Returns the invoice id.
  * The final invoice stays the existing separate flow.
  */
+/**
+ * The one source of truth for a slot's invoice-line description. Append and
+ * remove MUST agree on this string: if they drift, removal silently matches
+ * nothing and the orphan-line bug comes straight back.
+ */
+const slotLineDescription = (label: string) => `Slot ${label}`;
+
 export function appendSlotInvoiceLine(opts: { reseller: string; label: string; price: number; currency: string }): string {
   const store = getDevStore();
   const draftId = `SLOT-DRAFT-${opts.reseller.replace(/\s+/g, "-").toUpperCase()}`;
   let invoice = store.invoices.find((i) => i.id === draftId);
-  const line = { description: `Slot ${opts.label}`, quantity: 1, unitPrice: opts.price };
+  const line = { description: slotLineDescription(opts.label), quantity: 1, unitPrice: opts.price };
 
   if (!invoice) {
     invoice = {
@@ -342,6 +370,32 @@ export function appendSlotInvoiceLine(opts: { reseller: string; label: string; p
   return draftId;
 }
 
+/**
+ * §slots P4 — the exact inverse of `appendSlotInvoiceLine`. When a slot LEAVES
+ * Reserved (release, or setInactive on a Reserved slot), the draft line that
+ * approval created must go with it, or the reseller keeps getting billed for a
+ * slot they no longer hold.
+ *
+ * Only DRAFT invoices are touched: once an invoice has been issued it belongs to
+ * the separate final-invoice flow, and silently editing an issued invoice would
+ * be worse than the orphan line. Returns true only if a line was actually removed.
+ * Idempotent — removing an already-absent line is a no-op.
+ */
+export function removeSlotInvoiceLine(opts: { invoiceId: string; label: string }): boolean {
+  const store = getDevStore();
+  const invoice = store.invoices.find((i) => i.id === opts.invoiceId);
+  if (!invoice || invoice.invoiceStatus !== "Draft") return false;
+
+  const description = slotLineDescription(opts.label);
+  const lineItems = invoice.lineItems.filter((l) => l.description !== description);
+  if (lineItems.length === invoice.lineItems.length) return false; // nothing matched
+
+  const totals = calculateInvoiceTotals(lineItems, invoice.discount, invoice.taxAmount);
+  const updated = { ...invoice, lineItems, ...totals };
+  store.invoices = store.invoices.map((i) => (i.id === opts.invoiceId ? updated : i));
+  return true;
+}
+
 /** §44 permission matrix. */
 export function getPermissionMatrix(): PermissionMatrix {
   return getDevStore().permissionMatrix;
@@ -352,6 +406,20 @@ export function setPermissionMatrix(matrix: PermissionMatrix): PermissionMatrix 
 }
 
 /** §37/38/39 platform settings. */
+/**
+ * The single zone admin views render instants in. Pass this to client components
+ * as a prop — they cannot read it themselves (importing dev-store into a client
+ * bundle drags in node:fs), and formatting in the viewer's local zone instead
+ * would differ between the server and client renders and break hydration.
+ */
+export function getPlatformTimeZone(): string {
+  const configured = getPlatformSettings().general.defaultTimezone;
+  // Falls back to the documented default rather than UTC: UTC would silently
+  // shift every hold expiry by the offset. Blank is unreachable through the
+  // settings route (validateGeneral rejects it) — this covers seeded/legacy data.
+  return configured && configured.trim() ? configured : defaultPlatformSettings.general.defaultTimezone;
+}
+
 export function getPlatformSettings(): PlatformSettings {
   return getDevStore().platformSettings;
 }

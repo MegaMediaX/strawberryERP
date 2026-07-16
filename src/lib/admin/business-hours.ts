@@ -4,10 +4,16 @@
  * — nights, non-working days, and holidays do NOT count.
  *
  * DETERMINISM: `now` is always an argument; nothing here reads the system clock.
- * SIMPLIFICATION (locked decision): a single global calendar. The `timezone`
- * field is stored for display/future per-country use; the math treats the
- * incoming ISO instants as the calendar's local wall-clock (the dev-store seeds
- * + UI pass already-local ISO strings). Per-country tz conversion = later phase.
+ *
+ * TIMEZONE: every ISO string crossing this boundary is a real INSTANT (what
+ * `new Date().toISOString()` produces). `cal.timezone` is authoritative: instants
+ * are converted to that zone's wall-clock ONCE on the way in, all day-walking
+ * arithmetic runs on wall-clock values, and `holdExpiresAt` converts back to an
+ * instant on the way out. So "Mon–Fri 09:00–17:00" means 09:00–17:00 in
+ * `cal.timezone`, not in UTC, and the weekday is that zone's weekday.
+ *
+ * Counting in wall-clock is deliberate: a working day is 8 hours "by the clock on
+ * the wall" even across a DST shift, which is what a business calendar means.
  */
 
 export interface BusinessCalendar {
@@ -21,11 +27,68 @@ export interface BusinessCalendar {
   holidays?: string[];
 }
 
-export function defaultBusinessCalendar(timezone = "Asia/Beirut"): BusinessCalendar {
+/**
+ * `timezone` is required on purpose. A default here would let a caller omit it and
+ * silently get one country's zone regardless of platform settings — pass
+ * `platformSettings.general.defaultTimezone`, which is the spec's source of truth.
+ */
+export function defaultBusinessCalendar(timezone: string): BusinessCalendar {
   return { timezone, workingDays: [1, 2, 3, 4, 5], startHour: 9, endHour: 17, holidays: [] };
 }
 
 const MS_PER_HOUR = 3_600_000;
+
+// Intl.DateTimeFormat construction is expensive; one per zone is plenty.
+const FORMATTERS = new Map<string, Intl.DateTimeFormat>();
+
+function formatterFor(timeZone: string): Intl.DateTimeFormat {
+  const cached = FORMATTERS.get(timeZone);
+  if (cached) return cached;
+  const options: Intl.DateTimeFormatOptions = {
+    hourCycle: "h23", // not hour12:false — that yields hour "24" at midnight on some engines
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+  };
+  let formatter: Intl.DateTimeFormat;
+  try {
+    formatter = new Intl.DateTimeFormat("en-US", { ...options, timeZone });
+  } catch {
+    // An unknown zone would otherwise throw on every render. Degrade to UTC —
+    // wrong-but-serving beats a 500. `validateGeneral` is the boundary that
+    // rejects a bad zone; because this degrades silently rather than throwing,
+    // that validation is the only place a bad zone is ever reported. Keep it.
+    formatter = new Intl.DateTimeFormat("en-US", { ...options, timeZone: "UTC" });
+  }
+  FORMATTERS.set(timeZone, formatter);
+  return formatter;
+}
+
+/**
+ * An instant's wall-clock in `timeZone`, carried as a Date whose UTC fields ARE
+ * those local components. Every helper below then does plain UTC-field
+ * arithmetic (getUTCHours, setUTCHours, getUTCDay) and is therefore reading
+ * local time by construction.
+ */
+function toWallClock(instant: Date, timeZone: string): Date {
+  const parts = formatterFor(timeZone).formatToParts(instant);
+  const at = (type: string) => Number(parts.find((p) => p.type === type)?.value);
+  return new Date(Date.UTC(at("year"), at("month") - 1, at("day"), at("hour"), at("minute"), at("second"), instant.getUTCMilliseconds()));
+}
+
+/** The UTC offset (ms) in effect in `timeZone` at `instant`. */
+function offsetMs(instant: Date, timeZone: string): number {
+  return toWallClock(instant, timeZone).getTime() - instant.getTime();
+}
+
+/**
+ * Inverse of `toWallClock`: the real instant whose `timeZone` wall-clock is
+ * `wall`. Two passes, because the offset at the first guess can differ from the
+ * offset at the true instant across a DST boundary.
+ */
+function fromWallClock(wall: Date, timeZone: string): Date {
+  const guess = new Date(wall.getTime() - offsetMs(wall, timeZone));
+  return new Date(wall.getTime() - offsetMs(guess, timeZone));
+}
 
 function ymd(d: Date): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
@@ -54,8 +117,9 @@ function workingHoursWithinDay(from: Date, to: Date, cal: BusinessCalendar): num
  * days, and holidays. Returns 0 if `now <= start`.
  */
 export function workingHoursElapsed(startISO: string, nowISO: string, cal: BusinessCalendar): number {
-  const start = new Date(startISO);
-  const now = new Date(nowISO);
+  // Instants in, wall-clock out: everything below counts against cal.timezone.
+  const start = toWallClock(new Date(startISO), cal.timezone);
+  const now = toWallClock(new Date(nowISO), cal.timezone);
   if (now.getTime() <= start.getTime()) return 0;
 
   let total = 0;
@@ -85,7 +149,8 @@ export function holdExpiresAt(heldAtISO: string, workingHoursAllowed: number, ca
   // loop to a date decades out.
   if (cal.workingDays.length === 0 || cal.endHour <= cal.startHour) return heldAtISO;
   let remaining = workingHoursAllowed;
-  const cursor = new Date(heldAtISO);
+  // Walk forward in cal.timezone wall-clock, then convert back to an instant.
+  const cursor = toWallClock(new Date(heldAtISO), cal.timezone);
 
   // Safety bound: never loop more than ~1000 days.
   for (let guard = 0; guard < 24_000 && remaining > 1e-9; guard++) {
@@ -113,7 +178,7 @@ export function holdExpiresAt(heldAtISO: string, workingHoursAllowed: number, ca
       cursor.setUTCHours(cal.startHour, 0, 0, 0);
     }
   }
-  return cursor.toISOString();
+  return fromWallClock(cursor, cal.timezone).toISOString();
 }
 
 export function isHoldExpired(heldAtISO: string, nowISO: string, cal: BusinessCalendar, workingHoursAllowed = 24): boolean {

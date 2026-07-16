@@ -18,11 +18,10 @@ import {
   pendingDeleteCount,
   type DeleteQueueFilters,
 } from "@/lib/admin/delete-queue";
+import { formatInstant } from "@/lib/datetime-ui";
 import type { DeleteQueueRecord } from "@/lib/portal-security";
 
-const fmt = (iso: string) => (iso ? iso.slice(0, 16).replace("T", " ") : "—");
-
-export function AdminDeleteQueueView({ records }: { records: DeleteQueueRecord[] }) {
+export function AdminDeleteQueueView({ records, timeZone }: { records: DeleteQueueRecord[]; timeZone: string }) {
   const router = useRouter();
   const [filters, setFilters] = useStickyFilters<DeleteQueueFilters>("lebtech.admin.deletequeue.filters", {});
   const [busy, setBusy] = useState(false);
@@ -90,7 +89,7 @@ export function AdminDeleteQueueView({ records }: { records: DeleteQueueRecord[]
                   <td className="py-3 pr-4 align-middle text-[var(--muted)]">{r.role ?? "—"}</td>
                   <td className="py-3 pr-4 align-middle text-[var(--muted)]">{r.country ?? "—"}</td>
                   <td className="py-3 pr-4 align-middle text-[var(--muted)]">{r.reseller ?? "—"}</td>
-                  <td className="py-3 pr-4 align-middle text-[var(--muted)]">{fmt(r.requestedAt)}</td>
+                  <td className="py-3 pr-4 align-middle text-[var(--muted)]">{formatInstant(r.requestedAt, timeZone)}</td>
                   <td className="py-3 pr-4 align-middle text-[var(--muted)]"><span className="line-clamp-1 max-w-[180px]">{r.reason}</span></td>
                   <td className="py-3 pr-4 align-middle"><Badge tone={deleteStatusTone(r.status)}>{r.status}</Badge></td>
                   <td className="py-3 pr-4 align-middle">

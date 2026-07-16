@@ -19,7 +19,7 @@ export default async function AdminSlotApprovalsPage() {
     <div className="grid gap-5">
       <Link href="/admin/slots" className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--brand)] hover:underline"><ArrowLeft className="size-4" /> Back to floor plan</Link>
       <div><h1 className="text-xl font-bold tracking-tight">Slot Reservations &amp; Approvals</h1><p className="text-sm text-[var(--muted)]">{pending.length} hold{pending.length === 1 ? "" : "s"} pending Super Admin confirmation</p></div>
-      <AdminSlotApprovalsView pending={pending} zoneNames={zoneNames} />
+      <AdminSlotApprovalsView pending={pending} zoneNames={zoneNames} timeZone={data.calendar.timezone} />
     </div>
   );
 }

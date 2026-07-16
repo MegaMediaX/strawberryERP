@@ -1,6 +1,6 @@
 import { AdminApiNav } from "@/components/admin/AdminApiNav";
 import { AdminApiKeysView } from "@/components/admin/AdminApiKeysView";
-import { getDevStore } from "@/lib/dev-store";
+import { getDevStore, getPlatformTimeZone } from "@/lib/dev-store";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 
 export default async function AdminApiKeysPage() {
@@ -11,7 +11,7 @@ export default async function AdminApiKeysPage() {
     <div className="grid gap-5">
       <div><h1 className="text-xl font-bold tracking-tight">API Keys</h1><p className="text-sm text-[var(--muted)]">Generate, view, and revoke keys</p></div>
       <AdminApiNav />
-      <AdminApiKeysView keys={keys} />
+      <AdminApiKeysView keys={keys} timeZone={getPlatformTimeZone()} />
     </div>
   );
 }

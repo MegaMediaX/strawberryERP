@@ -7,6 +7,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { AdminDashboardData } from "@/lib/admin/dashboard-data";
+import { formatInstantDate } from "@/lib/datetime-ui";
+import { formatAmount } from "@/lib/money-ui";
 
 const money = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`;
 
@@ -44,7 +46,7 @@ function Bar({ value, max }: { value: number; max: number }) {
   );
 }
 
-export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
+export function AdminDashboardView({ data, timeZone }: { data: AdminDashboardData; timeZone: string }) {
   const s = data.summary;
   const t = data.today;
   const maxCountryRevenue = Math.max(1, ...data.countries.map((c) => c.revenue));
@@ -77,14 +79,14 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
 
       {/* §7 Global Performance Summary — clickable KPIs */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi label="Total leads" value={s.totalLeads.toLocaleString()} href="/admin/leads" />
-        <Kpi label="Interested" value={s.interested.toLocaleString()} href="/admin/leads?status=Contacted%20(Interested)" />
-        <Kpi label="Customers" value={s.customers.toLocaleString()} href="/admin/customers" />
-        <Kpi label="Active resellers" value={s.activeResellers.toLocaleString()} href="/admin/resellers" />
-        <Kpi label="Countries" value={s.countries.toLocaleString()} href="/admin/countries" />
+        <Kpi label="Total leads" value={formatAmount(s.totalLeads)} href="/admin/leads" />
+        <Kpi label="Interested" value={formatAmount(s.interested)} href="/admin/leads?status=Contacted%20(Interested)" />
+        <Kpi label="Customers" value={formatAmount(s.customers)} href="/admin/customers" />
+        <Kpi label="Active resellers" value={formatAmount(s.activeResellers)} href="/admin/resellers" />
+        <Kpi label="Countries" value={formatAmount(s.countries)} href="/admin/countries" />
         <Kpi label="Revenue this month" value={money(s.revenueThisMonth)} href="/admin/accounting/pnl" />
-        <Kpi label="Pending invoices" value={s.pendingInvoices.toLocaleString()} href="/admin/invoices" />
-        <Kpi label="Overdue follow-ups" value={s.overdueFollowUps.toLocaleString()} href="/admin/leads" />
+        <Kpi label="Pending invoices" value={formatAmount(s.pendingInvoices)} href="/admin/invoices" />
+        <Kpi label="Overdue follow-ups" value={formatAmount(s.overdueFollowUps)} href="/admin/leads" />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -173,7 +175,7 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
                 <p className="truncate font-medium">{a.action} · {a.entityType} {a.entityId}</p>
                 <p className="truncate text-xs text-[var(--muted)]">{a.newValue || a.oldValue || "—"}</p>
               </div>
-              <span className="shrink-0 text-right text-[11px] text-[var(--muted)]">{a.performedBy}<br />{a.timestamp.slice(0, 10)}</span>
+              <span className="shrink-0 text-right text-[11px] text-[var(--muted)]">{a.performedBy}<br />{formatInstantDate(a.timestamp, timeZone)}</span>
             </div>
           ))}
           <Link href="/admin/audit-logs" className="text-xs font-semibold text-[var(--brand)]">View all audit logs →</Link>

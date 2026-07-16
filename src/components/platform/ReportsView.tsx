@@ -5,16 +5,13 @@ import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/field";
+import { formatMoney } from "@/lib/money-ui";
 
 type RevenueRow = { country: string; invoiceTotal: number; receiptAmount: number; invoiceCount: number };
 type RevenueResponse = { data: RevenueRow[]; totalInvoiced: number; totalCollected: number };
 type ConversionResponse = {
   data: { total: number; statusBuckets: Record<string, number>; interested: number; conversionRate: number; topSource: string | null };
 };
-
-function money(n: number) {
-  return `USD ${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
-}
 
 export function ReportsView() {
   const [startDate, setStartDate] = useState("");
@@ -89,8 +86,8 @@ export function ReportsView() {
             </div>
             {revenue ? (
               <div className="flex gap-2">
-                <Badge tone="blue">Invoiced {money(revenue.totalInvoiced)}</Badge>
-                <Badge tone="green">Collected {money(revenue.totalCollected)}</Badge>
+                <Badge tone="blue">Invoiced {formatMoney(revenue.totalInvoiced)}</Badge>
+                <Badge tone="green">Collected {formatMoney(revenue.totalCollected)}</Badge>
               </div>
             ) : null}
           </div>
@@ -111,8 +108,8 @@ export function ReportsView() {
                   <tr key={row.country} className="border-b border-[var(--border)] last:border-0">
                     <td className="py-3.5 pr-4 align-middle font-medium">{row.country}</td>
                     <td className="py-3.5 pr-4 align-middle">{row.invoiceCount}</td>
-                    <td className="py-3.5 pr-4 align-middle">{money(row.invoiceTotal)}</td>
-                    <td className="py-3.5 pr-4 align-middle">{money(row.receiptAmount)}</td>
+                    <td className="py-3.5 pr-4 align-middle">{formatMoney(row.invoiceTotal)}</td>
+                    <td className="py-3.5 pr-4 align-middle">{formatMoney(row.receiptAmount)}</td>
                   </tr>
                 ))}
                 {revenue && revenue.data.length === 0 ? (

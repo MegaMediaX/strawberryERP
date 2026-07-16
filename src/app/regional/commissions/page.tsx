@@ -1,6 +1,7 @@
 import { RegionalCommissionsView } from "@/components/regional/RegionalCommissionsView";
 import { canViewCommissionPercent, type CommissionStatus } from "@/lib/regional/commission-list";
 import { regionalCommissionData } from "@/lib/regional/commission-data";
+import { getPlatformTimeZone } from "@/lib/dev-store";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 
 export default async function RegionalCommissionsPage({ searchParams }: {
@@ -17,6 +18,7 @@ export default async function RegionalCommissionsPage({ searchParams }: {
       rows={d.rows}
       scopeLabel={d.scopeLabel}
       canViewPercent={canViewCommissionPercent(session.effectiveUser.role)}
+      timeZone={getPlatformTimeZone()}
       initialFilters={{
         reseller: sp.reseller ? decodeURIComponent(sp.reseller) : undefined,
         status: sp.status ? (decodeURIComponent(sp.status) as CommissionStatus) : undefined,

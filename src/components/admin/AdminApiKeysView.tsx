@@ -10,9 +10,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Input } from "@/components/ui/field";
 import { apiKeyStatus, SCOPE_MODULES, type ApiKeyStatus } from "@/lib/admin/api-center";
+import { formatDay, formatInstantDate } from "@/lib/datetime-ui";
 import type { ApiKeyRecord, ApiScope } from "@/lib/phase2-data";
 
-const fmtDate = (iso: string) => (iso ? iso.slice(0, 10) : "never");
+// expiresAt is a DATE ("2026-12-31" — from a type="date" input): no zone, so it is
+// rendered as-is. lastUsedAt is an INSTANT, whose calendar day depends on the zone
+// — slicing it showed the UTC day, which is the wrong day for anything logged near
+// midnight. Two different kinds of value; they must not share one formatter.
 const MODULES = SCOPE_MODULES;
 
 function statusTone(s: ApiKeyStatus): "green" | "amber" | "neutral" {
@@ -23,7 +27,7 @@ function statusTone(s: ApiKeyStatus): "green" | "amber" | "neutral" {
 
 type SafeKey = Omit<ApiKeyRecord, "keyHash">;
 
-export function AdminApiKeysView({ keys }: { keys: SafeKey[] }) {
+export function AdminApiKeysView({ keys, timeZone }: { keys: SafeKey[]; timeZone: string }) {
   const router = useRouter();
   const now = useMemo(() => new Date(), []);
   const [open, setOpen] = useState(false);
@@ -114,8 +118,8 @@ export function AdminApiKeysView({ keys }: { keys: SafeKey[] }) {
                     <td className="py-3 pr-4 align-middle"><code className="font-mono text-xs text-[var(--muted)]">{k.prefix}…</code></td>
                     <td className="py-3 pr-4 align-middle text-[var(--muted)]">{k.scopes.length} scope{k.scopes.length === 1 ? "" : "s"}</td>
                     <td className="py-3 pr-4 align-middle">{k.rateLimitPerMinute}</td>
-                    <td className="py-3 pr-4 align-middle text-[var(--muted)]">{fmtDate(k.expiresAt)}</td>
-                    <td className="py-3 pr-4 align-middle text-[var(--muted)]">{fmtDate(k.lastUsedAt)}</td>
+                    <td className="py-3 pr-4 align-middle text-[var(--muted)]">{formatDay(k.expiresAt, "never")}</td>
+                    <td className="py-3 pr-4 align-middle text-[var(--muted)]">{formatInstantDate(k.lastUsedAt, timeZone, "never")}</td>
                     <td className="py-3 pr-4 align-middle"><Badge tone={statusTone(status)}>{status}</Badge></td>
                     <td className="py-3 pr-4 align-middle">{status === "Revoked" ? <span className="text-xs text-[var(--muted)]">—</span> : <Button variant="secondary" className="h-8 px-2.5 text-xs" disabled={busy} onClick={() => revoke(k.id)}>Revoke</Button>}</td>
                   </tr>

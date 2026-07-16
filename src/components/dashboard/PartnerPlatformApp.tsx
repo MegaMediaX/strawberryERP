@@ -55,6 +55,7 @@ import {
 import type { PortalSession } from "@/lib/portal-security";
 import type { PortalLead } from "@/lib/ui-data";
 import { cn } from "@/lib/utils";
+import { formatAmount } from "@/lib/money-ui";
 
 type CountryFilter = "All countries" | Country;
 type DateFilter = "Today" | "7 days" | "30 days" | "Quarter";
@@ -424,7 +425,7 @@ export function PartnerPlatformApp({ initialLeads, loadError, session, source }:
                                 borderRadius: "8px",
                                 color: "var(--tooltip-text)",
                               }}
-                              formatter={(value) => [`$${Number(value).toLocaleString()}`, "Revenue"]}
+                              formatter={(value) => [`$${formatAmount(Number(value))}`, "Revenue"]}
                             />
                             <Area
                               dataKey="revenue"

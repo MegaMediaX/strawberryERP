@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Input, Select } from "@/components/ui/field";
 import { useStickyFilters } from "@/components/regional/useStickyFilters";
+import { formatMoney } from "@/lib/money-ui";
 import {
   filterInvoices,
   overdueInvoiceCount,
@@ -16,7 +17,7 @@ import {
   type RegionalInvoiceRow,
 } from "@/lib/regional/billing-list";
 
-const money = (n: number, c: string) => `${c} ${n.toLocaleString()}`;
+const money = (n: number, c: string) => formatMoney(n, c);
 
 function tone(s: InvoiceBusinessStatus): "green" | "amber" | "rose" | "neutral" {
   if (s === "Paid") return "green";

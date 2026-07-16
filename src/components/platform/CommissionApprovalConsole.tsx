@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Field, Select } from "@/components/ui/field";
 import { canApproveCommission, type CommissionApprover } from "@/lib/business/commission-approval";
+import { formatMoney } from "@/lib/money-ui";
 import type { CommissionStatus } from "@/lib/phase2-data";
 
 type EntryRow = {
@@ -39,10 +40,6 @@ const NEXT_ACTIONS: Record<CommissionStatus, Array<{ to: CommissionStatus; label
   Paid: [],
   Cancelled: [],
 };
-
-function money(value?: number) {
-  return `USD ${(value ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
-}
 
 export function CommissionApprovalConsole({
   entries,
@@ -129,8 +126,8 @@ export function CommissionApprovalConsole({
                     <td className="py-3.5 pr-4 align-middle font-medium">{entry.id}</td>
                     <td className="py-3.5 pr-4 align-middle">{entry.reseller}</td>
                     <td className="py-3.5 pr-4 align-middle">{entry.country}</td>
-                    <td className="py-3.5 pr-4 align-middle">{money(entry.baseAmount)}</td>
-                    <td className="py-3.5 pr-4 align-middle">{money(entry.commissionAmount)}</td>
+                    <td className="py-3.5 pr-4 align-middle">{formatMoney(entry.baseAmount)}</td>
+                    <td className="py-3.5 pr-4 align-middle">{formatMoney(entry.commissionAmount)}</td>
                     <td className="py-3.5 pr-4 align-middle">
                       <Badge tone={STATUS_TONE[entry.status]}>{entry.status}</Badge>
                     </td>

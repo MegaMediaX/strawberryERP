@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ExpenseCategoryRow, PnlSummary } from "@/lib/admin/pnl";
+import { formatAmount } from "@/lib/money-ui";
 
-const money = (n: number) => `$${n.toLocaleString()}`;
+const money = (n: number) => `$${formatAmount(n)}`;
 
 function StatCard({ label, value, tone }: { label: string; value: string; tone: string }) {
   return (

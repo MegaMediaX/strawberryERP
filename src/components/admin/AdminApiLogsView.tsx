@@ -8,11 +8,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Input, Select } from "@/components/ui/field";
 import { useStickyFilters } from "@/components/regional/useStickyFilters";
 import { filterApiLogs, type ApiLogFilters } from "@/lib/admin/api-center";
+import { formatInstant } from "@/lib/datetime-ui";
 import type { ApiLog } from "@/lib/phase2-data";
 
-const fmtTime = (iso: string) => (iso ? iso.replace("T", " ").slice(0, 16) : "—");
-
-export function AdminApiLogsView({ logs }: { logs: ApiLog[] }) {
+export function AdminApiLogsView({ logs, timeZone }: { logs: ApiLog[]; timeZone: string }) {
   const [filters, setFilters] = useStickyFilters<ApiLogFilters>("lebtech.admin.apilogs.filters", {});
   const keys = useMemo(() => [...new Set(logs.map((l) => l.apiKey))].sort(), [logs]);
   const visible = useMemo(() => filterApiLogs(logs, filters), [logs, filters]);
@@ -39,7 +38,7 @@ export function AdminApiLogsView({ logs }: { logs: ApiLog[] }) {
             <tbody>
               {visible.map((l) => (
                 <tr key={l.id} className="border-b border-[var(--border)] last:border-0">
-                  <td className="py-3 pr-4 align-middle text-[var(--muted)]">{fmtTime(l.createdAt)}</td>
+                  <td className="py-3 pr-4 align-middle text-[var(--muted)]">{formatInstant(l.createdAt, timeZone)}</td>
                   <td className="py-3 pr-4 align-middle font-medium">{l.apiKey}</td>
                   <td className="py-3 pr-4 align-middle">{l.method}</td>
                   <td className="py-3 pr-4 align-middle"><code className="font-mono text-xs">{l.endpoint}</code></td>

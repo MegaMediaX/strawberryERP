@@ -8,12 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Field, Input, Select } from "@/components/ui/field";
+import { formatInstant } from "@/lib/datetime-ui";
 import { INTEGRATION_SPECS, providerSpec, statusTone, type IntegrationTestResult } from "@/lib/admin/integrations";
 import type { IntegrationSetting, IntegrationType } from "@/lib/phase2-data";
 
 type ConfigValue = string | boolean | number;
 
-export function AdminIntegrationForm({ type, setting }: { type: IntegrationType; setting: IntegrationSetting }) {
+export function AdminIntegrationForm({ type, setting, timeZone }: { type: IntegrationType; setting: IntegrationSetting; timeZone: string }) {
   const router = useRouter();
   const spec = INTEGRATION_SPECS[type];
   const [provider, setProvider] = useState(setting.provider || spec.providers[0].provider);
@@ -65,7 +66,7 @@ export function AdminIntegrationForm({ type, setting }: { type: IntegrationType;
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold">Status</span>
             <Badge tone={statusTone(setting.connectionStatus)}>{setting.connectionStatus}</Badge>
-            {setting.lastTestedAt && <span className="text-xs text-[var(--muted)]">last tested {setting.lastTestedAt.slice(0, 16).replace("T", " ")}</span>}
+            {setting.lastTestedAt && <span className="text-xs text-[var(--muted)]">last tested {formatInstant(setting.lastTestedAt, timeZone)}</span>}
           </div>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={enabled} onChange={(e) => { setEnabled(e.target.checked); setSaved(false); }} /> Enabled</label>
         </div>

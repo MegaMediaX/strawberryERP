@@ -6,13 +6,14 @@ import { Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ResellerRow } from "@/lib/regional/reseller-list";
+import { formatAmount } from "@/lib/money-ui";
 import type {
   CountryPerformanceRow,
   LeadConversionReport,
   RevenueReceiptsReport,
 } from "@/lib/regional/regional-reports";
 
-const money = (n: number) => `$${n.toLocaleString()}`;
+const money = (n: number) => `$${formatAmount(n)}`;
 const csvCell = (v: string | number) => `"${String(v).replaceAll('"', '""')}"`;
 function downloadCsv(name: string, headers: string[], rows: (string | number)[][]) {
   const csv = [headers.map(csvCell).join(","), ...rows.map((r) => r.map(csvCell).join(","))].join("\n");
