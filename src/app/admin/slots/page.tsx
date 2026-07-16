@@ -3,17 +3,15 @@ import { ClipboardCheck, Pencil } from "lucide-react";
 
 import { FloorPlanMap } from "@/components/admin/FloorPlanMap";
 import { buildFloorPlan } from "@/lib/admin/floor-plan";
-import { getSlotConfig, getSlotLayout, getSlotStatuses, getSlotZones } from "@/lib/dev-store";
+import { readFloorPlan } from "@/lib/admin/slots-persistence";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 
 export default async function AdminSlotsPage() {
   const session = await getPortalUiSession();
   if (!session) return null;
   const u = session.effectiveUser;
-  const data = buildFloorPlan({
-    zones: getSlotZones(), layout: getSlotLayout(), statuses: getSlotStatuses(),
-    config: getSlotConfig(), now: new Date().toISOString(),
-  });
+  const snapshot = await readFloorPlan();
+  const data = buildFloorPlan({ ...snapshot, now: new Date().toISOString() });
   const pendingCount = data.slots.filter((s) => s.status === "OnHold").length;
   return (
     <div className="grid gap-5">

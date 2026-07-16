@@ -1,6 +1,7 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
 import { devStoreResponse } from "@/lib/backend/backend-router";
-import { appendAudit, getSlotConfig, getSlotLayout, getSlotStatuses, setSlotStatus } from "@/lib/dev-store";
+import { appendAudit } from "@/lib/dev-store";
+import { persistSlotStatus, readFloorPlan } from "@/lib/admin/slots-persistence";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { applyTransition, normalizeExpiredHolds, type SlotAction } from "@/lib/admin/slot-status";
 import { parseSlot } from "@/lib/admin/slots";
@@ -23,11 +24,11 @@ export async function POST(request: Request) {
   let p: { label?: string; action?: SlotAction };
   try { p = (await request.json()) as typeof p; } catch { return jsonError("Invalid request body."); }
   if (!p.label || !p.action || !RESELLER_ACTIONS.includes(p.action)) return jsonError("A valid slot label and action are required.");
-  if (!parseSlot(p.label) || !getSlotLayout()[p.label]) return jsonError("Unknown slot label.", 400);
 
   const now = new Date().toISOString();
-  const config = getSlotConfig();
-  const current = normalizeExpiredHolds(getSlotStatuses(), now, config.calendar)[p.label] ?? { status: "Available" as const };
+  const { config, layout, statuses } = await readFloorPlan();
+  if (!parseSlot(p.label) || !layout[p.label]) return jsonError("Unknown slot label.", 400);
+  const current = normalizeExpiredHolds(statuses, now, config.calendar)[p.label] ?? { status: "Available" as const };
   // Act AS the effective user: a Super Admin impersonating a reseller holds as
   // that reseller; a genuine reseller holds as themselves. A real (non-
   // impersonating) Super Admin is still blocked by canActOnSlot.
@@ -37,11 +38,9 @@ export async function POST(request: Request) {
   const result = applyTransition(current, p.action, { role: acting.role, actor, now });
   if (!result.ok) return jsonError(result.error, 403);
 
-  // APP-10 accepted limitation: slot holds persist ONLY in the in-memory
-  // dev-store (no Frappe DocType exists for slots). The response is tagged
-  // source:"dev-store" and holds are ephemeral — reset on restart and not shared
-  // across instances. Tracked in docs/exhibition-slots-persistence.md.
-  setSlotStatus(p.label, result.next);
+  // Persisted via the slot seam: Frappe when configured (durable, APP-10 fixed),
+  // else in-memory dev-store. The response source reflects which one handled it.
+  await persistSlotStatus(p.label, result.next);
   const audit = appendAudit({ entityType: "SlotHold", entityId: p.label, action: p.action === "requestHold" ? "hold" : "cancel", oldValue: current.status, newValue: result.next.status, performedBy: session.auditLabel });
   return devStoreResponse({ slot: p.label, status: result.next, message: p.action === "requestHold" ? `Slot ${p.label} held — pending Super Admin approval.` : `Hold on ${p.label} cancelled.` }, { audit });
 }

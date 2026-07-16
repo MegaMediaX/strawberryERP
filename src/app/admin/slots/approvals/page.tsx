@@ -3,16 +3,14 @@ import { ArrowLeft } from "lucide-react";
 
 import { AdminSlotApprovalsView } from "@/components/admin/AdminSlotApprovalsView";
 import { buildFloorPlan } from "@/lib/admin/floor-plan";
-import { getSlotConfig, getSlotLayout, getSlotStatuses, getSlotZones } from "@/lib/dev-store";
+import { readFloorPlan } from "@/lib/admin/slots-persistence";
 import { getPortalUiSession } from "@/lib/security/ui-session";
 
 export default async function AdminSlotApprovalsPage() {
   const session = await getPortalUiSession();
   if (!session) return null;
-  const data = buildFloorPlan({
-    zones: getSlotZones(), layout: getSlotLayout(), statuses: getSlotStatuses(),
-    config: getSlotConfig(), now: new Date().toISOString(),
-  });
+  const snapshot = await readFloorPlan();
+  const data = buildFloorPlan({ ...snapshot, now: new Date().toISOString() });
   const pending = data.slots.filter((s) => s.status === "OnHold");
   const zoneNames = Object.fromEntries(data.zones.map((z) => [z.id, z.name]));
   return (
