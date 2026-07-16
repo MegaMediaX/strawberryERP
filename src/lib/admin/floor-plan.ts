@@ -31,6 +31,9 @@ export interface FloorPlanData {
   zones: SlotZone[];
   slots: FloorPlanSlot[];
   calendar: BusinessCalendar;
+  /** When set, the map renders this venue image with booths at their normalized
+   * (0-1) x/y. Empty = the abstract zone-grid map. */
+  floorImageUrl?: string;
 }
 
 export function buildFloorPlan(input: {
@@ -69,6 +72,7 @@ export function buildFloorPlan(input: {
     zones: [...input.zones].sort((a, b) => a.order - b.order),
     slots,
     calendar: input.config.calendar,
+    floorImageUrl: input.config.floorImageUrl || undefined,
   };
 }
 

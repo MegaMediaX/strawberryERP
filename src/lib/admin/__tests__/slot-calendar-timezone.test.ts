@@ -56,7 +56,9 @@ describe("slot calendar timezone follows platform settings", () => {
     setTimezone("Europe/Paris");
     const config = getSlotConfig();
     expect(config.currency).toBe("USD");
-    expect(config.priceBySlot.A1).toBe(1500);
+    // Real LEBTECH 2026 seed: section A booths are 900; every booth is active.
+    expect(config.priceBySlot.A1).toBe(900);
     expect(config.activeSlots).toContain("A1");
+    expect(config.floorImageUrl).toBe("/exhibition/lebtech-2026-floor.png");
   });
 });

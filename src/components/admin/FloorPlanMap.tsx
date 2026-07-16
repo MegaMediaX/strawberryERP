@@ -101,7 +101,32 @@ export function FloorPlanMap({ data, role, actor, isAdmin }: { data: FloorPlanDa
 
       {err && <p className="text-xs font-semibold text-rose-600 dark:text-rose-400">{err}</p>}
 
-      {/* Map */}
+      {/* Visual floor-plan map: booths positioned over the venue image. */}
+      {data.floorImageUrl && (
+        <Card><CardContent className="pt-4">
+          <div className="relative w-full overflow-hidden rounded-lg border border-[var(--border)] bg-white" style={{ aspectRatio: "2339 / 1654" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element -- static public asset, no optimization needed */}
+            <img src={data.floorImageUrl} alt="LEBTECH 2026 exhibition floor plan" className="absolute inset-0 h-full w-full object-contain" />
+            {visibleSlots.map((s) => (
+              <button
+                key={s.label}
+                type="button"
+                onClick={() => setSelected(s.label)}
+                aria-label={`${s.label} — ${STATUS_META[s.status].label}`}
+                title={`${s.label} · ${STATUS_META[s.status].label}${s.heldBy ? ` · ${s.heldBy}` : ""}`}
+                style={{ left: `${s.x * 100}%`, top: `${s.y * 100}%`, width: "2.4%", minWidth: 14, aspectRatio: "1 / 1" }}
+                className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-[3px] border border-white/70 text-[6px] font-bold leading-none flex items-center justify-center opacity-90 transition hover:opacity-100 hover:z-10 ${BG[s.status]} ${selected === s.label ? "z-10 scale-[1.6] opacity-100 ring-2 ring-[var(--brand)]" : ""}`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-center text-[11px] text-[var(--muted)]">LEBTECH 2026 · click a booth for details</p>
+        </CardContent></Card>
+      )}
+
+      {/* Fallback: abstract zone-grid map (no floor image). */}
+      {!data.floorImageUrl && (
       <div className="grid gap-4">
         {data.zones.map((z) => {
           const slots = byZone.get(z.id) ?? [];
@@ -129,6 +154,7 @@ export function FloorPlanMap({ data, role, actor, isAdmin }: { data: FloorPlanDa
           );
         })}
       </div>
+      )}
 
       {/* Detail panel */}
       {sel && (

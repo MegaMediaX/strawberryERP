@@ -13,6 +13,9 @@ export interface SlotConfig {
   priceBySlot: Record<string, number>;
   currency: string;
   calendar: BusinessCalendar;
+  /** Venue floor-plan image the map renders behind the booths. Booth x/y are
+   * normalized (0-1) over this image when set. Empty = abstract zone-grid map. */
+  floorImageUrl?: string;
 }
 
 /** A slot's position on the floor-plan canvas (P2 editor authors this). */

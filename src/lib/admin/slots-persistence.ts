@@ -104,6 +104,7 @@ export function adaptFrappeFloorPlan(data: FrappeFloorPlan): FloorPlanSnapshot {
     activeSlots,
     priceBySlot,
     currency: data.config?.currency ?? "USD",
+    floorImageUrl: data.config?.floorImageUrl || undefined,
     calendar: parseCalendar(data.config?.calendarJson),
   };
 
