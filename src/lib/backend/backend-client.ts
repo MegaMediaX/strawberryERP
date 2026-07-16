@@ -126,4 +126,22 @@ export const frappeMethodMap: Record<string, { get?: string; post?: string; patc
   "reports/pnl": {
     get: "lebtech_partner_platform.api.reports.pnl_summary",
   },
+  // Exhibition slots (APP-10 fix). Reads are whole-map + unscoped; writes are
+  // gated in the Next.js routes (Super Admin for layout/config; the slot state
+  // machine for holds) BEFORE they reach these methods.
+  "slots/floor-plan": {
+    get: "lebtech_partner_platform.api.slots.get_floor_plan",
+  },
+  "slots/layout": {
+    post: "lebtech_partner_platform.api.slots.save_layout",
+    patch: "lebtech_partner_platform.api.slots.save_layout",
+  },
+  "slots/config": {
+    post: "lebtech_partner_platform.api.slots.save_config",
+    patch: "lebtech_partner_platform.api.slots.save_config",
+  },
+  "slots/status": {
+    post: "lebtech_partner_platform.api.slots.set_slot_status",
+    patch: "lebtech_partner_platform.api.slots.set_slot_status",
+  },
 };

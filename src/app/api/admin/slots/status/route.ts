@@ -1,6 +1,7 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
 import { devStoreResponse } from "@/lib/backend/backend-router";
-import { appendAudit, appendSlotInvoiceLine, getSlotConfig, getSlotLayout, getSlotStatuses, removeSlotInvoiceLine, setSlotStatus } from "@/lib/dev-store";
+import { appendAudit, appendSlotInvoiceLine, removeSlotInvoiceLine } from "@/lib/dev-store";
+import { persistSlotStatus, readFloorPlan } from "@/lib/admin/slots-persistence";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { applyTransition, normalizeExpiredHolds, type SlotAction } from "@/lib/admin/slot-status";
 import { parseSlot } from "@/lib/admin/slots";
@@ -21,11 +22,11 @@ export async function PATCH(request: Request) {
   let p: { label?: string; action?: SlotAction };
   try { p = (await request.json()) as typeof p; } catch { return jsonError("Invalid request body."); }
   if (!p.label || !p.action || !ADMIN_ACTIONS.includes(p.action)) return jsonError("A valid slot label and action are required.");
-  if (!parseSlot(p.label) || !getSlotLayout()[p.label]) return jsonError("Unknown slot label.", 400);
 
   const now = new Date().toISOString();
-  const config = getSlotConfig();
-  const current = normalizeExpiredHolds(getSlotStatuses(), now, config.calendar)[p.label] ?? { status: "Available" as const };
+  const { config, layout, statuses } = await readFloorPlan();
+  if (!parseSlot(p.label) || !layout[p.label]) return jsonError("Unknown slot label.", 400);
+  const current = normalizeExpiredHolds(statuses, now, config.calendar)[p.label] ?? { status: "Available" as const };
 
   const result = applyTransition(current, p.action, { role: session.user.role, actor: session.user.name, now });
   if (!result.ok) return jsonError(result.error, 400);
@@ -48,7 +49,7 @@ export async function PATCH(request: Request) {
     removedInvoiceLine = removeSlotInvoiceLine({ invoiceId: current.reservedInvoice, label: p.label });
   }
 
-  setSlotStatus(p.label, result.next);
+  await persistSlotStatus(p.label, result.next);
   const auditValue = draftInvoice
     ? `${result.next.status} · ${draftInvoice}`
     : removedInvoiceLine

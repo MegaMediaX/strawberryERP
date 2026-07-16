@@ -1,0 +1,62 @@
+{
+  "doctype": "DocType",
+  "name": "Exhibition Zone",
+  "module": "LebTech Partner Platform",
+  "custom": 0,
+  "issingle": 0,
+  "is_submittable": 0,
+  "istable": 0,
+  "track_changes": 1,
+  "autoname": "field:zone_id",
+  "fields": [
+    {
+      "fieldname": "zone_id",
+      "fieldtype": "Data",
+      "label": "Zone ID",
+      "reqd": true,
+      "unique": true
+    },
+    {
+      "fieldname": "zone_name",
+      "fieldtype": "Data",
+      "label": "Zone Name",
+      "reqd": true
+    },
+    {
+      "fieldname": "sort_order",
+      "fieldtype": "Int",
+      "label": "Sort Order",
+      "default": "0"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Super Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1
+    },
+    {
+      "role": "Regional Director",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0
+    },
+    {
+      "role": "Reseller Admin",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0
+    },
+    {
+      "role": "Sales Team User",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0
+    }
+  ]
+}

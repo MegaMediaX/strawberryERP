@@ -1,0 +1,67 @@
+{
+  "doctype": "DocType",
+  "name": "Exhibition Config",
+  "module": "LebTech Partner Platform",
+  "custom": 0,
+  "issingle": 1,
+  "is_submittable": 0,
+  "istable": 0,
+  "track_changes": 1,
+  "fields": [
+    {
+      "fieldname": "slots_per_letter",
+      "fieldtype": "Int",
+      "label": "Slots Per Letter",
+      "default": "6",
+      "reqd": true
+    },
+    {
+      "fieldname": "default_currency",
+      "fieldtype": "Data",
+      "label": "Default Currency",
+      "default": "USD"
+    },
+    {
+      "fieldname": "calendar_json",
+      "fieldtype": "Small Text",
+      "label": "Business Calendar (JSON)",
+      "description": "Serialized BusinessCalendar: timezone, workingDays, startHour, endHour, holidays."
+    },
+    {
+      "fieldname": "floor_image_url",
+      "fieldtype": "Data",
+      "label": "Floor Plan Image URL",
+      "description": "Attachment URL of the venue floor-plan image the map renders behind the slots (P2/P3)."
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Super Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0
+    },
+    {
+      "role": "Regional Director",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0
+    },
+    {
+      "role": "Reseller Admin",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0
+    },
+    {
+      "role": "Sales Team User",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0
+    }
+  ]
+}

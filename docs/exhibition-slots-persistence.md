@@ -1,6 +1,9 @@
 # Exhibition Slots — Persistence Limitation (APP-10)
 
-**Status:** Accepted limitation, tracked. Durable persistence is a follow-up.
+**Status:** RESOLVED (P1) — slots now persist to Frappe when configured. The
+in-memory dev-store remains the fallback for local/unconfigured runs. See the
+"Resolution" section at the bottom. The limitation notes below are retained as
+the historical record of what was fixed.
 
 ## What
 
@@ -43,13 +46,36 @@ gap. The routes are honest about it (dev-store source tag, no fake durability),
 and the constraint is called out in code comments (`dev-store.ts`,
 `slots/hold/route.ts`) and tracked in `docs/production-blockers.md`.
 
-## Follow-up to make it durable
+## Resolution (P1 — `feat/exhibition-floor-persistence`)
 
-1. Add a `Slot`/`Slot Hold` (and `Slot Layout`) Frappe DocType under
-   `frappe_app/lebtech_partner_platform/.../doctype/`.
-2. Add whitelisted API methods (list/create/update) and `frappeMethodMap`
-   entries so the slot routes can route through `maybeRouteToFrappe` like the
-   other resources.
-3. Remove the fail-loud exemption once slots have a real backend path.
+Slots now have a real Frappe backend, so state survives restart/redeploy and is
+consistent across instances.
 
-Until then, treat exhibition-slot state as ephemeral.
+1. **DocTypes** — three, under
+   `frappe_app/lebtech_partner_platform/.../doctype/`:
+   - `Exhibition Config` (Singleton) — `slots_per_letter`, `calendar_json`,
+     `default_currency`, `floor_image_url`.
+   - `Exhibition Zone` — `zone_id`, `zone_name`, `sort_order`.
+   - `Exhibition Slot` (one row per label) — merges layout + status + price +
+     hold fields, so a hold is a single atomic row update (also removes the
+     scale-out race).
+2. **API** — `lebtech_partner_platform/api/slots.py`: `get_floor_plan`,
+   `save_layout`, `save_config`, `set_slot_status`, registered in
+   `frappeMethodMap` (`slots/floor-plan`, `slots/layout`, `slots/config`,
+   `slots/status`).
+3. **Async seam** — `src/lib/admin/slots-persistence.ts` (`readFloorPlan`,
+   `persistSlotStatus`, `persistLayout`) routes every slot read/write to Frappe
+   when configured, else the dev-store. The 3 pages + 3 routes use it.
+
+**Verified** on a throwaway Frappe **v15.111.0** bench (matching production):
+`bench install-app` + `migrate` applied all three DocTypes cleanly, and a
+`save_layout → set_slot_status → get_floor_plan` round-trip returned the correct
+data. TS side: full suite green incl. adapter + method-map-contract coverage.
+
+### Deliberate: dev-store fallback kept (not fail-loud yet)
+
+Reads/writes fall back to the dev-store when Frappe has no slot method (e.g.
+before the production `bench migrate`). This lets the code deploy BEFORE the prod
+migration without breaking the map. Removing the fail-loud exemption for slot
+routes is a **follow-up** to do once production Frappe is migrated and the round
+trip is confirmed against it.

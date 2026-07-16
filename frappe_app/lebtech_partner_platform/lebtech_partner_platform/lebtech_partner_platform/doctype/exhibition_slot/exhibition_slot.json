@@ -1,0 +1,110 @@
+{
+  "doctype": "DocType",
+  "name": "Exhibition Slot",
+  "module": "LebTech Partner Platform",
+  "custom": 0,
+  "issingle": 0,
+  "is_submittable": 0,
+  "istable": 0,
+  "track_changes": 1,
+  "autoname": "field:slot_label",
+  "fields": [
+    {
+      "fieldname": "slot_label",
+      "fieldtype": "Data",
+      "label": "Slot Label",
+      "reqd": true,
+      "unique": true,
+      "description": "Catalog label, e.g. A1. Primary key."
+    },
+    {
+      "fieldname": "zone",
+      "fieldtype": "Data",
+      "label": "Zone ID",
+      "description": "References Exhibition Zone.zone_id. Data (not Link) to mirror the layout's zoneId string and avoid a hard FK on an optional placement."
+    },
+    {
+      "fieldname": "pos_x",
+      "fieldtype": "Int",
+      "label": "Grid X",
+      "default": "0"
+    },
+    {
+      "fieldname": "pos_y",
+      "fieldtype": "Int",
+      "label": "Grid Y",
+      "default": "0"
+    },
+    {
+      "fieldname": "price",
+      "fieldtype": "Float",
+      "label": "Price",
+      "default": "0"
+    },
+    {
+      "fieldname": "is_active",
+      "fieldtype": "Check",
+      "label": "Active",
+      "default": "1"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Available\nOnHold\nReserved\nInactive",
+      "default": "Available",
+      "reqd": true
+    },
+    {
+      "fieldname": "held_by",
+      "fieldtype": "Data",
+      "label": "Held By"
+    },
+    {
+      "fieldname": "held_at",
+      "fieldtype": "Data",
+      "label": "Held At (ISO)",
+      "description": "ISO-8601 instant, stored as Data to preserve the exact string the working-hours math consumes."
+    },
+    {
+      "fieldname": "reserved_invoice",
+      "fieldtype": "Data",
+      "label": "Reserved Invoice"
+    },
+    {
+      "fieldname": "approved_by",
+      "fieldtype": "Data",
+      "label": "Approved By"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Super Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1
+    },
+    {
+      "role": "Regional Director",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0
+    },
+    {
+      "role": "Reseller Admin",
+      "read": 1,
+      "write": 1,
+      "create": 0,
+      "delete": 0
+    },
+    {
+      "role": "Sales Team User",
+      "read": 1,
+      "write": 1,
+      "create": 0,
+      "delete": 0
+    }
+  ]
+}
