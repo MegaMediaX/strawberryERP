@@ -95,12 +95,28 @@ def seed_exhibition():
     Skips entirely if any Exhibition Slot already exists, so a re-run never
     clobbers live holds/reservations. Safe to call on every migrate.
     """
+    # Config: fill each field only when unset, so an admin who has already changed
+    # currency / slots-per-letter (or cleared the floor image to use the abstract
+    # map) is never reset by a later migrate. Each field guards itself.
     config = frappe.get_single("Exhibition Config")
+    dirty = False
     if not config.floor_image_url:
-        config.slots_per_letter = 12
-        config.default_currency = "USD"
         config.floor_image_url = FLOOR_IMAGE_URL
+        dirty = True
+    if not config.slots_per_letter:
+        config.slots_per_letter = 12
+        dirty = True
+    if not config.default_currency:
+        config.default_currency = "USD"
+        dirty = True
+    if dirty:
         config.save(ignore_permissions=True)
+
+    # Zones + booths are seeded ONLY on the very first run (no slots yet). Placing
+    # the zone loop after this guard means a later migrate cannot resurrect a zone
+    # the admin deleted, matching the "never clobber live state" contract.
+    if frappe.db.count("Exhibition Slot") > 0:
+        return
 
     for zone_id, zone_name, order in ZONES:
         if not frappe.db.exists("Exhibition Zone", zone_id):
@@ -108,8 +124,6 @@ def seed_exhibition():
                 {"doctype": "Exhibition Zone", "zone_id": zone_id, "zone_name": zone_name, "sort_order": order}
             ).insert(ignore_permissions=True)
 
-    if frappe.db.count("Exhibition Slot") > 0:
-        return  # booths already present — never overwrite live state
     for label, zone_id, x, y in BOOTHS:
         frappe.get_doc(
             {

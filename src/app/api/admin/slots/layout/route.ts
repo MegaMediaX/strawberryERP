@@ -3,7 +3,7 @@ import { devStoreResponse } from "@/lib/backend/backend-router";
 import { appendAudit } from "@/lib/dev-store";
 import { persistLayout, readFloorPlan } from "@/lib/admin/slots-persistence";
 import { resolvePortalSession } from "@/lib/portal-security";
-import { parseSlot, type SlotLayoutEntry, type SlotZone } from "@/lib/admin/slots";
+import { isPlaceableSlotLabel, type SlotLayoutEntry, type SlotZone } from "@/lib/admin/slots";
 
 interface SavePayload {
   zones?: SlotZone[];
@@ -25,7 +25,7 @@ export async function PATCH(request: Request) {
   const zoneIds = new Set(p.zones.map((z) => z.id));
 
   for (const [label, pos] of Object.entries(p.layout)) {
-    if (!parseSlot(label)) return jsonError(`Invalid slot label: ${label}.`);
+    if (!isPlaceableSlotLabel(label)) return jsonError(`Invalid slot label: ${label}.`);
     if (!zoneIds.has(pos.zoneId)) return jsonError(`Slot ${label} references an unknown zone.`);
     if (!Number.isFinite(pos.x) || !Number.isFinite(pos.y) || pos.x < 0 || pos.y < 0) return jsonError(`Slot ${label} has an invalid position.`);
   }

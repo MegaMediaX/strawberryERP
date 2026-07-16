@@ -68,6 +68,17 @@ export function isValidSlotLabel(label: string, slotsPerLetter: number = DEFAULT
   return parsed.number >= 1 && parsed.number <= slotsPerLetter;
 }
 
+// Real-venue placement labels are broader than parseSlot's strict A1 grammar:
+// multi-letter sections and hyphenated sub-units (e.g. "LB5-1"). This is the gate
+// for a label that can be PLACED on the floor plan; parseSlot stays strict for the
+// generated catalog.
+const PLACEMENT_LABEL_RE = /^[A-Z]{1,3}[0-9]+(?:-[0-9]+)?$/;
+
+/** True if `label` is a well-formed booth label that may appear in a layout. */
+export function isPlaceableSlotLabel(label: string): boolean {
+  return PLACEMENT_LABEL_RE.test((label ?? "").trim().toUpperCase());
+}
+
 /** Group a flat list of labels into per-letter rows (for palette/map rendering). */
 export function groupSlotsByLetter(labels: readonly string[]): { letter: string; slots: string[] }[] {
   const map = new Map<string, string[]>();

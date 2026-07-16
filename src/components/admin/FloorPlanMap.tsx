@@ -23,6 +23,13 @@ const BG: Record<SlotStatus, string> = {
 };
 const DOT: Record<SlotStatus, string> = { Available: "bg-emerald-500", OnHold: "bg-amber-500", Reserved: "bg-rose-500", Inactive: "bg-slate-400" };
 
+// Aspect ratio of the shipped LEBTECH 2026 floor image (2339×1654, A4 landscape).
+// The container matches it so `object-contain` doesn't letterbox and shift the
+// booth overlay off its coordinates. A custom-ratio image (once the layout editor
+// supports uploads) will need this to travel with the image in config; today only
+// the one asset ships, so it is a named constant, not a magic pair of numbers.
+const FLOOR_IMAGE_ASPECT = "2339 / 1654";
+
 const money = (n: number) => `$${formatAmount(n)}`;
 
 /** Plain calendar time until the (already working-hours-correct) expiry instant. */
@@ -104,7 +111,7 @@ export function FloorPlanMap({ data, role, actor, isAdmin }: { data: FloorPlanDa
       {/* Visual floor-plan map: booths positioned over the venue image. */}
       {data.floorImageUrl && (
         <Card><CardContent className="pt-4">
-          <div className="relative w-full overflow-hidden rounded-lg border border-[var(--border)] bg-white" style={{ aspectRatio: "2339 / 1654" }}>
+          <div className="relative w-full overflow-hidden rounded-lg border border-[var(--border)] bg-white" style={{ aspectRatio: FLOOR_IMAGE_ASPECT }}>
             {/* eslint-disable-next-line @next/next/no-img-element -- static public asset, no optimization needed */}
             <img src={data.floorImageUrl} alt="LEBTECH 2026 exhibition floor plan" className="absolute inset-0 h-full w-full object-contain" />
             {visibleSlots.map((s) => (

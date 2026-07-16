@@ -4,7 +4,6 @@ import { appendAudit, appendSlotInvoiceLine, removeSlotInvoiceLine } from "@/lib
 import { persistSlotStatus, readFloorPlan } from "@/lib/admin/slots-persistence";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { applyTransition, normalizeExpiredHolds, type SlotAction } from "@/lib/admin/slot-status";
-import { parseSlot } from "@/lib/admin/slots";
 
 /**
  * §slots P3 — Super-Admin slot actions (approve / reject / release /
@@ -25,7 +24,9 @@ export async function PATCH(request: Request) {
 
   const now = new Date().toISOString();
   const { config, layout, statuses } = await readFloorPlan();
-  if (!parseSlot(p.label) || !layout[p.label]) return jsonError("Unknown slot label.", 400);
+  // Layout presence is the real gate (seeded catalog includes LB5-1 etc., which the
+  // strict A1 grammar rejects); a label in the layout is by definition a valid booth.
+  if (!p.label || !layout[p.label]) return jsonError("Unknown slot label.", 400);
   const current = normalizeExpiredHolds(statuses, now, config.calendar)[p.label] ?? { status: "Available" as const };
 
   const result = applyTransition(current, p.action, { role: session.user.role, actor: session.user.name, now });

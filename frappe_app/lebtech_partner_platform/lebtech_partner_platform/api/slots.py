@@ -105,8 +105,10 @@ def save_layout(**payload):
         else:
             doc = frappe.get_doc({"doctype": "Exhibition Slot", "slot_label": label, "status": "Available"})
         doc.zone = pos.get("zoneId")
-        doc.pos_x = int(pos.get("x") or 0)
-        doc.pos_y = int(pos.get("y") or 0)
+        # Normalized 0-1 image coordinates — float, NOT int. int() truncates every
+        # booth to 0 and stacks the whole map in the corner (both reviewers flagged).
+        doc.pos_x = float(pos.get("x") or 0)
+        doc.pos_y = float(pos.get("y") or 0)
         doc.price = float(prices.get(label) or 0)
         doc.is_active = 1 if label in active_set else 0
         doc.save() if not doc.is_new() else doc.insert()
