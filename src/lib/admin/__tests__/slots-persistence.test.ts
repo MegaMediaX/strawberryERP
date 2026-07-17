@@ -1,6 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { adaptFrappeFloorPlan } from "@/lib/admin/slots-persistence";
+import { adaptFrappeFloorPlan, readFloorPlan } from "@/lib/admin/slots-persistence";
+
+// readFloorPlan goes through the real client seam. Frappe wraps whitelisted-method
+// returns in { message: ... }; this suite pins that readFloorPlan unwraps it — the
+// integration gap that shipped an empty map to production despite adapter + bench
+// unit tests both passing.
+vi.mock("@/lib/frappe-client", () => ({ isFrappeConfigured: () => true }));
+const handleMock = vi.fn();
+vi.mock("@/lib/backend/frappe-client", () => ({ frappeBackendClient: { source: "frappe", handle: (...a: unknown[]) => handleMock(...a) } }));
 
 /**
  * The adapter maps Frappe's merged Exhibition Slot rows back into the four
@@ -66,5 +74,28 @@ describe("adaptFrappeFloorPlan", () => {
     expect(empty.config.currency).toBe("USD");
     // A missing calendarJson falls back to the platform default calendar.
     expect(empty.config.calendar.workingDays).toEqual([1, 2, 3, 4, 5]);
+  });
+});
+
+describe("readFloorPlan — unwraps Frappe's { message } envelope", () => {
+  const floorPlan = {
+    config: { slotsPerLetter: 12, currency: "USD", floorImageUrl: "/exhibition/lebtech-2026-floor.png" },
+    zones: [{ zone_id: "A", zone_name: "Section A", sort_order: 0 }],
+    slots: [{ slot_label: "A1", zone: "A", pos_x: 0.63, pos_y: 0.41, price: 1500, is_active: 1, status: "Available" }],
+  };
+
+  it("carries floorImageUrl + booths through when the client returns { data: { message } }", async () => {
+    // Exactly what frappeRequest returns: the raw Frappe envelope, message-wrapped.
+    handleMock.mockResolvedValueOnce({ source: "frappe", data: { message: floorPlan } });
+    const snap = await readFloorPlan();
+    expect(snap.config.floorImageUrl).toBe("/exhibition/lebtech-2026-floor.png");
+    expect(snap.layout.A1).toEqual({ zoneId: "A", x: 0.63, y: 0.41 });
+    expect(snap.zones.map((z) => z.id)).toEqual(["A"]);
+  });
+
+  it("also works if a caller returns the already-unwrapped shape", async () => {
+    handleMock.mockResolvedValueOnce({ source: "frappe", data: floorPlan });
+    const snap = await readFloorPlan();
+    expect(snap.config.floorImageUrl).toBe("/exhibition/lebtech-2026-floor.png");
   });
 });

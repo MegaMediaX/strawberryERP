@@ -124,7 +124,14 @@ async function tryFrappe(resource: string, method: "get" | "post" | "patch", pay
   if (!isFrappeConfigured()) return null;
   try {
     const result = await frappeBackendClient.handle({ resource, method, payload });
-    return result ? result.data ?? true : null;
+    if (!result) return null;
+    // Frappe wraps every whitelisted-method return in { message: ... }. The client
+    // passes that envelope through untouched, so unwrap it here — otherwise the
+    // adapter sees { message: {...} } instead of { config, zones, slots } and the
+    // whole floor plan (image + booths) comes back empty.
+    const raw = result.data;
+    const unwrapped = raw && typeof raw === "object" && "message" in raw ? (raw as { message: unknown }).message : raw;
+    return unwrapped ?? true;
   } catch {
     // Frappe configured but the method/DocTypes are not there yet (pre-migration),
     // or a transient connection error: fall back rather than break the map.
