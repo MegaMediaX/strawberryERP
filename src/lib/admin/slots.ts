@@ -69,14 +69,22 @@ export function isValidSlotLabel(label: string, slotsPerLetter: number = DEFAULT
 }
 
 // Real-venue placement labels are broader than parseSlot's strict A1 grammar:
-// multi-letter sections and hyphenated sub-units (e.g. "LB5-1"). This is the gate
-// for a label that can be PLACED on the floor plan; parseSlot stays strict for the
-// generated catalog.
-const PLACEMENT_LABEL_RE = /^[A-Z]{1,3}[0-9]+(?:-[0-9]+)?$/;
+// multi-letter sections and hyphenated sub-units ("LB5-1"), plus named features
+// like "Island". A label must start with a letter, then letters/digits, with an
+// optional "-N" sub-unit. This is the gate for a label that can be PLACED on the
+// floor plan; parseSlot stays strict for the generated catalog.
+const PLACEMENT_LABEL_RE = /^[A-Z][A-Z0-9]*(?:-[0-9]+)?$/;
+
+// Broadening to allow letter-only labels re-admits prototype-chain keys, which the
+// hold/status routes' Object.hasOwn gate already blocks — but the layout-SAVE route
+// uses each label as a NEW object key, so deny them here too. (Uppercased before the
+// check; "__proto__" is already rejected by the leading-letter rule.)
+const RESERVED_LABELS = new Set(["CONSTRUCTOR", "PROTOTYPE", "TOSTRING", "HASOWNPROPERTY", "VALUEOF", "ISPROTOTYPEOF"]);
 
 /** True if `label` is a well-formed booth label that may appear in a layout. */
 export function isPlaceableSlotLabel(label: string): boolean {
-  return PLACEMENT_LABEL_RE.test((label ?? "").trim().toUpperCase());
+  const s = (label ?? "").trim().toUpperCase();
+  return PLACEMENT_LABEL_RE.test(s) && !RESERVED_LABELS.has(s);
 }
 
 /** Group a flat list of labels into per-letter rows (for palette/map rendering). */

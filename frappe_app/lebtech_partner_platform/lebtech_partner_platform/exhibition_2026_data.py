@@ -21,6 +21,7 @@ ZONES = [
     ("L", "Section L", 11),
     ("LB", "Section LB", 12),
     ("M", "Section M", 13),
+    ("Island", "Island", 14),
 ]
 
 # (label, zone_id, x, y)
@@ -136,4 +137,6 @@ BOOTHS = [
     ("M6", "M", 0.5392, 0.8452),
     ("M7", "M", 0.5562, 0.8452),
     ("M8", "M", 0.5733, 0.8452),
+    # The central 4x4m island feature — one premium booth on the circle.
+    ("Island", "Island", 0.532, 0.734),
 ]

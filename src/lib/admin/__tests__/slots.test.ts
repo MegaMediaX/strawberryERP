@@ -16,12 +16,18 @@ describe("isPlaceableSlotLabel", () => {
     }
   });
   it("rejects malformed labels", () => {
-    for (const bad of ["", "1A", "A", "-1", "A-", "A1-", "LB5-"]) {
+    // "A" is intentionally NOT here: broadening to admit named features ("Island")
+    // also admits a bare letter, which is harmless for a Super-Admin-authored label.
+    for (const bad of ["", "1A", "-1", "A-", "A1-", "LB5-"]) {
       expect(isPlaceableSlotLabel(bad)).toBe(false);
     }
   });
-  it("rejects prototype-chain keys and over-long prefixes (security boundary)", () => {
-    for (const bad of ["__proto__", "constructor", "toString", "hasOwnProperty", "ABCD1"]) {
+  it("accepts named-feature labels like Island", () => {
+    expect(isPlaceableSlotLabel("Island")).toBe(true);
+    expect(isPlaceableSlotLabel("island")).toBe(true); // case-insensitive
+  });
+  it("rejects prototype-chain keys (security boundary)", () => {
+    for (const bad of ["__proto__", "constructor", "toString", "hasOwnProperty", "valueOf"]) {
       expect(isPlaceableSlotLabel(bad)).toBe(false);
     }
   });

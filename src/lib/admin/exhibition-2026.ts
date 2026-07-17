@@ -22,6 +22,7 @@ export const EXHIBITION_2026_ZONES: { id: string; name: string; order: number }[
   { id: "L", name: "Section L", order: 11 },
   { id: "LB", name: "Section LB", order: 12 },
   { id: "M", name: "Section M", order: 13 },
+  { id: "Island", name: "Island", order: 14 },
 ];
 
 export const EXHIBITION_2026_BOOTHS: BoothPlacement[] = [
@@ -136,5 +137,7 @@ export const EXHIBITION_2026_BOOTHS: BoothPlacement[] = [
   { label: "M6", zoneId: "M", x: 0.5392, y: 0.8452 },
   { label: "M7", zoneId: "M", x: 0.5562, y: 0.8452 },
   { label: "M8", zoneId: "M", x: 0.5733, y: 0.8452 },
+  // The central 4x4m island feature — one premium booth on the circle.
+  { label: "Island", zoneId: "Island", x: 0.532, y: 0.734 },
 ];
 
