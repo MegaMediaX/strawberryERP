@@ -24,9 +24,10 @@ export async function PATCH(request: Request) {
 
   const now = new Date().toISOString();
   const { config, layout, statuses } = await readFloorPlan();
-  // Layout presence is the real gate (seeded catalog includes LB5-1 etc., which the
-  // strict A1 grammar rejects); a label in the layout is by definition a valid booth.
-  if (!p.label || !layout[p.label]) return jsonError("Unknown slot label.", 400);
+  // Own-property presence is the gate (seeded catalog includes LB5-1 etc. that the
+  // strict A1 grammar rejects). Object.hasOwn + string check so a prototype key or
+  // non-string payload can't spoof it — defense in depth ahead of the state machine.
+  if (typeof p.label !== "string" || !Object.hasOwn(layout, p.label)) return jsonError("Unknown slot label.", 400);
   const current = normalizeExpiredHolds(statuses, now, config.calendar)[p.label] ?? { status: "Available" as const };
 
   const result = applyTransition(current, p.action, { role: session.user.role, actor: session.user.name, now });

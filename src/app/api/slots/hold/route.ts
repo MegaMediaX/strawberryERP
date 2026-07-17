@@ -27,8 +27,10 @@ export async function POST(request: Request) {
   const now = new Date().toISOString();
   const { config, layout, statuses } = await readFloorPlan();
   // The seeded layout is the source of truth for valid labels (incl. LB5-1 etc.);
-  // presence there is the real gate, not a label-grammar regex.
-  if (!p.label || !layout[p.label]) return jsonError("Unknown slot label.", 400);
+  // own-property presence is the gate. Object.hasOwn + a string check so a
+  // prototype key ("__proto__", "constructor") or a non-string payload can't
+  // spoof the gate — defense in depth ahead of the state machine.
+  if (typeof p.label !== "string" || !Object.hasOwn(layout, p.label)) return jsonError("Unknown slot label.", 400);
   const current = normalizeExpiredHolds(statuses, now, config.calendar)[p.label] ?? { status: "Available" as const };
   // Act AS the effective user: a Super Admin impersonating a reseller holds as
   // that reseller; a genuine reseller holds as themselves. A real (non-

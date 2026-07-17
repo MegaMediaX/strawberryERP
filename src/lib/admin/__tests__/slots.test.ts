@@ -20,6 +20,11 @@ describe("isPlaceableSlotLabel", () => {
       expect(isPlaceableSlotLabel(bad)).toBe(false);
     }
   });
+  it("rejects prototype-chain keys and over-long prefixes (security boundary)", () => {
+    for (const bad of ["__proto__", "constructor", "toString", "hasOwnProperty", "ABCD1"]) {
+      expect(isPlaceableSlotLabel(bad)).toBe(false);
+    }
+  });
   it("is the gate that unbricks LB booths that parseSlot's strict grammar rejects", () => {
     // Regression: LB5-1 must be placeable even though parseSlot returns null for it.
     expect(parseSlot("LB5-1")).toBeNull();

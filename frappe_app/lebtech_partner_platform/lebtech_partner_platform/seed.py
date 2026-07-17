@@ -96,8 +96,11 @@ def seed_exhibition():
     clobbers live holds/reservations. Safe to call on every migrate.
     """
     # Config: fill each field only when unset, so an admin who has already changed
-    # currency / slots-per-letter (or cleared the floor image to use the abstract
-    # map) is never reset by a later migrate. Each field guards itself.
+    # currency or slots-per-letter is never collaterally reset by a later migrate
+    # (the original bug: one guard on floor_image_url gating all three fields).
+    # Caveat: "unset" is falsy-detection, so a floor image an admin explicitly
+    # CLEARED ("") is re-imposed on the next migrate — distinguishing cleared from
+    # never-set would need a separate flag; out of scope here.
     config = frappe.get_single("Exhibition Config")
     dirty = False
     if not config.floor_image_url:
