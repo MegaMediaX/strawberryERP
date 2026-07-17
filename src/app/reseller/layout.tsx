@@ -6,6 +6,7 @@ import { ResellerNotificationsBell } from "@/components/reseller/ResellerNotific
 import { resellerNotificationData } from "@/lib/reseller/notification-data";
 import { resellerNotifications } from "@/lib/reseller/reseller-notifications";
 import { getPortalUiSession } from "@/lib/security/ui-session";
+import { canAccessPersonaShell } from "@/lib/security/persona-access";
 import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
 
 /**
@@ -21,7 +22,7 @@ export default async function ResellerLayout({ children }: { children: ReactNode
     redirect("/login");
   }
   const role = session.effectiveUser.role;
-  if (role !== "Reseller Admin" && role !== "Super Admin") {
+  if (!canAccessPersonaShell(role, "reseller")) {
     redirect(role === "Sales Team User" ? "/sales/dashboard" : "/");
   }
 
