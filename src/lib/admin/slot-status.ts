@@ -49,7 +49,10 @@ export interface TransitionCtx {
  * another role's authority.
  */
 const ROLE_ACTIONS: Record<Role, readonly SlotAction[]> = {
-  "Super Admin": ["approve", "reject", "release", "setInactive", "setActive"],
+  // Super Admin has full parity: the oversight actions plus the operational
+  // hold actions the reseller/sales roles use (requestHold/cancel), so a genuine
+  // (non-impersonating) Super Admin can exercise every slot capability directly.
+  "Super Admin": ["approve", "reject", "release", "setInactive", "setActive", "requestHold", "cancel"],
   "Regional Director": [],
   "Reseller Admin": ["requestHold", "cancel"],
   "Sales Team User": ["requestHold", "cancel"],
