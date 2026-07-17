@@ -13,6 +13,9 @@ export interface SlotConfig {
   priceBySlot: Record<string, number>;
   currency: string;
   calendar: BusinessCalendar;
+  /** Venue floor-plan image the map renders behind the booths. Booth x/y are
+   * normalized (0-1) over this image when set. Empty = abstract zone-grid map. */
+  floorImageUrl?: string;
 }
 
 /** A slot's position on the floor-plan canvas (P2 editor authors this). */
@@ -63,6 +66,17 @@ export function isValidSlotLabel(label: string, slotsPerLetter: number = DEFAULT
   const parsed = parseSlot(label);
   if (!parsed) return false;
   return parsed.number >= 1 && parsed.number <= slotsPerLetter;
+}
+
+// Real-venue placement labels are broader than parseSlot's strict A1 grammar:
+// multi-letter sections and hyphenated sub-units (e.g. "LB5-1"). This is the gate
+// for a label that can be PLACED on the floor plan; parseSlot stays strict for the
+// generated catalog.
+const PLACEMENT_LABEL_RE = /^[A-Z]{1,3}[0-9]+(?:-[0-9]+)?$/;
+
+/** True if `label` is a well-formed booth label that may appear in a layout. */
+export function isPlaceableSlotLabel(label: string): boolean {
+  return PLACEMENT_LABEL_RE.test((label ?? "").trim().toUpperCase());
 }
 
 /** Group a flat list of labels into per-letter rows (for palette/map rendering). */

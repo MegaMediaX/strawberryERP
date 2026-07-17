@@ -4,9 +4,33 @@ import {
   buildSlot,
   generateSlotCatalog,
   groupSlotsByLetter,
+  isPlaceableSlotLabel,
   isValidSlotLabel,
   parseSlot,
 } from "@/lib/admin/slots";
+
+describe("isPlaceableSlotLabel", () => {
+  it("accepts the real venue catalog, incl. multi-letter + hyphenated LB labels", () => {
+    for (const ok of ["A1", "G4", "M12", "LB5-1", "LB6-2", "AA1"]) {
+      expect(isPlaceableSlotLabel(ok)).toBe(true);
+    }
+  });
+  it("rejects malformed labels", () => {
+    for (const bad of ["", "1A", "A", "-1", "A-", "A1-", "LB5-"]) {
+      expect(isPlaceableSlotLabel(bad)).toBe(false);
+    }
+  });
+  it("rejects prototype-chain keys and over-long prefixes (security boundary)", () => {
+    for (const bad of ["__proto__", "constructor", "toString", "hasOwnProperty", "ABCD1"]) {
+      expect(isPlaceableSlotLabel(bad)).toBe(false);
+    }
+  });
+  it("is the gate that unbricks LB booths that parseSlot's strict grammar rejects", () => {
+    // Regression: LB5-1 must be placeable even though parseSlot returns null for it.
+    expect(parseSlot("LB5-1")).toBeNull();
+    expect(isPlaceableSlotLabel("LB5-1")).toBe(true);
+  });
+});
 
 describe("generateSlotCatalog", () => {
   it("defaults to 6 per letter → 156 slots, A1 first, Z6 last", () => {

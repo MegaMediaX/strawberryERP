@@ -4,7 +4,6 @@ import { appendAudit } from "@/lib/dev-store";
 import { persistSlotStatus, readFloorPlan } from "@/lib/admin/slots-persistence";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { applyTransition, normalizeExpiredHolds, type SlotAction } from "@/lib/admin/slot-status";
-import { parseSlot } from "@/lib/admin/slots";
 
 /**
  * §slots P3 — reseller hold actions (requestHold / cancel). Role-gated via the
@@ -27,7 +26,11 @@ export async function POST(request: Request) {
 
   const now = new Date().toISOString();
   const { config, layout, statuses } = await readFloorPlan();
-  if (!parseSlot(p.label) || !layout[p.label]) return jsonError("Unknown slot label.", 400);
+  // The seeded layout is the source of truth for valid labels (incl. LB5-1 etc.);
+  // own-property presence is the gate. Object.hasOwn + a string check so a
+  // prototype key ("__proto__", "constructor") or a non-string payload can't
+  // spoof the gate — defense in depth ahead of the state machine.
+  if (typeof p.label !== "string" || !Object.hasOwn(layout, p.label)) return jsonError("Unknown slot label.", 400);
   const current = normalizeExpiredHolds(statuses, now, config.calendar)[p.label] ?? { status: "Available" as const };
   // Act AS the effective user: a Super Admin impersonating a reseller holds as
   // that reseller; a genuine reseller holds as themselves. A real (non-

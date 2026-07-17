@@ -12,7 +12,6 @@
       "fieldname": "slots_per_letter",
       "fieldtype": "Int",
       "label": "Slots Per Letter",
-      "default": "6",
       "reqd": true
     },
     {

@@ -137,12 +137,12 @@ describe("PATCH /api/admin/slots/status — issued invoices are never edited", (
   });
 
   it("leaves the seeded customer invoice untouched when its slot is released", async () => {
-    // A3 is seeded Reserved against the real customer invoice INV-2026-LB-0041.
+    // E1 is seeded Reserved against the real customer invoice INV-2026-LB-0041.
     const before = getDevStore().invoices.find((i) => i.id === "INV-2026-LB-0041");
     const linesBefore = before!.lineItems.length;
     const totalBefore = before!.total;
 
-    const res = await statusRequest({ label: "A3", action: "release" });
+    const res = await statusRequest({ label: "E1", action: "release" });
     expect(res.status).toBe(200);
 
     const after = getDevStore().invoices.find((i) => i.id === "INV-2026-LB-0041");

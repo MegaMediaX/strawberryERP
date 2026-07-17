@@ -4,7 +4,6 @@ import { appendAudit, appendSlotInvoiceLine, removeSlotInvoiceLine } from "@/lib
 import { persistSlotStatus, readFloorPlan } from "@/lib/admin/slots-persistence";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { applyTransition, normalizeExpiredHolds, type SlotAction } from "@/lib/admin/slot-status";
-import { parseSlot } from "@/lib/admin/slots";
 
 /**
  * §slots P3 — Super-Admin slot actions (approve / reject / release /
@@ -25,7 +24,10 @@ export async function PATCH(request: Request) {
 
   const now = new Date().toISOString();
   const { config, layout, statuses } = await readFloorPlan();
-  if (!parseSlot(p.label) || !layout[p.label]) return jsonError("Unknown slot label.", 400);
+  // Own-property presence is the gate (seeded catalog includes LB5-1 etc. that the
+  // strict A1 grammar rejects). Object.hasOwn + string check so a prototype key or
+  // non-string payload can't spoof it — defense in depth ahead of the state machine.
+  if (typeof p.label !== "string" || !Object.hasOwn(layout, p.label)) return jsonError("Unknown slot label.", 400);
   const current = normalizeExpiredHolds(statuses, now, config.calendar)[p.label] ?? { status: "Available" as const };
 
   const result = applyTransition(current, p.action, { role: session.user.role, actor: session.user.name, now });

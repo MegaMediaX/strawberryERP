@@ -48,6 +48,7 @@ import { defaultPermissionMatrix, type PermissionMatrix } from "@/lib/admin/perm
 import { defaultPlatformSettings, type PlatformSettings, type SettingsSection } from "@/lib/admin/platform-settings";
 import { generateSlotCatalog, type SlotConfig, type SlotLayoutEntry, type SlotZone } from "@/lib/admin/slots";
 import { defaultBusinessCalendar } from "@/lib/admin/business-hours";
+import { EXHIBITION_2026_BOOTHS, EXHIBITION_2026_IMAGE, EXHIBITION_2026_ZONES } from "@/lib/admin/exhibition-2026";
 import type { SlotStatusRecord } from "@/lib/admin/slot-status";
 
 type DevStore = {
@@ -102,29 +103,33 @@ type DevStore = {
 
 /** §slots — seed a small demo floor plan so the map has something to render. */
 function seedSlots(): { config: SlotConfig; statuses: Record<string, SlotStatusRecord>; layout: Record<string, SlotLayoutEntry>; zones: SlotZone[] } {
+  // Real venue layout: the LEBTECH 2026 floor plan (booths + normalized positions
+  // auto-extracted from the CAD). Every booth active; a per-section base price.
+  const priceForZone = (zoneId: string): number =>
+    zoneId === "LB" ? 3000 : ["A", "B", "C"].includes(zoneId) ? 900 : 1500;
+  const priceBySlot: Record<string, number> = {};
+  const layout: Record<string, SlotLayoutEntry> = {};
+  for (const b of EXHIBITION_2026_BOOTHS) {
+    layout[b.label] = { zoneId: b.zoneId, x: b.x, y: b.y };
+    priceBySlot[b.label] = priceForZone(b.zoneId);
+  }
   const config: SlotConfig = {
-    slotsPerLetter: 6,
-    activeSlots: ["A1", "A2", "A3", "A4", "B1", "B2", "B3"],
-    priceBySlot: { A1: 1500, A2: 1500, A3: 1200, A4: 1200, B1: 900, B2: 900, B3: 900 },
+    slotsPerLetter: 12,
+    activeSlots: EXHIBITION_2026_BOOTHS.map((b) => b.label),
+    priceBySlot,
     currency: "USD",
+    floorImageUrl: EXHIBITION_2026_IMAGE,
     // Not hardcoded: the spec sources the global calendar's zone from platform
     // settings. getSlotConfig() re-derives it on every read, so this is only the
     // value at seed time.
     calendar: defaultBusinessCalendar(defaultPlatformSettings.general.defaultTimezone),
   };
-  const zones: SlotZone[] = [
-    { id: "hall-a", name: "Hall A — Premium", order: 0 },
-    { id: "hall-b", name: "Hall B — Standard", order: 1 },
-  ];
-  const layout: Record<string, SlotLayoutEntry> = {
-    A1: { zoneId: "hall-a", x: 0, y: 0 }, A2: { zoneId: "hall-a", x: 1, y: 0 },
-    A3: { zoneId: "hall-a", x: 2, y: 0 }, A4: { zoneId: "hall-a", x: 3, y: 0 },
-    B1: { zoneId: "hall-b", x: 0, y: 0 }, B2: { zoneId: "hall-b", x: 1, y: 0 }, B3: { zoneId: "hall-b", x: 2, y: 0 },
-  };
+  const zones: SlotZone[] = EXHIBITION_2026_ZONES.map((z) => ({ ...z }));
+  // A couple of demo states so the map shows every status on first load.
   const statuses: Record<string, SlotStatusRecord> = {
-    A2: { status: "OnHold", heldBy: "Beirut Digital Partners", heldAt: "2026-06-17T10:00:00.000Z" },
-    A3: { status: "Reserved", heldBy: "Beirut Digital Partners", heldAt: "2026-06-12T09:00:00.000Z", approvedBy: "Super Admin", reservedInvoice: "INV-2026-LB-0041" },
-    B2: { status: "Inactive" },
+    G4: { status: "OnHold", heldBy: "Beirut Digital Partners", heldAt: "2026-06-17T10:00:00.000Z" },
+    E1: { status: "Reserved", heldBy: "Beirut Digital Partners", heldAt: "2026-06-12T09:00:00.000Z", approvedBy: "Super Admin", reservedInvoice: "INV-2026-LB-0041" },
+    M8: { status: "Inactive" },
   };
   return { config, statuses, layout, zones };
 }

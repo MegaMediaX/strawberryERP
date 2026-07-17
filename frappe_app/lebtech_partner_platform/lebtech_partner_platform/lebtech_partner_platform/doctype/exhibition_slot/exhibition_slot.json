@@ -25,15 +25,19 @@
     },
     {
       "fieldname": "pos_x",
-      "fieldtype": "Int",
-      "label": "Grid X",
-      "default": "0"
+      "fieldtype": "Float",
+      "label": "Position X",
+      "precision": "6",
+      "default": "0",
+      "description": "Normalized 0-1 X position on the floor-plan image (visual map). Float — not Int — or every booth collapses to 0."
     },
     {
       "fieldname": "pos_y",
-      "fieldtype": "Int",
-      "label": "Grid Y",
-      "default": "0"
+      "fieldtype": "Float",
+      "label": "Position Y",
+      "precision": "6",
+      "default": "0",
+      "description": "Normalized 0-1 Y position on the floor-plan image (visual map)."
     },
     {
       "fieldname": "price",
