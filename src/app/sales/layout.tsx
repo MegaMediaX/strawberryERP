@@ -5,6 +5,7 @@ import { SalesBottomNav, SalesTopNav } from "@/components/sales/SalesNav";
 import { SalesNotificationsBell } from "@/components/sales/SalesNotificationsBell";
 import { deriveNotifications } from "@/lib/sales/derive-notifications";
 import { getPortalUiSession } from "@/lib/security/ui-session";
+import { canAccessPersonaShell } from "@/lib/security/persona-access";
 import { getUiLeads } from "@/lib/ui-data";
 import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
 
@@ -20,8 +21,7 @@ export default async function SalesLayout({ children }: { children: ReactNode })
   if (!session) {
     redirect("/login");
   }
-  const role = session.effectiveUser.role;
-  if (role !== "Sales Team User" && role !== "Super Admin") {
+  if (!canAccessPersonaShell(session.effectiveUser.role, "sales")) {
     redirect("/");
   }
 

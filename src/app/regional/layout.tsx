@@ -8,6 +8,7 @@ import { RegionalBottomNav, RegionalSidebar } from "@/components/regional/Region
 import { RegionalNotificationsBell } from "@/components/regional/RegionalNotificationsBell";
 import { regionalNotificationData } from "@/lib/regional/notification-data";
 import { getPortalUiSession } from "@/lib/security/ui-session";
+import { canAccessPersonaShell } from "@/lib/security/persona-access";
 import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
 
 /**
@@ -21,7 +22,7 @@ export default async function RegionalLayout({ children }: { children: ReactNode
   if (!session) redirect("/login");
 
   const role = session.effectiveUser.role;
-  if (role !== "Regional Director" && role !== "Super Admin") {
+  if (!canAccessPersonaShell(role, "regional")) {
     redirect(role === "Sales Team User" ? "/sales/dashboard" : role === "Reseller Admin" ? "/reseller/dashboard" : "/");
   }
 
