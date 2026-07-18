@@ -10,7 +10,7 @@ from lebtech_partner_platform.validators import get_portal_assignment, write_act
 # Fields mass-assignable onto an Exhibition Slot from a status write. slot_label is
 # the autoname key (set on create, never reassigned); pos_x/pos_y/price/zone belong
 # to the layout write, not the status write.
-_STATUS_FIELDS = {"status", "held_by", "held_at", "reserved_invoice", "approved_by"}
+_STATUS_FIELDS = {"status", "held_by", "held_at", "reserved_invoice", "approved_by", "package"}
 
 
 def _require_super_admin() -> None:
@@ -49,6 +49,7 @@ def get_floor_plan(**_payload):
             "held_at",
             "reserved_invoice",
             "approved_by",
+            "package",
         ],
     )
     return {

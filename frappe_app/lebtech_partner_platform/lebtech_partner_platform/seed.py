@@ -82,11 +82,11 @@ def seed_roles():
 
 
 def _exhibition_price(zone_id: str) -> float:
-    if zone_id == "LB":
-        return 3000.0
-    if zone_id in ("A", "B", "C"):
-        return 900.0
-    return 1500.0
+    # Every 1x2m plot is $600 ($300/m2). The Island (4x4m, Main Elite Partner) is
+    # priced on its booking, not here — seed it at 0 and set the real figure live.
+    if zone_id == "Island":
+        return 0.0
+    return 600.0
 
 
 def seed_exhibition():
