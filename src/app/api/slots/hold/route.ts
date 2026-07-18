@@ -34,7 +34,9 @@ export async function POST(request: Request) {
   const current = normalizeExpiredHolds(statuses, now, config.calendar)[p.label] ?? { status: "Available" as const };
   // Act AS the effective user: a Super Admin impersonating a reseller holds as
   // that reseller; a genuine reseller holds as themselves. A real (non-
-  // impersonating) Super Admin is still blocked by canActOnSlot.
+  // impersonating) Super Admin holds as themselves too (GAP-2 parity) — their
+  // own hold, cancellable only by them, since canActOnSlot keeps cancel
+  // ownership-bound.
   const acting = session.effectiveUser;
   const actor = acting.reseller ?? acting.name;
 

@@ -19,19 +19,25 @@ describe("canActOnSlot (fail-closed, role-gated)", () => {
     expect(canActOnSlot("Reseller Admin", "cancel", { status: "OnHold", heldBy: "Rami" }, "Other")).toBe(false);
     expect(canActOnSlot("Reseller Admin", "approve", { status: "OnHold" })).toBe(false);
   });
-  it("Super Admin can approve/reject/release but not self-hold", () => {
+  it("Super Admin can approve/reject/release", () => {
     expect(canActOnSlot("Super Admin", "approve", { status: "OnHold" })).toBe(true);
     expect(canActOnSlot("Super Admin", "release", { status: "Reserved" })).toBe(true);
-    expect(canActOnSlot("Super Admin", "requestHold", avail)).toBe(false);
+  });
+  // Super Admin parity (GAP-2): a genuine Super Admin can also request a hold and
+  // cancel their OWN hold, on the same terms as the operational roles — cancel
+  // stays ownership-bound, so they still cannot cancel someone else's hold.
+  it("Super Admin can request a hold and cancel their own hold", () => {
+    expect(canActOnSlot("Super Admin", "requestHold", avail)).toBe(true);
+    expect(canActOnSlot("Super Admin", "cancel", { status: "OnHold", heldBy: "SA" }, "SA")).toBe(true);
+    expect(canActOnSlot("Super Admin", "cancel", { status: "OnHold", heldBy: "Rami" }, "SA")).toBe(false);
   });
   it("Sales Team User holds on the same terms as Reseller Admin", () => {
     expect(canActOnSlot("Sales Team User", "requestHold", avail)).toBe(true);
     expect(canActOnSlot("Sales Team User", "cancel", { status: "OnHold", heldBy: "Lina" }, "Lina")).toBe(true);
     expect(canActOnSlot("Sales Team User", "approve", { status: "OnHold" })).toBe(false);
   });
-  // Spec grants cancel to the HOLDER only ("reseller: requestHold/cancel(own)");
-  // Super Admin's list is approve/reject/release/setInactive/setActive. Reject is
-  // their equivalent-effect action — cancel is not theirs to call.
+  // cancel is ownership-bound for every role, Super Admin included: it clears the
+  // HOLDER's own hold only. To clear someone else's hold a Super Admin rejects it.
   it("Super Admin cannot cancel a reseller's hold", () => {
     expect(canActOnSlot("Super Admin", "cancel", { status: "OnHold", heldBy: "Rami" }, "Georges")).toBe(false);
   });

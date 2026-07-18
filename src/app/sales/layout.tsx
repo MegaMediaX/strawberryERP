@@ -9,16 +9,19 @@ import { getUiLeads } from "@/lib/ui-data";
 import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
 
 /**
- * Sales persona shell (spec §24/§28/§29). Guard: only a Sales Team User lives
- * here; any other role is redirected to the admin home. Admin surfaces are
- * simply absent from this layout — nothing to hide because nothing is rendered.
+ * Sales persona shell (spec §24/§28/§29). Guard: a Sales Team User (or a Super
+ * Admin, for oversight) lives here; any other role is redirected to the admin
+ * home. This mirrors the Super-Admin carve-out already present in the regional
+ * and reseller persona shells. Admin surfaces are simply absent from this
+ * layout — nothing to hide because nothing is rendered.
  */
 export default async function SalesLayout({ children }: { children: ReactNode }) {
   const session = await getPortalUiSession();
   if (!session) {
     redirect("/login");
   }
-  if (session.effectiveUser.role !== "Sales Team User") {
+  const role = session.effectiveUser.role;
+  if (role !== "Sales Team User" && role !== "Super Admin") {
     redirect("/");
   }
 
