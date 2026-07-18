@@ -49,6 +49,7 @@ type FrappeSlotRow = {
   held_at?: string | null;
   reserved_invoice?: string | null;
   approved_by?: string | null;
+  package?: string | null;
 };
 
 type FrappeFloorPlan = {
@@ -96,6 +97,7 @@ export function adaptFrappeFloorPlan(data: FrappeFloorPlan): FloorPlanSnapshot {
       heldAt: r.held_at ?? undefined,
       reservedInvoice: r.reserved_invoice ?? undefined,
       approvedBy: r.approved_by ?? undefined,
+      package: r.package ?? undefined,
     };
   }
 

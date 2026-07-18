@@ -23,6 +23,7 @@ export interface SlotStatusRecord {
   heldAt?: string;
   reservedInvoice?: string;
   approvedBy?: string;
+  package?: string;
 }
 
 export type SlotAction = "requestHold" | "cancel" | "approve" | "reject" | "release" | "setInactive" | "setActive";

@@ -79,6 +79,12 @@
       "fieldname": "approved_by",
       "fieldtype": "Data",
       "label": "Approved By"
+    },
+    {
+      "fieldname": "package",
+      "fieldtype": "Data",
+      "label": "Package",
+      "description": "Sponsorship tier for a booked booth, e.g. Silver / Platinum / Main Elite Partner. Shown on the map's booking detail."
     }
   ],
   "permissions": [
