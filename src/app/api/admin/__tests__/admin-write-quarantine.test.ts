@@ -108,6 +108,28 @@ describe("ADM-QUARANTINE: countries/resellers/white-label writes stay dev-store 
     await expectQuarantinedDevStore(await PATCH(adminReq("PATCH", { platformName: "LebTech Partner Platform" })), 200);
   });
 
+  // Phase 3 admin-accounting writes join the same quarantine.
+  it("currencies POST does not route to Frappe by default", async () => {
+    const { POST } = await import("@/app/api/admin/accounting/currencies/route");
+    await expectQuarantinedDevStore(
+      await POST(adminReq("POST", { currencyCode: "AED", currencyName: "UAE Dirham", symbol: "AED", decimalPrecision: 2, isActive: true, manualExchangeRate: 0.27 })),
+      201,
+    );
+  });
+
+  it("payment-methods PATCH does not route to Frappe by default", async () => {
+    const { PATCH } = await import("@/app/api/admin/accounting/payment-methods/route");
+    await expectQuarantinedDevStore(await PATCH(adminReq("PATCH", { methodName: "Cash", isActive: false })), 200);
+  });
+
+  it("expenses POST does not route to Frappe by default", async () => {
+    const { POST } = await import("@/app/api/admin/accounting/expenses/route");
+    await expectQuarantinedDevStore(
+      await POST(adminReq("POST", { category: "Marketing", amount: 500, currency: "USD", date: "2026-07-05", notes: "Q3 ads" })),
+      201,
+    );
+  });
+
   it("resellers GET (list_resellers, pre-existing/already-verified) is unaffected by the write quarantine", async () => {
     // Sanity check that the quarantine is write-scoped, not resource-scoped:
     // GET was already mapped before PR #22 and must keep working exactly as
@@ -132,6 +154,19 @@ describe("ADM-QUARANTINE: opting in with ADMIN_FRAPPE_WRITE_VERIFIED=true restor
   it("countries POST routes to Frappe once verified", async () => {
     const { POST } = await import("@/app/api/admin/countries/route");
     const res = await POST(adminReq("POST", { name: "Oman", currency: "OMR", timezone: "UTC", invoicePrefix: "OM-INV", paymentMethods: ["Cash"] }));
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { ok: boolean; source: string };
+    expect(body.ok).toBe(true);
+    expect(body.source).toBe("frappe");
+    expect(frappeRequest).toHaveBeenCalledTimes(1);
+  });
+
+  // Fresh currency code (BHD, not the AED created in the default-quarantine block
+  // above) — the dev-store singleton persists across describes, and the route's
+  // duplicate check runs before routing, so a reused code would 400 pre-proxy.
+  it("currencies POST routes to Frappe once verified", async () => {
+    const { POST } = await import("@/app/api/admin/accounting/currencies/route");
+    const res = await POST(adminReq("POST", { currencyCode: "BHD", currencyName: "Bahraini Dinar", symbol: "BHD", decimalPrecision: 3, isActive: true, manualExchangeRate: 2.65 }));
     expect(res.status).toBe(200);
     const body = (await res.json()) as { ok: boolean; source: string };
     expect(body.ok).toBe(true);

@@ -3,7 +3,11 @@ from __future__ import annotations
 import frappe
 from frappe import _
 
-from lebtech_partner_platform.validators import validate_country_value, write_activity
+from lebtech_partner_platform.validators import (
+    get_portal_assignment,
+    validate_country_value,
+    write_activity,
+)
 
 
 @frappe.whitelist(methods=["GET"])
@@ -273,3 +277,154 @@ def create_commission_entries_for_invoice(invoice, trigger_condition: str, recei
         )
         doc.insert(ignore_permissions=True)
         write_activity("Commission Entry", doc.name, "create", "", str(commission_amount))
+
+
+# ---------------------------------------------------------------------------
+# Phase 3 — admin accounting config: currencies / payment methods / expenses.
+# Super-Admin-only (mirrors countries.py). DocTypes already exist:
+# "Currency Setting", "Payment Method", "Expense Log". The Next.js layer also
+# gates these Super-Admin-only and quarantines writes behind
+# ADMIN_FRAPPE_WRITE_VERIFIED until the staging smoke passes.
+# ---------------------------------------------------------------------------
+
+def _require_super_admin():
+    assignment = get_portal_assignment(frappe.session.user)
+    if "Super Admin" not in frappe.get_roles() and assignment.get("role") != "Super Admin":
+        frappe.throw(_("Super Admin only."), frappe.PermissionError)
+
+
+# Fields the API may set. `currency_code` (autoname) is set explicitly on create
+# only; `is_default` is never mass-assigned (default currency is chosen elsewhere).
+_CURRENCY_FIELDS = {
+    "currency_name", "symbol", "decimal_precision", "is_active",
+    "assigned_countries", "assigned_resellers", "manual_exchange_rate",
+}
+
+
+@frappe.whitelist(methods=["GET"])
+def list_currencies():
+    _require_super_admin()
+    return frappe.get_all(
+        "Currency Setting",
+        fields=[
+            "name", "currency_code", "currency_name", "symbol", "decimal_precision",
+            "is_active", "is_default", "assigned_countries", "assigned_resellers",
+            "manual_exchange_rate",
+        ],
+        order_by="currency_code asc",
+    )
+
+
+@frappe.whitelist(methods=["POST"])
+def create_currency(**payload):
+    _require_super_admin()
+    code = (payload.get("currency_code") or "").strip().upper()
+    if not code:
+        frappe.throw(_("Currency code is required."), frappe.ValidationError)
+    if frappe.db.exists("Currency Setting", code):
+        frappe.throw(_("A currency with this code already exists."), frappe.DuplicateEntryError)
+
+    doc = frappe.get_doc({"doctype": "Currency Setting", "currency_code": code})
+    for field in _CURRENCY_FIELDS:
+        if field in payload:
+            doc.set(field, payload[field])
+    doc.insert()
+    frappe.db.commit()
+    write_activity("Currency Setting", doc.name, "create", "", doc.get("symbol") or "")
+    return doc.as_dict()
+
+
+@frappe.whitelist(methods=["POST", "PUT", "PATCH"])
+def update_currency(**payload):
+    _require_super_admin()
+    code = (payload.get("currency_code") or payload.get("name") or "").strip()
+    if not code or not frappe.db.exists("Currency Setting", code):
+        frappe.throw(_("Currency not found."), frappe.DoesNotExistError)
+
+    doc = frappe.get_doc("Currency Setting", code)
+    old_active = doc.is_active
+    for field in _CURRENCY_FIELDS:
+        if field in payload:
+            doc.set(field, payload[field])
+    doc.save()
+    frappe.db.commit()
+    write_activity("Currency Setting", doc.name, "update", str(old_active), str(doc.is_active))
+    return doc.as_dict()
+
+
+_PAYMENT_METHOD_FIELDS = {
+    "is_active", "countries", "resellers", "requires_reference",
+    "requires_attachment", "display_order", "icon",
+}
+
+
+@frappe.whitelist(methods=["GET"])
+def list_payment_methods():
+    _require_super_admin()
+    return frappe.get_all(
+        "Payment Method",
+        fields=[
+            "name", "method_name", "is_active", "countries", "resellers",
+            "requires_reference", "requires_attachment", "display_order", "icon",
+        ],
+        order_by="display_order asc",
+    )
+
+
+@frappe.whitelist(methods=["POST", "PUT", "PATCH"])
+def upsert_payment_method(**payload):
+    _require_super_admin()
+    method_name = (payload.get("method_name") or "").strip()
+    if not method_name:
+        frappe.throw(_("Payment method name is required."), frappe.ValidationError)
+
+    exists = frappe.db.exists("Payment Method", method_name)
+    if exists:
+        doc = frappe.get_doc("Payment Method", method_name)
+    else:
+        doc = frappe.get_doc({"doctype": "Payment Method", "method_name": method_name})
+    for field in _PAYMENT_METHOD_FIELDS:
+        if field in payload:
+            doc.set(field, payload[field])
+    if exists:
+        doc.save()
+    else:
+        doc.insert()
+    frappe.db.commit()
+    write_activity("Payment Method", doc.name, "update" if exists else "create", "", str(doc.is_active))
+    return doc.as_dict()
+
+
+_EXPENSE_FIELDS = {"category", "amount", "currency", "country", "reseller", "expense_date", "reference"}
+
+
+@frappe.whitelist(methods=["GET"])
+def list_expenses(country: str | None = None):
+    _require_super_admin()
+    filters = {}
+    if country:
+        validate_country_value(country)
+        filters["country"] = country
+    return frappe.get_all(
+        "Expense Log",
+        filters=filters,
+        fields=["name", "category", "amount", "currency", "country", "reseller", "expense_date", "reference"],
+        order_by="expense_date desc",
+    )
+
+
+@frappe.whitelist(methods=["POST"])
+def create_expense(**payload):
+    _require_super_admin()
+    if payload.get("country"):
+        validate_country_value(payload["country"])
+
+    # Expense Log autonames (format:EXP-{####}); never mass-assign name/doctype.
+    doc = frappe.get_doc({"doctype": "Expense Log"})
+    for field in _EXPENSE_FIELDS:
+        if field in payload:
+            doc.set(field, payload[field])
+    doc.insert()
+    frappe.db.commit()
+    write_activity("Expense Log", doc.name, "create", "", f"{doc.get('category')} {doc.get('amount')}")
+    return doc.as_dict()

@@ -90,4 +90,46 @@ describe("admin mapped write (Frappe CONFIGURED) routes to Frappe, not the fail-
     expect(body.ok).toBe(true);
     expect(body.source).toBe("frappe");
   });
+
+  it("currency create routes to Frappe (currencies.post → create_currency)", async () => {
+    const { POST } = await import("@/app/api/admin/accounting/currencies/route");
+    const req = new Request("https://portal.local/api/admin/accounting/currencies", {
+      method: "POST",
+      headers: { "x-platform-user-id": "USR-SUPER", "content-type": "application/json" },
+      body: JSON.stringify({ currencyCode: "AED", currencyName: "UAE Dirham", symbol: "AED", decimalPrecision: 2, isActive: true, manualExchangeRate: 0.27 }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { ok: boolean; source: string };
+    expect(body.ok).toBe(true);
+    expect(body.source).toBe("frappe");
+  });
+
+  it("payment method save routes to Frappe (payment-methods.patch → upsert_payment_method)", async () => {
+    const { PATCH } = await import("@/app/api/admin/accounting/payment-methods/route");
+    const req = new Request("https://portal.local/api/admin/accounting/payment-methods", {
+      method: "PATCH",
+      headers: { "x-platform-user-id": "USR-SUPER", "content-type": "application/json" },
+      body: JSON.stringify({ methodName: "Cash", isActive: false, displayOrder: 1 }),
+    });
+    const res = await PATCH(req);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { ok: boolean; source: string };
+    expect(body.ok).toBe(true);
+    expect(body.source).toBe("frappe");
+  });
+
+  it("expense create routes to Frappe (expenses.post → create_expense)", async () => {
+    const { POST } = await import("@/app/api/admin/accounting/expenses/route");
+    const req = new Request("https://portal.local/api/admin/accounting/expenses", {
+      method: "POST",
+      headers: { "x-platform-user-id": "USR-SUPER", "content-type": "application/json" },
+      body: JSON.stringify({ category: "Marketing", amount: 500, currency: "USD", date: "2026-07-05", notes: "Q3 ads" }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { ok: boolean; source: string };
+    expect(body.ok).toBe(true);
+    expect(body.source).toBe("frappe");
+  });
 });

@@ -74,19 +74,23 @@ async function expectDevStore(res: Response, status = 200) {
   expect(body.source).toBe("dev-store");
 }
 
+// currencies / payment-methods / expenses gained a Frappe write path (Phase 3),
+// so — like countries/resellers/white-label — a valid write falls back to a
+// durable-shaped dev-store success when Frappe is unconfigured (this env),
+// rather than the 501 gate. Guard-before-gate short-circuits are unchanged.
 describe("accounting/currencies", () => {
-  it("POST 501 for a valid new currency", async () =>
-    expectGate(await currenciesPOST(adminReq("POST", { currencyCode: "AED", currencyName: "UAE Dirham", symbol: "AED", decimalPrecision: 2, isActive: true, manualExchangeRate: 0.27 }))));
-  it("POST 403 for a non-Super-Admin (guard before gate)", async () =>
+  it("POST 201 dev-store fallback for a valid new currency (has a Frappe write path)", async () =>
+    expectDevStore(await currenciesPOST(adminReq("POST", { currencyCode: "AED", currencyName: "UAE Dirham", symbol: "AED", decimalPrecision: 2, isActive: true, manualExchangeRate: 0.27 })), 201));
+  it("POST 403 for a non-Super-Admin (guard before routing)", async () =>
     expectGuard(await currenciesPOST(adminReq("POST", { currencyCode: "AED", currencyName: "UAE Dirham", symbol: "AED", decimalPrecision: 2 }, "USR-SALES-MARVEN")), 403));
-  it("PATCH 404 for an unknown currency (guard before gate)", async () =>
+  it("PATCH 404 for an unknown currency (guard before routing)", async () =>
     expectGuard(await currenciesPATCH(adminReq("PATCH", { currencyCode: "ZZZ", isActive: false })), 404));
 });
 
 describe("accounting/expenses", () => {
-  it("POST 501 for a valid expense", async () =>
-    expectGate(await expensesPOST(adminReq("POST", { category: "Marketing", amount: 500, currency: "USD", date: "2026-07-05", notes: "Q3 ads" }))));
-  it("POST 400 for an invalid expense (guard before gate)", async () =>
+  it("POST 201 dev-store fallback for a valid expense (has a Frappe write path)", async () =>
+    expectDevStore(await expensesPOST(adminReq("POST", { category: "Marketing", amount: 500, currency: "USD", date: "2026-07-05", notes: "Q3 ads" })), 201));
+  it("POST 400 for an invalid expense (guard before routing)", async () =>
     expectGuard(await expensesPOST(adminReq("POST", { category: "", amount: 0, currency: "", date: "" })), 400));
 });
 
@@ -98,9 +102,9 @@ describe("accounting/invoicing", () => {
 });
 
 describe("accounting/payment-methods", () => {
-  it("PATCH 501 for a known method", async () =>
-    expectGate(await paymentMethodsPATCH(adminReq("PATCH", { methodName: "Cash", isActive: false, displayOrder: 1 }))));
-  it("PATCH 404 for an unknown method (guard before gate)", async () =>
+  it("PATCH 200 dev-store fallback for a known method (has a Frappe write path)", async () =>
+    expectDevStore(await paymentMethodsPATCH(adminReq("PATCH", { methodName: "Cash", isActive: false, displayOrder: 1 })), 200));
+  it("PATCH 404 for an unknown method (guard before routing)", async () =>
     expectGuard(await paymentMethodsPATCH(adminReq("PATCH", { methodName: "PayPal" })), 404));
 });
 
