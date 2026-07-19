@@ -63,7 +63,33 @@ export function FloorPlanMap({ data, role, actor, isAdmin }: { data: FloorPlanDa
     for (const s of visibleSlots) { const a = m.get(s.zoneId) ?? []; a.push(s); m.set(s.zoneId, a); }
     return m;
   }, [visibleSlots]);
+
+  // Reserved booths of the same company are one BOOKING, drawn as a single red
+  // block spanning their bounding box + labeled with the company name (the
+  // "merge adjacent booked plots into red" requirement). A booth marker is 2.4%
+  // of the container WIDTH and square in px, so its height fraction scales by the
+  // image aspect (2339/1654) — used to pad the block so it fully covers the booths.
+  const bookings = useMemo(() => {
+    const BW = 0.024, BH = 0.024 * (2339 / 1654);
+    const groups = new Map<string, FloorPlanSlot[]>();
+    for (const s of visibleSlots) {
+      if (s.status === "Reserved" && s.heldBy) {
+        const a = groups.get(s.heldBy) ?? []; a.push(s); groups.set(s.heldBy, a);
+      }
+    }
+    return [...groups.entries()].map(([company, slots]) => {
+      const xs = slots.map((s) => s.x), ys = slots.map((s) => s.y);
+      const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+      return {
+        company, slots, firstLabel: slots[0].label,
+        left: (minX - BW / 2) * 100, top: (minY - BH / 2) * 100,
+        width: (maxX - minX + BW) * 100, height: (maxY - minY + BH) * 100,
+      };
+    });
+  }, [visibleSlots]);
+
   const sel = selected ? data.slots.find((s) => s.label === selected) : null;
+  const selBooking = sel && sel.status === "Reserved" && sel.heldBy ? bookings.find((b) => b.company === sel.heldBy) : null;
 
   async function act(label: string, action: string, admin: boolean) {
     setErr(""); setBusy(`${label}:${action}`);
@@ -114,7 +140,8 @@ export function FloorPlanMap({ data, role, actor, isAdmin }: { data: FloorPlanDa
           <div className="relative w-full overflow-hidden rounded-lg border border-[var(--border)] bg-white" style={{ aspectRatio: FLOOR_IMAGE_ASPECT }}>
             {/* eslint-disable-next-line @next/next/no-img-element -- static public asset, no optimization needed */}
             <img src={data.floorImageUrl} alt="LEBTECH 2026 exhibition floor plan" className="absolute inset-0 h-full w-full object-contain" />
-            {visibleSlots.map((s) => (
+            {/* Individual markers for everything NOT booked (Reserved booths are drawn as merged booking blocks below). */}
+            {visibleSlots.filter((s) => s.status !== "Reserved").map((s) => (
               <button
                 key={s.label}
                 type="button"
@@ -127,6 +154,23 @@ export function FloorPlanMap({ data, role, actor, isAdmin }: { data: FloorPlanDa
                 {s.label}
               </button>
             ))}
+            {/* Merged red booking blocks — one per company, spanning its booths, labeled with the name. */}
+            {bookings.map((b) => {
+              const isSel = selBooking?.company === b.company;
+              return (
+                <button
+                  key={b.company}
+                  type="button"
+                  onClick={() => setSelected(b.firstLabel)}
+                  aria-label={`${b.company} — Reserved (${b.slots.length} booth${b.slots.length > 1 ? "s" : ""})`}
+                  title={`${b.company} · Reserved · ${b.slots.map((s) => s.label).join(", ")}`}
+                  style={{ left: `${b.left}%`, top: `${b.top}%`, width: `${b.width}%`, height: `${b.height}%` }}
+                  className={`absolute flex items-center justify-center rounded-[4px] border border-white/80 bg-rose-500/90 px-0.5 text-center text-[7px] font-bold leading-tight text-white shadow-sm transition hover:bg-rose-500 hover:z-10 ${isSel ? "z-10 opacity-100 ring-2 ring-[var(--brand)]" : "opacity-95"}`}
+                >
+                  <span className="line-clamp-2">{b.company}</span>
+                </button>
+              );
+            })}
           </div>
           <p className="mt-2 text-center text-[11px] text-[var(--muted)]">LEBTECH 2026 · click a booth for details</p>
         </CardContent></Card>
@@ -165,11 +209,22 @@ export function FloorPlanMap({ data, role, actor, isAdmin }: { data: FloorPlanDa
 
       {/* Detail panel */}
       {sel && (
-        <Card><CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base">Slot {sel.label} <Badge tone={STATUS_META[sel.status].tone}>{STATUS_META[sel.status].label}</Badge></CardTitle></CardHeader>
+        <Card><CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base">
+          {selBooking ? selBooking.company : `Slot ${sel.label}`} <Badge tone={STATUS_META[sel.status].tone}>{STATUS_META[sel.status].label}</Badge>
+        </CardTitle></CardHeader>
           <CardContent className="grid gap-2 pt-1 text-sm">
-            <p className="text-[var(--muted)]">Price {money(sel.price)} · {sel.active ? "active" : "inactive"}{sel.heldBy ? ` · held by ${sel.heldBy}` : ""}</p>
+            {/* A booking (merged red block): company + package + booths + deposit receipt. */}
+            {selBooking ? (
+              <>
+                {sel.package && <p><span className="font-semibold">{sel.package}</span></p>}
+                <p className="text-[var(--muted)]">{selBooking.slots.length} booth{selBooking.slots.length > 1 ? "s" : ""} · {selBooking.slots.map((s) => s.label).join(", ")}</p>
+                <p className="text-[var(--muted)]">Total {money(selBooking.slots.reduce((sum, s) => sum + s.price, 0))}</p>
+                <p className="text-[var(--muted)]">Deposit receipt {sel.reservedInvoice ? sel.reservedInvoice : <span className="italic">— none yet (set in Edit layout)</span>}</p>
+              </>
+            ) : (
+              <p className="text-[var(--muted)]">Price {money(sel.price)} · {sel.active ? "active" : "inactive"}{sel.heldBy ? ` · held by ${sel.heldBy}` : ""}</p>
+            )}
             {sel.status === "OnHold" && sel.expiresAt && <p className="text-amber-700 dark:text-amber-400">Expires {formatInZone(sel.expiresAt, data.calendar.timezone)} · {countdown(sel.expiresAt, now)}</p>}
-            {sel.status === "Reserved" && sel.reservedInvoice && <p className="text-[var(--muted)]">Invoice {sel.reservedInvoice} · approved by {sel.approvedBy ?? "—"}</p>}
             {actionsFor(sel).length > 0 && (
               <div className="mt-1 flex flex-wrap gap-2">
                 {actionsFor(sel).map((a) => (

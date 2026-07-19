@@ -21,6 +21,8 @@ export interface FloorPlanSlot {
   heldAt?: string;
   approvedBy?: string;
   reservedInvoice?: string;
+  /** Sponsorship tier for a booked booth (Silver / Platinum / Main Elite Partner). */
+  package?: string;
   price: number;
   active: boolean;
   /** ISO instant the hold lapses (OnHold only) — for the working-hours countdown. */
@@ -62,6 +64,7 @@ export function buildFloorPlan(input: {
       heldAt: showHold ? rec.heldAt : undefined,
       approvedBy: showHold ? rec.approvedBy : undefined,
       reservedInvoice: showHold ? rec.reservedInvoice : undefined,
+      package: showHold ? rec.package : undefined,
       price: input.config.priceBySlot[label] ?? 0,
       active: isActive,
       expiresAt: status === "OnHold" && rec.heldAt ? holdExpiresAt(rec.heldAt, HOLD_WORKING_HOURS, input.config.calendar) : undefined,
