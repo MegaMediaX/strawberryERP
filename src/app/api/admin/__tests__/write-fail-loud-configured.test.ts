@@ -18,25 +18,22 @@ vi.mock("@/lib/frappe-client", () => ({
 }));
 
 describe("admin write fail-loud gate (Frappe CONFIGURED, unmapped resource) — APP-9", () => {
-  it("currency create returns 501 BACKEND_NOT_CONFIGURED, not a dev-store success", async () => {
-    const { POST } = await import("@/app/api/admin/accounting/currencies/route");
+  // Uses invoicing settings — a still-unmapped admin write that calls
+  // writeRequiresBackend() directly (no frappeMethodMap entry). currencies /
+  // payment-methods / expenses gained a Frappe method in Phase 3, so they are no
+  // longer valid "unmapped" examples (they now dev-store-fallback / route to
+  // Frappe); their behavior is covered in admin-write-quarantine +
+  // write-route-mapped-configured + write-gate-coverage.
+  it("invoicing settings save returns 501 BACKEND_NOT_CONFIGURED, not a dev-store success", async () => {
+    const { PATCH } = await import("@/app/api/admin/accounting/invoicing/route");
 
-    const req = new Request("https://portal.local/api/admin/accounting/currencies", {
-      method: "POST",
+    const req = new Request("https://portal.local/api/admin/accounting/invoicing", {
+      method: "PATCH",
       headers: { "x-platform-user-id": "USR-SUPER", "content-type": "application/json" },
-      body: JSON.stringify({
-        currencyCode: "ZZZ",
-        currencyName: "Test Currency",
-        symbol: "Z",
-        decimalPrecision: 2,
-        isActive: true,
-        assignedCountries: [],
-        assignedResellers: [],
-        manualExchangeRate: 1,
-      }),
+      body: JSON.stringify({ mode: "Country Prefix", prefix: "LB", nextSequence: 42, pdfTemplate: "classic", qrCode: true, emailSend: true }),
     });
 
-    const res = await POST(req);
+    const res = await PATCH(req);
     expect(res.status).toBe(501);
     const body = (await res.json()) as { ok: boolean; error: { code: string } };
     expect(body.ok).toBe(false);

@@ -59,7 +59,16 @@ export function writeRequiresBackend(): NextResponse | null {
  * pattern — default OFF, explicit human opt-in). Until then these writes keep
  * falling back to the dev-store, unchanged from pre-PR-#22 behavior.
  */
-const QUARANTINED_FRAPPE_WRITE_RESOURCES = new Set(["countries", "resellers", "white-label"]);
+const QUARANTINED_FRAPPE_WRITE_RESOURCES = new Set([
+  "countries",
+  "resellers",
+  "white-label",
+  // Phase 3 admin-accounting writes — prod round-trip unverified (no staging
+  // smoke yet), so they stay dev-store-backed until ADMIN_FRAPPE_WRITE_VERIFIED.
+  "currencies",
+  "payment-methods",
+  "expenses",
+]);
 
 function isQuarantinedWriteVerified(): boolean {
   return process.env.ADMIN_FRAPPE_WRITE_VERIFIED === "true";

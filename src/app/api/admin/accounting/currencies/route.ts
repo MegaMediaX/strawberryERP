@@ -1,9 +1,23 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
+import { devStoreResponse, maybeRouteToFrappe } from "@/lib/backend/backend-router";
 import { appendAudit, getDevStore, upsertCurrency } from "@/lib/dev-store";
 import { requireSuperAdmin } from "@/lib/security/admin-guard";
 import { validateCurrencySetting } from "@/lib/business/billing-settings";
 import type { CurrencySetting } from "@/lib/phase2-data";
+
+/** Map a CurrencySetting to the Frappe "Currency Setting" doctype payload. */
+function toFrappeCurrency(c: CurrencySetting) {
+  return {
+    currency_code: c.currencyCode,
+    currency_name: c.currencyName,
+    symbol: c.symbol,
+    decimal_precision: c.decimalPrecision,
+    is_active: c.isActive ? 1 : 0,
+    assigned_countries: JSON.stringify(c.assignedCountries),
+    assigned_resellers: JSON.stringify(c.assignedResellers),
+    manual_exchange_rate: c.manualExchangeRate,
+  };
+}
 
 /** §20 currencies — add new. Super-Admin-only + audited. */
 export async function POST(request: Request) {
@@ -16,15 +30,16 @@ export async function POST(request: Request) {
   const invalid = validateCurrencySetting(payload);
   if (invalid) return jsonError(invalid);
 
-  const gate = writeRequiresBackend();
-  if (gate) return gate;
-
   const record: CurrencySetting = {
     currencyCode: payload.currencyCode!, currencyName: payload.currencyName!, symbol: payload.symbol!,
     decimalPrecision: payload.decimalPrecision!, isActive: payload.isActive ?? true, isDefault: false,
     assignedCountries: payload.assignedCountries ?? [], assignedResellers: payload.assignedResellers ?? [],
     manualExchangeRate: payload.manualExchangeRate ?? 1,
   };
+
+  const proxied = await maybeRouteToFrappe("currencies", "post", toFrappeCurrency(record));
+  if (proxied) return proxied;
+
   upsertCurrency(record);
   const audit = appendAudit({ entityType: "Currency", entityId: record.currencyCode, action: "create", oldValue: "", newValue: `${record.symbol} · precision ${record.decimalPrecision}`, performedBy: session.auditLabel });
   return devStoreResponse({ currency: record, message: `Currency ${record.currencyCode} added.` }, { status: 201, audit });
@@ -53,8 +68,8 @@ export async function PATCH(request: Request) {
   const invalid = validateCurrencySetting(merged);
   if (invalid) return jsonError(invalid);
 
-  const gate = writeRequiresBackend();
-  if (gate) return gate;
+  const proxied = await maybeRouteToFrappe("currencies", "patch", toFrappeCurrency(merged));
+  if (proxied) return proxied;
 
   upsertCurrency(merged);
   const audit = appendAudit({ entityType: "Currency", entityId: merged.currencyCode, action: current.isActive !== merged.isActive ? (merged.isActive ? "enable" : "disable") : "update", oldValue: String(current.isActive), newValue: String(merged.isActive), performedBy: session.auditLabel });

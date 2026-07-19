@@ -1,9 +1,23 @@
 import { deleteNotAllowed, jsonError } from "@/lib/api-helpers";
-import { devStoreResponse, writeRequiresBackend } from "@/lib/backend/backend-router";
+import { devStoreResponse, maybeRouteToFrappe } from "@/lib/backend/backend-router";
 import { appendAudit, getDevStore, upsertPaymentMethod } from "@/lib/dev-store";
 import { resolvePortalSession } from "@/lib/portal-security";
 import { validatePaymentMethod } from "@/lib/business/payment-methods";
 import type { PaymentMethod } from "@/lib/phase2-data";
+
+/** Map a PaymentMethod to the Frappe "Payment Method" doctype payload. */
+function toFrappePaymentMethod(m: PaymentMethod) {
+  return {
+    method_name: m.methodName,
+    is_active: m.isActive ? 1 : 0,
+    countries: JSON.stringify(m.countries),
+    resellers: JSON.stringify(m.resellers),
+    requires_reference: m.requiresReference ? 1 : 0,
+    requires_attachment: m.requiresAttachment ? 1 : 0,
+    display_order: m.displayOrder,
+    icon: m.icon,
+  };
+}
 
 /** §19 payment methods — enable/disable + edit. Super-Admin-only + audited. Disable, never delete. */
 export async function PATCH(request: Request) {
@@ -29,8 +43,8 @@ export async function PATCH(request: Request) {
   const invalid = validatePaymentMethod(merged);
   if (invalid) return jsonError(invalid);
 
-  const gate = writeRequiresBackend();
-  if (gate) return gate;
+  const proxied = await maybeRouteToFrappe("payment-methods", "patch", toFrappePaymentMethod(merged));
+  if (proxied) return proxied;
 
   upsertPaymentMethod(merged);
   const audit = appendAudit({ entityType: "PaymentMethod", entityId: merged.methodName, action: current.isActive !== merged.isActive ? (merged.isActive ? "enable" : "disable") : "update", oldValue: String(current.isActive), newValue: String(merged.isActive), performedBy: session.auditLabel });

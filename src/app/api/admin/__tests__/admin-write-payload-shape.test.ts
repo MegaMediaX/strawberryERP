@@ -189,3 +189,67 @@ describe("ADM-W5: white-label payload shape", () => {
     expect(body.settings).toEqual({ ...defaultWhiteLabel, platformName: "Cedar Cloud Partners" });
   });
 });
+
+// Phase 3: lock the camelCase route payload -> snake_case Frappe field mapping,
+// including Check -> 1/0 and Small Text arrays -> JSON strings.
+describe("ADM-W5: accounting/currencies payload shape", () => {
+  it("POST create_currency maps every field to its Frappe fieldname (AED is not in the default seed)", async () => {
+    const { POST } = await import("@/app/api/admin/accounting/currencies/route");
+    await POST(adminReq("POST", {
+      currencyCode: "AED", currencyName: "UAE Dirham", symbol: "AED", decimalPrecision: 2,
+      isActive: true, assignedCountries: ["Lebanon"], assignedResellers: ["Beirut Digital Partners"], manualExchangeRate: 0.27,
+    }));
+
+    const { path, method, body } = lastCall();
+    expect(path).toBe("/api/method/lebtech_partner_platform.api.accounting.create_currency");
+    expect(method).toBe("POST");
+    expect(body).toMatchObject({
+      currency_code: "AED",
+      currency_name: "UAE Dirham",
+      symbol: "AED",
+      decimal_precision: 2,
+      is_active: 1,
+      assigned_countries: JSON.stringify(["Lebanon"]),
+      assigned_resellers: JSON.stringify(["Beirut Digital Partners"]),
+      manual_exchange_rate: 0.27,
+    });
+    // is_default is chosen elsewhere and must never be mass-assigned by the API.
+    expect(body).not.toHaveProperty("is_default");
+  });
+});
+
+describe("ADM-W5: accounting/payment-methods payload shape", () => {
+  it("PATCH upsert_payment_method maps method_name + is_active and JSON-encodes the Small Text arrays", async () => {
+    const { PATCH } = await import("@/app/api/admin/accounting/payment-methods/route");
+    // "Cash" is seeded in the default dev-store; the pre-routing existence check
+    // is dev-store-local (same as the countries/resellers PATCH pattern).
+    await PATCH(adminReq("PATCH", { methodName: "Cash", isActive: false }));
+
+    const { path, body } = lastCall();
+    expect(path).toBe("/api/method/lebtech_partner_platform.api.accounting.upsert_payment_method");
+    expect(body).toMatchObject({ method_name: "Cash", is_active: 0 });
+    expect(typeof body.countries).toBe("string");
+    expect(typeof body.resellers).toBe("string");
+  });
+});
+
+describe("ADM-W5: accounting/expenses payload shape", () => {
+  it("POST create_expense maps date->expense_date and notes->reference, and never sends the client id", async () => {
+    const { POST } = await import("@/app/api/admin/accounting/expenses/route");
+    await POST(adminReq("POST", { category: "Marketing", amount: 500, currency: "USD", date: "2026-07-05", notes: "Q3 ads" }));
+
+    const { path, method, body } = lastCall();
+    expect(path).toBe("/api/method/lebtech_partner_platform.api.accounting.create_expense");
+    expect(method).toBe("POST");
+    expect(body).toMatchObject({
+      category: "Marketing",
+      amount: 500,
+      currency: "USD",
+      expense_date: "2026-07-05",
+      reference: "Q3 ads",
+    });
+    // Frappe autonames Expense Log (format:EXP-{####}) — the client id/notes keys must not leak.
+    expect(body).not.toHaveProperty("id");
+    expect(body).not.toHaveProperty("notes");
+  });
+});

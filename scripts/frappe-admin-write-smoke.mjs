@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * ADM-W7 / ADM-W9 — live-Frappe smoke for the admin write path (countries /
- * resellers / white-label) added by the 501->Frappe-persist fix.
+ * resellers / white-label; plus Phase 3: currencies / payment-methods /
+ * expenses) added by the 501->Frappe-persist fix.
  *
  * SAFETY (binding, do not relax):
  *   - Env-gated + default-SKIP (exit 0, not exit 1) when its secrets are
@@ -178,6 +179,59 @@ async function main() {
     await callMethod("lebtech_partner_platform.api.settings.save_white_label", {
       settings: whiteLabelSnapshot ?? {},
     });
+  }
+
+  // ---- Phase 3: accounting config round-trips (currencies / payment-methods / expenses) ----
+  await test("Currency Setting / Payment Method / Expense Log DocTypes have their mapped fields", async () => {
+    await assertDoctypeHasFields("Currency Setting", ["currency_code", "currency_name", "symbol", "decimal_precision", "is_active", "manual_exchange_rate"]);
+    await assertDoctypeHasFields("Payment Method", ["method_name", "is_active", "countries", "resellers", "display_order"]);
+    await assertDoctypeHasFields("Expense Log", ["category", "amount", "currency", "expense_date", "reference"]);
+  });
+
+  const currencyCode = `S${String(runId).slice(-2)}`; // 3-char smoke code, e.g. "S42"
+  try {
+    await test("create_currency -> update_currency round-trips", async () => {
+      const created = await callMethod("lebtech_partner_platform.api.accounting.create_currency", {
+        currency_code: currencyCode, currency_name: "Smoke Currency", symbol: "§", decimal_precision: 2, is_active: 1, manual_exchange_rate: 1,
+      });
+      assert(created.currency_code === currencyCode, "create_currency did not return the created code");
+      const toggled = await callMethod("lebtech_partner_platform.api.accounting.update_currency", { currency_code: currencyCode, is_active: 0 });
+      assert(Number(toggled.is_active) === 0, "update_currency is_active toggle did not persist");
+      const fetched = await getResource("Currency Setting", currencyCode);
+      assert(Number(fetched.is_active) === 0, "Currency Setting did not round-trip the disabled state");
+    });
+  } finally {
+    try { await deleteResource("Currency Setting", currencyCode); } catch (error) { console.warn(`WARN could not delete smoke currency ${currencyCode}: ${error instanceof Error ? error.message : error}`); }
+  }
+
+  const methodName = `Smoke Method ${runId}`;
+  try {
+    await test("upsert_payment_method creates then updates in place", async () => {
+      await callMethod("lebtech_partner_platform.api.accounting.upsert_payment_method", { method_name: methodName, is_active: 1, countries: "[]", resellers: "[]", display_order: 99 });
+      const updated = await callMethod("lebtech_partner_platform.api.accounting.upsert_payment_method", { method_name: methodName, is_active: 0 });
+      assert(Number(updated.is_active) === 0, "upsert_payment_method did not update in place");
+      const fetched = await getResource("Payment Method", methodName);
+      assert(Number(fetched.is_active) === 0, "Payment Method did not round-trip the disabled state");
+    });
+  } finally {
+    try { await deleteResource("Payment Method", methodName); } catch (error) { console.warn(`WARN could not delete smoke payment method ${methodName}: ${error instanceof Error ? error.message : error}`); }
+  }
+
+  let expenseName;
+  try {
+    await test("create_expense persists via the whitelisted method (autonamed)", async () => {
+      const created = await callMethod("lebtech_partner_platform.api.accounting.create_expense", {
+        category: "Smoke", amount: 1, currency: "USD", expense_date: "2026-01-01", reference: `smoke-${runId}`,
+      });
+      expenseName = created.name;
+      assert(typeof expenseName === "string" && expenseName.startsWith("EXP-"), "create_expense did not autoname EXP-####");
+      const fetched = await getResource("Expense Log", expenseName);
+      assert(fetched.reference === `smoke-${runId}`, "Expense Log did not round-trip the reference");
+    });
+  } finally {
+    if (expenseName) {
+      try { await deleteResource("Expense Log", expenseName); } catch (error) { console.warn(`WARN could not delete smoke expense ${expenseName}: ${error instanceof Error ? error.message : error}`); }
+    }
   }
 
   const failed = results.filter((result) => !result.ok);

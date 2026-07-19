@@ -70,6 +70,22 @@ export const frappeMethodMap: Record<string, { get?: string; post?: string; patc
     post: "lebtech_partner_platform.api.receipts.create_receipt",
     patch: "lebtech_partner_platform.api.receipts.update_receipt",
   },
+  // Admin accounting config (Phase 3). Writes are quarantined behind
+  // ADMIN_FRAPPE_WRITE_VERIFIED in backend-router.ts until the staging smoke
+  // confirms the round-trip — same discipline as countries/resellers/white-label.
+  currencies: {
+    get: "lebtech_partner_platform.api.accounting.list_currencies",
+    post: "lebtech_partner_platform.api.accounting.create_currency",
+    patch: "lebtech_partner_platform.api.accounting.update_currency",
+  },
+  "payment-methods": {
+    get: "lebtech_partner_platform.api.accounting.list_payment_methods",
+    patch: "lebtech_partner_platform.api.accounting.upsert_payment_method",
+  },
+  expenses: {
+    get: "lebtech_partner_platform.api.accounting.list_expenses",
+    post: "lebtech_partner_platform.api.accounting.create_expense",
+  },
   // Bare "commissions" is what the dashboards/data-gathers fetch (commission
   // ENTRIES); without this key handle() returns null and every dashboard
   // shows "The Frappe commissions endpoint is unavailable."
